@@ -1,0 +1,48 @@
+1. A teacher overview page, like GitHub overview page, but instead of a file .md, teacher can edit there profile by adding value to given key
+2. This is the edit modal
+```
+---------------------------------------------------------
+|                   Thông tin về tôi                    |
+| - Họ và tên -                                         |
+| [___________________________________________________] |  
+| - Nghề nghiệp hiện tại -                              |
+| [Giáo viên                                          ] |
+| [Giảng viên tại trung tâm giáo dục                  ] |
+| [___________________________________________________] |
+| [                      + Thêm                       ] |
+| - Nơi giảng dạy -                                     |
+| [THPT Ngô Quyền                                     ] |
+| [Trung tâm giảng dạy ABC                            ] |
+| [___________________________________________________] |
+| [                      + Thêm                       ] |
+| - Giới thiệu -                                        |
+| [___________________________________________________] |
+| - Chuyên môn -                                        |
+| | Chuyên ngành | Bằng cấp | Xem bằng cấp |            |
+| |              | [______] | Ảnh đính kèm |            |
+| | [__________] | [______] | Ảnh đính kèm |            |  
+| |              | [______] | Ảnh đính kèm |            |
+| [              + Thêm hàng               ]            |
+| [               + Thêm                   ]            |
+| - Kinh nghiệm -                                       |
+| [Luyên thi đánh giá năng lực         ] [Ảnh đính kèm] |
+| [Luyện thi tốt nghiệp THPT           ] [Ảnh đính kèm] |
+| [Dạy kèm học sinh mất gốc            ] [Ảnh đính kèm] |
+| [____________________________________] [  Thêm ảnh  ] |
+| [                      + Thêm                       ] |
+| - Kỹ năng giảng dạy khác -                            |
+| [Thành thạo mindmap                  ] [Ảnh đính kèm] |
+| [Slide thuyết trình đẹp              ] [Ảnh đính kèm] |
+| [____________________________________] [  Thêm ảnh  ] | 
+| [                      + Thêm                       ] |
+| - Học phí -                                           |
+| [Tài liệu miễn phí                                  ] |
+| [Thu tiền theo buổi tại trung tâm (XXX.XXX/buổi)    ] |
+| [___________________________________________________] |
+| [                      + Thêm                       ] |
+| - Ghi chú -                                           |
+| [Học thử miễn phí 2 buổi để kiểm tra trình độ       ] |
+| [___________________________________________________] |
+| [                      + Thêm                       ] |
+---------------------------------------------------------
+```

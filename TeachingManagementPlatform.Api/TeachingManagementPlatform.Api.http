@@ -1,0 +1,6 @@
+@TeachingManagementPlatform.Api_HostAddress = http://localhost:5001
+
+GET {{TeachingManagementPlatform.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

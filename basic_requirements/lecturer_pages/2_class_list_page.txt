@@ -1,0 +1,62 @@
+1. A page to display list of class, CRUD for manage a class and when click to view one class, it has these tabs
+2. First tab is class basic information: class name, year, number of student (retrive from the main student list)
+3. The second tab must be a student list system with basic CRUD of a list
++ There is a smaller tab menu where show multiple lists, teacher can mark 1 list to become the main student list
++ Teacher must be able to create multiple list
++ In each list, teacher must be able to add collumn
++ Techer must be able to clone a list
++ There must be a function to import data from Excel file, which will first scan and see if the first row of the Excel file has the same key name of the header row of table
++ There must be a function to export list to Excel file
+4. Third tab must be a lesson plan page
++ Teacher can choose a lesson plan from lesson plan list
++ Teacher can update time of each lesson in plan
+```
+----------------------------------------------------------
+|                Chi tiết thời gian dạy                  |
+| Môn Toán          Khối 7          Niên khóa 2026-2027  |
+|                                                        |
+| |----------------------------------------------------| |
+| |                  Danh sách tiết                    | |
+| |(   Tìm kiếm theo tên bài học      ) (x) [Tìm kiếm] | |
+| | Tiết 1 Đạo hàm |   22   |    3    | 2026  | [Lịch] | |
+| | Tiết 2 Tích .. | [Ngày] | [Tháng] | [Năm] | [Lịch] | |
+| | Tiết 3 Tham .. | [Ngày] | [Tháng] | [Năm] | [Lịch] | |
+|                                                        |
+|                                             [Cập nhật] |
+|                                                        |
+----------------------------------------------------------
+```
+- List of lesson (Danh sách tiết) must be scrollable
++ Teacher can see current plan display
+```
+----------------------------------------------------------
+|                        Lớp 7A1                         |
+|                    Chi tiết giáo án                    |
+|                            v                           |
+|                 -o-o-o-o-o-o-o-o-o-o-o-                |
+|                                                        |
+| ------------------------------------------------------ |
+| |                  Tiết 4: Hàm số                    | |
+| | -------------------------------------------------- | |
+| | |                     Tài liệu                   | | |
+| | | | Tên tài liệu   |   Link tài liệu   | Trang | | | |
+| | | | SGK Toán 7     |   https://abc..   | 20-21 | | | |
+| | | | SGK Toán 7     |   https://abc..   | 20-21 | | | |
+| | | | SGK Toán 7     |   https://abc..   | 20-21 | | | |
+| | -------------------------------------------------- | |
+| |                                                    | |
+| | -------------------------------------------------- | |
+| | |                Tệp đính kèm                    | | |
+| | | Đạo hàm.pptx                                   | | |
+| | | Bài tập đạo hàm.docx                           | | |
+| | | Đề kiểm tra 15 phút.docx                       | | |
+| | -------------------------------------------------- | |
+| |                                                    | |
+| | -------------------------------------------------- | |
+| | |                 Mini game                      | | |
+| | | | Tên          |  Loại     | Hành động       | | | |
+| | | | Đạo hàm      |  Quiz     |  [Chơi]         | | | |
+| | -------------------------------------------------- | |
+| ------------------------------------------------------ |
+----------------------------------------------------------
+```

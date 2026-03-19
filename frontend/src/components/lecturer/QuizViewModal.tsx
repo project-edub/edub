@@ -1,0 +1,107 @@
+import { useState, useEffect } from 'react';
+import { AxiosError } from 'axios';
+import type { MiniGame } from '../../types/miniGame';
+import type { ApiError } from '../../types/common';
+import * as miniGameService from '../../services/miniGameService';
+
+interface QuizViewModalProps {
+  miniGameId: number;
+  onClose: () => void;
+}
+
+function extractError(err: unknown): string {
+  const axiosErr = err as AxiosError<ApiError>;
+  return axiosErr.response?.data?.error?.message || 'Đã xảy ra lỗi. Vui lòng thử lại.';
+}
+
+export default function QuizViewModal({ miniGameId, onClose }: QuizViewModalProps) {
+  const [game, setGame] = useState<MiniGame | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    loadGame();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [miniGameId]);
+
+  async function loadGame() {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await miniGameService.getMiniGame(miniGameId);
+      setGame(data);
+    } catch (err) {
+      setError(extractError(err));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div style={overlayStyle} role="dialog" aria-label="Xem mini game">
+      <div style={modalStyle}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h2>Xem mini game</h2>
+          <button type="button" onClick={onClose} style={{ cursor: 'pointer', padding: '4px 12px' }}>
+            Đóng
+          </button>
+        </div>
+
+        {error && (
+          <div role="alert" style={{ color: '#d32f2f', marginBottom: 12 }}>{error}</div>
+        )}
+
+        {loading ? (
+          <p>Đang tải...</p>
+        ) : game ? (
+          <>
+            <div style={{ marginBottom: 16 }}>
+              <p><strong>Tên:</strong> {game.name}</p>
+              {game.description && <p><strong>Mô tả:</strong> {game.description}</p>}
+              <p><strong>Loại:</strong> {game.type}</p>
+            </div>
+
+            {game.content && game.content.questions.length > 0 ? (
+              game.content.questions.map((q, idx) => (
+                <div key={idx} style={{ marginBottom: 16, padding: 12, border: '1px solid #eee', borderRadius: 4 }}>
+                  <p style={{ fontWeight: 'bold', marginBottom: 8 }}>
+                    Câu {idx + 1}: {q.question}
+                  </p>
+                  <ul style={{ margin: 0, paddingLeft: 20 }}>
+                    {q.options.map((opt) => (
+                      <li key={opt} style={{ marginBottom: 4, fontWeight: opt === q.answer ? 'bold' : 'normal', color: opt === q.answer ? '#2e7d32' : 'inherit' }}>
+                        {opt} {opt === q.answer && '(Đáp án đúng)'}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))
+            ) : (
+              <p style={{ color: '#888' }}>Không có nội dung quiz</p>
+            )}
+          </>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+const overlayStyle: React.CSSProperties = {
+  position: 'fixed',
+  inset: 0,
+  backgroundColor: 'rgba(0,0,0,0.4)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  zIndex: 1100,
+};
+
+const modalStyle: React.CSSProperties = {
+  backgroundColor: '#fff',
+  padding: 24,
+  borderRadius: 8,
+  minWidth: 600,
+  maxWidth: 750,
+  maxHeight: '85vh',
+  overflowY: 'auto',
+};

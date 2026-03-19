@@ -1,0 +1,229 @@
+using Microsoft.EntityFrameworkCore;
+using TeachingManagementPlatform.Api.Data;
+using TeachingManagementPlatform.Api.Interfaces;
+using TeachingManagementPlatform.Api.Models;
+
+namespace TeachingManagementPlatform.Api.Services;
+
+public class ProfileService : IProfileService
+{
+    private readonly ApplicationDbContext _context;
+
+    public ProfileService(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<ProfileResponse> GetProfileAsync(int userId)
+    {
+        var profile = await _context.LecturerProfiles
+            .Include(p => p.Occupations.OrderBy(o => o.SortOrder))
+            .Include(p => p.TeachingLocations.OrderBy(t => t.SortOrder))
+            .Include(p => p.Expertises.OrderBy(e => e.SortOrder))
+            .Include(p => p.Experiences.OrderBy(e => e.SortOrder))
+            .Include(p => p.TeachingSkills.OrderBy(s => s.SortOrder))
+            .Include(p => p.TuitionFees.OrderBy(f => f.SortOrder))
+            .Include(p => p.Notes.OrderBy(n => n.SortOrder))
+            .FirstOrDefaultAsync(p => p.UserId == userId);
+
+        if (profile == null)
+        {
+            var user = await _context.Users.FindAsync(userId)
+                ?? throw new UserNotFoundException("Không tìm thấy người dùng.");
+
+            profile = new LecturerProfile
+            {
+                UserId = userId,
+                FullName = user.FullName
+            };
+            _context.LecturerProfiles.Add(profile);
+            await _context.SaveChangesAsync();
+        }
+
+        return MapToResponse(profile);
+    }
+
+    public async Task<ProfileResponse> UpdateProfileAsync(int userId, UpdateProfileRequest request)
+    {
+        var profile = await _context.LecturerProfiles
+            .Include(p => p.Occupations)
+            .Include(p => p.TeachingLocations)
+            .Include(p => p.Expertises)
+            .Include(p => p.Experiences)
+            .Include(p => p.TeachingSkills)
+            .Include(p => p.TuitionFees)
+            .Include(p => p.Notes)
+            .FirstOrDefaultAsync(p => p.UserId == userId);
+
+        if (profile == null)
+        {
+            var user = await _context.Users.FindAsync(userId)
+                ?? throw new UserNotFoundException("Không tìm thấy người dùng.");
+
+            profile = new LecturerProfile
+            {
+                UserId = userId,
+                FullName = user.FullName
+            };
+            _context.LecturerProfiles.Add(profile);
+            await _context.SaveChangesAsync();
+        }
+
+        // Update scalar fields
+        if (request.FullName != null)
+            profile.FullName = request.FullName;
+        if (request.Introduction != null)
+            profile.Introduction = request.Introduction;
+
+        // Replace multi-entry collections
+        if (request.Occupations != null)
+        {
+            _context.ProfileOccupations.RemoveRange(profile.Occupations);
+            profile.Occupations = request.Occupations.Select((o, i) => new ProfileOccupation
+            {
+                ProfileId = profile.Id,
+                Value = o.Value,
+                SortOrder = i
+            }).ToList();
+        }
+
+        if (request.TeachingLocations != null)
+        {
+            _context.ProfileTeachingLocations.RemoveRange(profile.TeachingLocations);
+            profile.TeachingLocations = request.TeachingLocations.Select((t, i) => new ProfileTeachingLocation
+            {
+                ProfileId = profile.Id,
+                Value = t.Value,
+                SortOrder = i
+            }).ToList();
+        }
+
+        if (request.Expertises != null)
+        {
+            _context.ProfileExpertises.RemoveRange(profile.Expertises);
+            profile.Expertises = request.Expertises.Select((e, i) => new ProfileExpertise
+            {
+                ProfileId = profile.Id,
+                Specialty = e.Specialty,
+                Degree = e.Degree,
+                CertificateImageUrl = e.CertificateImageUrl,
+                SortOrder = i
+            }).ToList();
+        }
+
+        if (request.Experiences != null)
+        {
+            _context.ProfileExperiences.RemoveRange(profile.Experiences);
+            profile.Experiences = request.Experiences.Select((e, i) => new ProfileExperience
+            {
+                ProfileId = profile.Id,
+                Description = e.Description,
+                ImageUrl = e.ImageUrl,
+                SortOrder = i
+            }).ToList();
+        }
+
+        if (request.TeachingSkills != null)
+        {
+            _context.ProfileTeachingSkills.RemoveRange(profile.TeachingSkills);
+            profile.TeachingSkills = request.TeachingSkills.Select((s, i) => new ProfileTeachingSkill
+            {
+                ProfileId = profile.Id,
+                Description = s.Description,
+                ImageUrl = s.ImageUrl,
+                SortOrder = i
+            }).ToList();
+        }
+
+        if (request.TuitionFees != null)
+        {
+            _context.ProfileTuitionFees.RemoveRange(profile.TuitionFees);
+            profile.TuitionFees = request.TuitionFees.Select((f, i) => new ProfileTuitionFee
+            {
+                ProfileId = profile.Id,
+                Description = f.Description,
+                SortOrder = i
+            }).ToList();
+        }
+
+        if (request.Notes != null)
+        {
+            _context.ProfileNotes.RemoveRange(profile.Notes);
+            profile.Notes = request.Notes.Select((n, i) => new ProfileNote
+            {
+                ProfileId = profile.Id,
+                Content = n.Content,
+                SortOrder = i
+            }).ToList();
+        }
+
+        await _context.SaveChangesAsync();
+
+        // Re-fetch with ordering
+        var updated = await _context.LecturerProfiles
+            .Include(p => p.Occupations.OrderBy(o => o.SortOrder))
+            .Include(p => p.TeachingLocations.OrderBy(t => t.SortOrder))
+            .Include(p => p.Expertises.OrderBy(e => e.SortOrder))
+            .Include(p => p.Experiences.OrderBy(e => e.SortOrder))
+            .Include(p => p.TeachingSkills.OrderBy(s => s.SortOrder))
+            .Include(p => p.TuitionFees.OrderBy(f => f.SortOrder))
+            .Include(p => p.Notes.OrderBy(n => n.SortOrder))
+            .FirstAsync(p => p.Id == profile.Id);
+
+        return MapToResponse(updated);
+    }
+
+    public async Task UpdateAvatarAsync(int userId, string avatarUrl)
+    {
+        var profile = await _context.LecturerProfiles.FirstOrDefaultAsync(p => p.UserId == userId);
+        if (profile == null)
+        {
+            var user = await _context.Users.FindAsync(userId)
+                ?? throw new UserNotFoundException("Không tìm thấy người dùng.");
+            profile = new LecturerProfile { UserId = userId, FullName = user.FullName, AvatarUrl = avatarUrl };
+            _context.LecturerProfiles.Add(profile);
+        }
+        else
+        {
+            profile.AvatarUrl = avatarUrl;
+        }
+        await _context.SaveChangesAsync();
+    }
+
+    private static ProfileResponse MapToResponse(LecturerProfile profile)
+    {
+        return new ProfileResponse
+        {
+            Id = profile.Id,
+            UserId = profile.UserId,
+            FullName = profile.FullName,
+            Introduction = profile.Introduction,
+            AvatarUrl = profile.AvatarUrl,
+            Occupations = profile.Occupations.OrderBy(o => o.SortOrder).Select(o => new OccupationDto { Value = o.Value }).ToList(),
+            TeachingLocations = profile.TeachingLocations.OrderBy(t => t.SortOrder).Select(t => new TeachingLocationDto { Value = t.Value }).ToList(),
+            Expertises = profile.Expertises.OrderBy(e => e.SortOrder).Select(e => new ExpertiseDto
+            {
+                Specialty = e.Specialty,
+                Degree = e.Degree,
+                CertificateImageUrl = e.CertificateImageUrl
+            }).ToList(),
+            Experiences = profile.Experiences.OrderBy(e => e.SortOrder).Select(e => new ExperienceDto
+            {
+                Description = e.Description,
+                ImageUrl = e.ImageUrl
+            }).ToList(),
+            TeachingSkills = profile.TeachingSkills.OrderBy(s => s.SortOrder).Select(s => new TeachingSkillDto
+            {
+                Description = s.Description,
+                ImageUrl = s.ImageUrl
+            }).ToList(),
+            TuitionFees = profile.TuitionFees.OrderBy(f => f.SortOrder).Select(f => new TuitionFeeDto { Description = f.Description }).ToList(),
+            Notes = profile.Notes.OrderBy(n => n.SortOrder).Select(n => new NoteDto { Content = n.Content }).ToList()
+        };
+    }
+}
+
+public class UserNotFoundException : Exception
+{
+    public UserNotFoundException(string message) : base(message) { }
+}
