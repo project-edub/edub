@@ -89,7 +89,7 @@ export default function ExcelImportModal({ listId, onSuccess, onClose }: Props) 
             type="button"
             onClick={onClose}
             disabled={loading}
-            style={{ cursor: 'pointer', padding: '8px 16px' }}
+            className="btn btn-neutral"
           >
             Hủy
           </button>
@@ -97,7 +97,7 @@ export default function ExcelImportModal({ listId, onSuccess, onClose }: Props) 
             type="button"
             onClick={handleSubmit}
             disabled={!file || loading}
-            style={{ cursor: 'pointer', padding: '8px 16px', background: '#1976d2', color: '#fff', border: 'none', borderRadius: 4 }}
+            className="btn btn-add"
           >
             {loading ? 'Đang nhập...' : 'Nhập'}
           </button>

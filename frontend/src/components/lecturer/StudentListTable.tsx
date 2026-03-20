@@ -109,15 +109,15 @@ export default function StudentListTable({
               style={{ padding: 6 }}
               aria-label="Tên cột mới"
             />
-            <button type="submit" disabled={actionLoading} style={{ cursor: 'pointer', padding: '6px 12px' }}>
+            <button type="submit" disabled={actionLoading} className="btn btn-update" style={{ padding: '6px 12px' }}>
               Lưu
             </button>
-            <button type="button" onClick={() => { setAddingColumn(false); setNewColumnName(''); }} style={{ cursor: 'pointer', padding: '6px 12px' }}>
+            <button type="button" onClick={() => { setAddingColumn(false); setNewColumnName(''); }} className="btn btn-neutral" style={{ padding: '6px 12px' }}>
               Hủy
             </button>
           </form>
         ) : (
-          <button type="button" onClick={() => setAddingColumn(true)} style={{ cursor: 'pointer', padding: '6px 12px' }}>
+          <button type="button" onClick={() => setAddingColumn(true)} className="btn btn-add" style={{ padding: '6px 12px' }}>
             Thêm cột
           </button>
         )}
@@ -139,8 +139,8 @@ export default function StudentListTable({
                       style={{ padding: 4, width: 100 }}
                       aria-label="Sửa tên cột"
                     />
-                    <button type="submit" disabled={actionLoading} style={{ cursor: 'pointer', fontSize: 12 }}>Lưu</button>
-                    <button type="button" onClick={cancelEditColumn} style={{ cursor: 'pointer', fontSize: 12 }}>Hủy</button>
+                    <button type="submit" disabled={actionLoading} className="btn btn-update" style={{ padding: '4px 8px' }}>Lưu</button>
+                    <button type="button" onClick={cancelEditColumn} className="btn btn-neutral" style={{ padding: '4px 8px' }}>Hủy</button>
                   </form>
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -149,7 +149,8 @@ export default function StudentListTable({
                       type="button"
                       onClick={() => startEditColumn(col)}
                       disabled={actionLoading}
-                      style={{ cursor: 'pointer', fontSize: 11, padding: '2px 4px' }}
+                      className="btn btn-update"
+                      style={{ fontSize: 11, padding: '2px 4px' }}
                       title="Sửa cột"
                     >
                       Sửa
@@ -158,7 +159,8 @@ export default function StudentListTable({
                       type="button"
                       onClick={() => onDeleteColumn(col.id)}
                       disabled={actionLoading}
-                      style={{ cursor: 'pointer', fontSize: 11, padding: '2px 4px', color: '#d32f2f' }}
+                      className="btn btn-delete"
+                      style={{ fontSize: 11, padding: '2px 4px' }}
                       title="Xóa cột"
                     >
                       Xóa
@@ -192,15 +194,15 @@ export default function StudentListTable({
               <td style={tdStyle}>
                 {editingEntryId === entry.id ? (
                   <form onSubmit={handleUpdateEntry} style={{ display: 'flex', gap: 4 }}>
-                    <button type="submit" disabled={actionLoading} style={{ cursor: 'pointer' }}>Lưu</button>
-                    <button type="button" onClick={cancelEditEntry} style={{ cursor: 'pointer' }}>Hủy</button>
+                    <button type="submit" disabled={actionLoading} className="btn btn-update" style={{ padding: '4px 8px' }}>Lưu</button>
+                    <button type="button" onClick={cancelEditEntry} className="btn btn-neutral" style={{ padding: '4px 8px' }}>Hủy</button>
                   </form>
                 ) : (
                   <div style={{ display: 'flex', gap: 4 }}>
-                    <button type="button" onClick={() => startEditEntry(entry)} disabled={actionLoading} style={{ cursor: 'pointer' }}>
+                    <button type="button" onClick={() => startEditEntry(entry)} disabled={actionLoading} className="btn btn-update">
                       Sửa
                     </button>
-                    <button type="button" onClick={() => onDeleteEntry(entry.id)} disabled={actionLoading} style={{ cursor: 'pointer', color: '#d32f2f' }}>
+                    <button type="button" onClick={() => onDeleteEntry(entry.id)} disabled={actionLoading} className="btn btn-delete">
                       Xóa
                     </button>
                   </div>
@@ -226,8 +228,8 @@ export default function StudentListTable({
               ))}
               <td style={tdStyle}>
                 <form onSubmit={handleAddEntry} style={{ display: 'flex', gap: 4 }}>
-                  <button type="submit" disabled={actionLoading} style={{ cursor: 'pointer' }}>Lưu</button>
-                  <button type="button" onClick={() => { setAddingEntry(false); setNewEntryData({}); }} style={{ cursor: 'pointer' }}>Hủy</button>
+                  <button type="submit" disabled={actionLoading} className="btn btn-update" style={{ padding: '4px 8px' }}>Lưu</button>
+                  <button type="button" onClick={() => { setAddingEntry(false); setNewEntryData({}); }} className="btn btn-neutral" style={{ padding: '4px 8px' }}>Hủy</button>
                 </form>
               </td>
             </tr>
@@ -241,7 +243,8 @@ export default function StudentListTable({
           type="button"
           onClick={startAddEntry}
           disabled={actionLoading || columns.length === 0}
-          style={{ marginTop: 12, cursor: 'pointer', padding: '6px 12px' }}
+          className="btn btn-add"
+          style={{ marginTop: 12, padding: '6px 12px' }}
         >
           Thêm học sinh
         </button>

@@ -66,15 +66,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div style={{ padding: '16px', borderTop: '1px solid #334155' }}>
           <button
             onClick={handleLogout}
+            className="btn btn-delete"
             style={{
               width: '100%',
               padding: '8px 16px',
-              backgroundColor: 'transparent',
-              color: '#94a3b8',
-              border: '1px solid #475569',
-              borderRadius: 4,
-              cursor: 'pointer',
-              fontSize: 14,
             }}
           >
             Đăng xuất

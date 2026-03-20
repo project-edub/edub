@@ -218,7 +218,7 @@ export default function LessonDetailModal({ lessonId, onClose }: LessonDetailMod
       <div style={modalStyle}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h2>Chi tiết bài học</h2>
-          <button type="button" onClick={onClose} style={{ cursor: 'pointer', padding: '4px 12px' }}>
+          <button type="button" onClick={onClose} className="btn btn-neutral" style={{ padding: '4px 12px' }}>
             Đóng
           </button>
         </div>
@@ -239,7 +239,7 @@ export default function LessonDetailModal({ lessonId, onClose }: LessonDetailMod
             <section style={{ marginBottom: 20 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <h4>Tài liệu</h4>
-                <button type="button" onClick={openAddDocForm} disabled={actionLoading} style={{ cursor: 'pointer', padding: '4px 12px' }}>
+                <button type="button" onClick={openAddDocForm} disabled={actionLoading} className="btn btn-add" style={{ padding: '4px 12px' }}>
                   Thêm tài liệu
                 </button>
               </div>
@@ -280,10 +280,10 @@ export default function LessonDetailModal({ lessonId, onClose }: LessonDetailMod
                     />
                   </div>
                   <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                    <button type="button" onClick={cancelDocForm} disabled={actionLoading} style={{ padding: '4px 12px', cursor: 'pointer' }}>
+                    <button type="button" onClick={cancelDocForm} disabled={actionLoading} className="btn btn-neutral" style={{ padding: '4px 12px' }}>
                       Hủy
                     </button>
-                    <button type="button" onClick={handleDocSubmit} disabled={actionLoading} style={{ padding: '4px 12px', cursor: 'pointer' }}>
+                    <button type="button" onClick={handleDocSubmit} disabled={actionLoading} className="btn btn-update" style={{ padding: '4px 12px' }}>
                       Lưu
                     </button>
                   </div>
@@ -311,10 +311,10 @@ export default function LessonDetailModal({ lessonId, onClose }: LessonDetailMod
                         </td>
                         <td style={tdStyle}>{doc.pageRange || '—'}</td>
                         <td style={tdStyle}>
-                          <button type="button" onClick={() => openEditDocForm(doc)} disabled={actionLoading} style={{ marginRight: 4, cursor: 'pointer' }}>
+                          <button type="button" onClick={() => openEditDocForm(doc)} disabled={actionLoading} className="btn btn-update" style={{ marginRight: 4 }}>
                             Sửa
                           </button>
-                          <button type="button" onClick={() => handleDeleteDoc(doc.id)} disabled={actionLoading} style={{ cursor: 'pointer', color: '#d32f2f' }}>
+                          <button type="button" onClick={() => handleDeleteDoc(doc.id)} disabled={actionLoading} className="btn btn-delete">
                             Xóa
                           </button>
                         </td>
@@ -333,7 +333,8 @@ export default function LessonDetailModal({ lessonId, onClose }: LessonDetailMod
                   type="button"
                   onClick={openStoragePicker}
                   disabled={actionLoading}
-                  style={{ cursor: 'pointer', padding: '4px 12px' }}
+                  className="btn btn-add"
+                  style={{ padding: '4px 12px' }}
                 >
                   Chọn tệp từ kho
                 </button>
@@ -356,7 +357,7 @@ export default function LessonDetailModal({ lessonId, onClose }: LessonDetailMod
                         <td style={tdStyle}>{att.fileName}</td>
                         <td style={tdStyle}>{formatFileSize(att.fileSize)}</td>
                         <td style={tdStyle}>
-                          <button type="button" onClick={() => handleDeleteAttachment(att.id)} disabled={actionLoading} style={{ cursor: 'pointer', color: '#d32f2f' }}>
+                          <button type="button" onClick={() => handleDeleteAttachment(att.id)} disabled={actionLoading} className="btn btn-delete">
                             Xóa
                           </button>
                         </td>
@@ -371,7 +372,7 @@ export default function LessonDetailModal({ lessonId, onClose }: LessonDetailMod
             <section>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <h4>Mini game</h4>
-                <button type="button" onClick={() => setShowMiniGameCreate(true)} disabled={actionLoading} style={{ cursor: 'pointer', padding: '4px 12px' }}>
+                <button type="button" onClick={() => setShowMiniGameCreate(true)} disabled={actionLoading} className="btn btn-add" style={{ padding: '4px 12px' }}>
                   Tạo mini game
                 </button>
               </div>
@@ -392,13 +393,13 @@ export default function LessonDetailModal({ lessonId, onClose }: LessonDetailMod
                         <td style={tdStyle}>{game.name}</td>
                         <td style={tdStyle}>{game.type}</td>
                         <td style={tdStyle}>
-                          <button type="button" onClick={() => setPlayGameId(game.id)} disabled={actionLoading} style={{ marginRight: 4, cursor: 'pointer' }}>
+                          <button type="button" onClick={() => setPlayGameId(game.id)} disabled={actionLoading} className="btn btn-view" style={{ marginRight: 4 }}>
                             Chơi
                           </button>
-                          <button type="button" onClick={() => setViewGameId(game.id)} disabled={actionLoading} style={{ marginRight: 4, cursor: 'pointer' }}>
+                          <button type="button" onClick={() => setViewGameId(game.id)} disabled={actionLoading} className="btn btn-view" style={{ marginRight: 4 }}>
                             Xem
                           </button>
-                          <button type="button" onClick={() => setDeleteGameTarget(game)} disabled={actionLoading} style={{ cursor: 'pointer', color: '#d32f2f' }}>
+                          <button type="button" onClick={() => setDeleteGameTarget(game)} disabled={actionLoading} className="btn btn-delete">
                             Xóa
                           </button>
                         </td>
@@ -446,10 +447,10 @@ export default function LessonDetailModal({ lessonId, onClose }: LessonDetailMod
               Bạn có chắc chắn muốn xóa mini game <strong>{deleteGameTarget.name}</strong>?
             </p>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-              <button type="button" onClick={() => setDeleteGameTarget(null)} disabled={actionLoading} style={{ padding: '8px 16px', cursor: 'pointer' }}>
+              <button type="button" onClick={() => setDeleteGameTarget(null)} disabled={actionLoading} className="btn btn-neutral">
                 Hủy
               </button>
-              <button type="button" onClick={handleDeleteMiniGame} disabled={actionLoading} style={{ padding: '8px 16px', cursor: 'pointer', color: '#d32f2f' }}>
+              <button type="button" onClick={handleDeleteMiniGame} disabled={actionLoading} className="btn btn-delete">
                 {actionLoading ? 'Đang xử lý...' : 'Xóa'}
               </button>
             </div>
@@ -462,7 +463,7 @@ export default function LessonDetailModal({ lessonId, onClose }: LessonDetailMod
           <div style={{ backgroundColor: '#fff', padding: 20, borderRadius: 8, minWidth: 620, maxWidth: 760, maxHeight: '80vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <h3 style={{ margin: 0 }}>Chọn tệp từ kho lưu trữ</h3>
-              <button type="button" onClick={closeStoragePicker} style={{ cursor: 'pointer', padding: '4px 12px' }}>
+              <button type="button" onClick={closeStoragePicker} className="btn btn-neutral" style={{ padding: '4px 12px' }}>
                 Đóng
               </button>
             </div>
@@ -475,7 +476,8 @@ export default function LessonDetailModal({ lessonId, onClose }: LessonDetailMod
                 type="button"
                 onClick={navigateUpFolder}
                 disabled={folderTrail.length <= 1 || storageLoading}
-                style={{ cursor: folderTrail.length <= 1 ? 'not-allowed' : 'pointer', padding: '4px 10px' }}
+                  className="btn btn-view"
+                  style={{ padding: '4px 10px' }}
               >
                 Lên thư mục trên
               </button>
@@ -519,7 +521,8 @@ export default function LessonDetailModal({ lessonId, onClose }: LessonDetailMod
                             <button
                               type="button"
                               onClick={() => enterFolder(item)}
-                              style={{ cursor: 'pointer', padding: '4px 8px' }}
+                              className="btn btn-view"
+                              style={{ padding: '4px 8px' }}
                             >
                               Mở
                             </button>
@@ -535,14 +538,14 @@ export default function LessonDetailModal({ lessonId, onClose }: LessonDetailMod
             )}
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
-              <button type="button" onClick={closeStoragePicker} disabled={actionLoading} style={{ padding: '8px 16px', cursor: 'pointer' }}>
+              <button type="button" onClick={closeStoragePicker} disabled={actionLoading} className="btn btn-neutral">
                 Hủy
               </button>
               <button
                 type="button"
                 onClick={handleAddAttachmentFromStorage}
                 disabled={actionLoading || selectedStorageItemId == null}
-                style={{ padding: '8px 16px', cursor: selectedStorageItemId == null ? 'not-allowed' : 'pointer' }}
+                className="btn btn-add"
               >
                 {actionLoading ? 'Đang thêm...' : 'Thêm vào bài học'}
               </button>

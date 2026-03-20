@@ -124,7 +124,8 @@ export default function RegisterPage() {
         <button
           type="submit"
           disabled={loading}
-          style={{ width: '100%', padding: 10, marginBottom: 16, cursor: 'pointer' }}
+          className="btn btn-update"
+          style={{ width: '100%', marginBottom: 16 }}
         >
           {loading ? 'Đang xử lý...' : 'Đăng ký'}
         </button>

@@ -128,7 +128,7 @@ export default function LessonPlanPage() {
   }
 
   return (
-    <div style={{ padding: 24 }}>
+    <div style={{ padding: 24, backgroundColor: '#fff', color: '#111' }}>
       <h1 style={{ marginBottom: 24, color: '#000' }}>Giáo án</h1>
 
       {error && (
@@ -172,7 +172,7 @@ export default function LessonPlanPage() {
             style={{ padding: 8, width: 160 }}
           />
         </div>
-        <button type="button" onClick={handleFilter} style={{ padding: '8px 16px', cursor: 'pointer' }}>
+        <button type="button" onClick={handleFilter} className="btn btn-view">
           Lọc
         </button>
       </div>
@@ -180,7 +180,8 @@ export default function LessonPlanPage() {
       <button
         type="button"
         onClick={openCreateModal}
-        style={{ marginBottom: 16, padding: '8px 16px', cursor: 'pointer' }}
+        className="btn btn-add"
+        style={{ marginBottom: 16 }}
       >
         Thêm giáo án
       </button>
@@ -215,7 +216,8 @@ export default function LessonPlanPage() {
                       type="button"
                       onClick={() => toggleExpandPlan(plan)}
                       disabled={actionLoading}
-                      style={{ marginRight: 8, cursor: 'pointer' }}
+                      className="btn btn-view"
+                      style={{ marginRight: 8 }}
                     >
                       {expandedPlan?.id === plan.id ? 'Ẩn' : 'Xem'}
                     </button>
@@ -223,7 +225,8 @@ export default function LessonPlanPage() {
                       type="button"
                       onClick={() => openEditModal(plan)}
                       disabled={actionLoading}
-                      style={{ marginRight: 8, cursor: 'pointer' }}
+                      className="btn btn-update"
+                      style={{ marginRight: 8 }}
                     >
                       Sửa
                     </button>
@@ -231,7 +234,7 @@ export default function LessonPlanPage() {
                       type="button"
                       onClick={() => setDeleteTarget(plan)}
                       disabled={actionLoading}
-                      style={{ cursor: 'pointer' }}
+                      className="btn btn-delete"
                     >
                       Xóa
                     </button>
@@ -256,7 +259,8 @@ export default function LessonPlanPage() {
                   <button
                     type="button"
                     onClick={() => setLessonDetailId(lesson.id)}
-                    style={{ background: 'none', border: 'none', color: '#1976d2', cursor: 'pointer', fontSize: 14, textDecoration: 'underline', padding: 0 }}
+                    className="btn btn-view"
+                    style={{ fontSize: 13, padding: '4px 10px' }}
                   >
                     {lesson.orderIndex}. {lesson.name}
                   </button>
@@ -299,7 +303,7 @@ export default function LessonPlanPage() {
                 type="button"
                 onClick={() => setDeleteTarget(null)}
                 disabled={actionLoading}
-                style={{ padding: '8px 16px', cursor: 'pointer' }}
+                className="btn btn-neutral"
               >
                 Hủy
               </button>
@@ -307,7 +311,7 @@ export default function LessonPlanPage() {
                 type="button"
                 onClick={handleDelete}
                 disabled={actionLoading}
-                style={{ padding: '8px 16px', cursor: 'pointer', color: '#d32f2f' }}
+                className="btn btn-delete"
               >
                 {actionLoading ? 'Đang xử lý...' : 'Xóa'}
               </button>

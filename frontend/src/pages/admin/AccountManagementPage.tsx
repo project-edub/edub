@@ -164,7 +164,8 @@ export default function AccountManagementPage() {
       <button
         type="button"
         onClick={openCreateModal}
-        style={{ marginBottom: 16, padding: '8px 16px', cursor: 'pointer' }}
+        className="btn btn-add"
+        style={{ marginBottom: 16 }}
       >
         Thêm tài khoản
       </button>
@@ -201,7 +202,8 @@ export default function AccountManagementPage() {
                       type="button"
                       onClick={() => openEditModal(account)}
                       disabled={actionLoading}
-                      style={{ marginRight: 8, cursor: 'pointer' }}
+                      className="btn btn-update"
+                      style={{ marginRight: 8 }}
                     >
                       Sửa
                     </button>
@@ -209,7 +211,8 @@ export default function AccountManagementPage() {
                       type="button"
                       onClick={() => setDeleteTarget(account)}
                       disabled={actionLoading}
-                      style={{ marginRight: 8, cursor: 'pointer' }}
+                      className="btn btn-delete"
+                      style={{ marginRight: 8 }}
                     >
                       Xóa
                     </button>
@@ -217,7 +220,7 @@ export default function AccountManagementPage() {
                       type="button"
                       onClick={() => handleToggleStatus(account)}
                       disabled={actionLoading}
-                      style={{ cursor: 'pointer' }}
+                      className="btn btn-view"
                     >
                       {account.status === AccountStatus.Active ? 'Vô hiệu hóa' : 'Kích hoạt'}
                     </button>
@@ -287,14 +290,14 @@ export default function AccountManagementPage() {
                   type="button"
                   onClick={closeModal}
                   disabled={actionLoading}
-                  style={{ padding: '8px 16px', cursor: 'pointer' }}
+                  className="btn btn-neutral"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  style={{ padding: '8px 16px', cursor: 'pointer' }}
+                  className="btn btn-update"
                 >
                   {actionLoading ? 'Đang xử lý...' : 'Lưu'}
                 </button>
@@ -317,7 +320,7 @@ export default function AccountManagementPage() {
                 type="button"
                 onClick={() => setDeleteTarget(null)}
                 disabled={actionLoading}
-                style={{ padding: '8px 16px', cursor: 'pointer' }}
+                className="btn btn-neutral"
               >
                 Hủy
               </button>
@@ -325,7 +328,7 @@ export default function AccountManagementPage() {
                 type="button"
                 onClick={handleDelete}
                 disabled={actionLoading}
-                style={{ padding: '8px 16px', cursor: 'pointer', color: '#d32f2f' }}
+                className="btn btn-delete"
               >
                 {actionLoading ? 'Đang xử lý...' : 'Xóa'}
               </button>

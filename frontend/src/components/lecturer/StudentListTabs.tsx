@@ -238,14 +238,12 @@ export default function StudentListTabs({ classId }: Props) {
             key={list.id}
             type="button"
             onClick={() => setActiveListId(list.id)}
+            className="btn btn-view"
             style={{
               padding: '8px 16px',
-              cursor: 'pointer',
-              border: 'none',
-              borderBottom: activeListId === list.id ? '3px solid #1976d2' : '3px solid transparent',
-              background: 'none',
+              borderBottom: activeListId === list.id ? '3px solid #007fff' : '3px solid transparent',
+              background: activeListId === list.id ? '#f0f8ff' : 'none',
               fontWeight: activeListId === list.id ? 600 : 400,
-              color: activeListId === list.id ? '#1976d2' : '#333',
               marginBottom: -2,
             }}
           >
@@ -265,10 +263,10 @@ export default function StudentListTabs({ classId }: Props) {
               style={{ padding: 4 }}
               aria-label="Tên danh sách mới"
             />
-            <button type="button" onClick={handleCreateList} disabled={actionLoading} style={{ cursor: 'pointer', padding: '4px 8px' }}>
+            <button type="button" onClick={handleCreateList} disabled={actionLoading} className="btn btn-update" style={{ padding: '4px 8px' }}>
               Lưu
             </button>
-            <button type="button" onClick={() => { setCreatingList(false); setNewListName(''); }} style={{ cursor: 'pointer', padding: '4px 8px' }}>
+            <button type="button" onClick={() => { setCreatingList(false); setNewListName(''); }} className="btn btn-neutral" style={{ padding: '4px 8px' }}>
               Hủy
             </button>
           </div>
@@ -276,7 +274,8 @@ export default function StudentListTabs({ classId }: Props) {
           <button
             type="button"
             onClick={() => setCreatingList(true)}
-            style={{ padding: '8px 16px', cursor: 'pointer', border: 'none', background: 'none', color: '#1976d2' }}
+            className="btn btn-add"
+            style={{ padding: '8px 16px' }}
           >
             + Thêm danh sách
           </button>
@@ -297,10 +296,10 @@ export default function StudentListTabs({ classId }: Props) {
                   style={{ padding: 4 }}
                   aria-label="Đổi tên danh sách"
                 />
-                <button type="button" onClick={handleRenameList} disabled={actionLoading} style={{ cursor: 'pointer', padding: '4px 8px' }}>
+                <button type="button" onClick={handleRenameList} disabled={actionLoading} className="btn btn-update" style={{ padding: '4px 8px' }}>
                   Lưu
                 </button>
-                <button type="button" onClick={() => { setRenamingListId(null); setRenameValue(''); }} style={{ cursor: 'pointer', padding: '4px 8px' }}>
+                <button type="button" onClick={() => { setRenamingListId(null); setRenameValue(''); }} className="btn btn-neutral" style={{ padding: '4px 8px' }}>
                   Hủy
                 </button>
               </div>
@@ -309,7 +308,7 @@ export default function StudentListTabs({ classId }: Props) {
                 type="button"
                 onClick={() => { setRenamingListId(activeList.id); setRenameValue(activeList.name); }}
                 disabled={actionLoading}
-                style={{ cursor: 'pointer', padding: '6px 12px' }}
+                className="btn btn-update"
               >
                 Sửa tên
               </button>
@@ -320,7 +319,7 @@ export default function StudentListTabs({ classId }: Props) {
                 type="button"
                 onClick={() => handleSetMain(activeList.id)}
                 disabled={actionLoading}
-                style={{ cursor: 'pointer', padding: '6px 12px' }}
+                className="btn btn-view"
               >
                 Đặt làm danh sách chính
               </button>
@@ -330,7 +329,7 @@ export default function StudentListTabs({ classId }: Props) {
               type="button"
               onClick={() => handleClone(activeList.id)}
               disabled={actionLoading}
-              style={{ cursor: 'pointer', padding: '6px 12px' }}
+              className="btn btn-update"
             >
               Nhân bản
             </button>
@@ -339,7 +338,7 @@ export default function StudentListTabs({ classId }: Props) {
               type="button"
               onClick={() => handleDeleteList(activeList.id)}
               disabled={actionLoading}
-              style={{ cursor: 'pointer', padding: '6px 12px', color: '#d32f2f' }}
+              className="btn btn-delete"
             >
               Xóa danh sách
             </button>
@@ -348,7 +347,7 @@ export default function StudentListTabs({ classId }: Props) {
               type="button"
               onClick={() => setShowImportModal(true)}
               disabled={actionLoading}
-              style={{ cursor: 'pointer', padding: '6px 12px' }}
+              className="btn btn-add"
             >
               Nhập Excel
             </button>
@@ -357,7 +356,7 @@ export default function StudentListTabs({ classId }: Props) {
               type="button"
               onClick={handleExportExcel}
               disabled={actionLoading}
-              style={{ cursor: 'pointer', padding: '6px 12px' }}
+              className="btn btn-view"
             >
               Xuất Excel
             </button>

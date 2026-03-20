@@ -87,7 +87,7 @@ export default function QuizPlayModal({ miniGameId, onClose }: QuizPlayModalProp
       <div style={modalStyle}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h2>{playData?.name || 'Quiz'}</h2>
-          <button type="button" onClick={onClose} style={{ cursor: 'pointer', padding: '4px 12px' }}>
+          <button type="button" onClick={onClose} className="btn btn-neutral">
             Đóng
           </button>
         </div>

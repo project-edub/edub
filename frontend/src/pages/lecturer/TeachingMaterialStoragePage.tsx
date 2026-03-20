@@ -179,7 +179,8 @@ export default function TeachingMaterialStoragePage() {
               <button
                 type="button"
                 onClick={() => navigateToBreadcrumb(i)}
-                style={{ background: 'none', border: 'none', color: '#1976d2', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
+                className="btn btn-view"
+                style={{ padding: 0, marginLeft: 4, marginRight: 4 }}
               >
                 {bc.name}
               </button>
@@ -196,7 +197,7 @@ export default function TeachingMaterialStoragePage() {
           type="button"
           onClick={() => setShowCreateFolder(true)}
           disabled={actionLoading}
-          style={{ padding: '8px 16px', cursor: 'pointer' }}
+          className="btn btn-add"
         >
           Tạo thư mục
         </button>
@@ -204,7 +205,7 @@ export default function TeachingMaterialStoragePage() {
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={actionLoading}
-          style={{ padding: '8px 16px', cursor: 'pointer' }}
+          className="btn btn-add"
         >
           Tải lên
         </button>
@@ -282,10 +283,10 @@ export default function TeachingMaterialStoragePage() {
             style={{ padding: 8, width: 240 }}
             onKeyDown={(e) => { if (e.key === 'Enter') handleCreateFolder(); }}
           />
-          <button type="button" onClick={handleCreateFolder} disabled={actionLoading} style={{ padding: '8px 16px', cursor: 'pointer' }}>
+          <button type="button" onClick={handleCreateFolder} disabled={actionLoading} className="btn btn-update" style={{ marginRight: 4 }}>
             Tạo
           </button>
-          <button type="button" onClick={() => { setShowCreateFolder(false); setNewFolderName(''); }} style={{ padding: '8px 16px', cursor: 'pointer' }}>
+          <button type="button" onClick={() => { setShowCreateFolder(false); setNewFolderName(''); }} className="btn btn-neutral">
             Hủy
           </button>
         </div>
@@ -336,7 +337,8 @@ export default function TeachingMaterialStoragePage() {
                       type="button"
                       onClick={() => startRename(item)}
                       disabled={actionLoading}
-                      style={{ marginRight: 8, cursor: 'pointer' }}
+                      className="btn btn-update"
+                      style={{ marginRight: 8 }}
                     >
                       Đổi tên
                     </button>
@@ -344,7 +346,7 @@ export default function TeachingMaterialStoragePage() {
                       type="button"
                       onClick={() => setDeleteTarget(item)}
                       disabled={actionLoading}
-                      style={{ cursor: 'pointer' }}
+                      className="btn btn-delete"
                     >
                       Xóa
                     </button>
@@ -370,10 +372,10 @@ export default function TeachingMaterialStoragePage() {
               onKeyDown={(e) => { if (e.key === 'Enter') handleRename(); }}
             />
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-              <button type="button" onClick={() => { setRenameTarget(null); setRenameName(''); }} disabled={actionLoading} style={{ padding: '8px 16px', cursor: 'pointer' }}>
+              <button type="button" onClick={() => { setRenameTarget(null); setRenameName(''); }} disabled={actionLoading} className="btn btn-neutral">
                 Hủy
               </button>
-              <button type="button" onClick={handleRename} disabled={actionLoading} style={{ padding: '8px 16px', cursor: 'pointer' }}>
+              <button type="button" onClick={handleRename} disabled={actionLoading} className="btn btn-update">
                 {actionLoading ? 'Đang xử lý...' : 'Lưu'}
               </button>
             </div>
@@ -390,10 +392,10 @@ export default function TeachingMaterialStoragePage() {
               Bạn có chắc chắn muốn xóa <strong>{deleteTarget.name}</strong>?
             </p>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-              <button type="button" onClick={() => setDeleteTarget(null)} disabled={actionLoading} style={{ padding: '8px 16px', cursor: 'pointer' }}>
+              <button type="button" onClick={() => setDeleteTarget(null)} disabled={actionLoading} className="btn btn-neutral">
                 Hủy
               </button>
-              <button type="button" onClick={handleDelete} disabled={actionLoading} style={{ padding: '8px 16px', cursor: 'pointer', color: '#d32f2f' }}>
+              <button type="button" onClick={handleDelete} disabled={actionLoading} className="btn btn-delete">
                 {actionLoading ? 'Đang xử lý...' : 'Xóa'}
               </button>
             </div>

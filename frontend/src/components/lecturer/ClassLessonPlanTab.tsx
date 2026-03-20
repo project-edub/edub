@@ -131,7 +131,7 @@ export default function ClassLessonPlanTab({ classId }: ClassLessonPlanTabProps)
           type="button"
           onClick={handleAssign}
           disabled={!selectedPlanId || assigning}
-          style={{ padding: '8px 16px', cursor: 'pointer' }}
+          className="btn btn-update"
         >
           {assigning ? 'Đang gán...' : 'Gán giáo án'}
         </button>
@@ -300,7 +300,7 @@ function LessonRow({ lesson, expanded, onToggle, onDateChange, onPlayGame }: Les
                         <button
                           type="button"
                           onClick={() => onPlayGame(game.id)}
-                          style={{ cursor: 'pointer' }}
+                          className="btn btn-view"
                         >
                           Chơi
                         </button>
