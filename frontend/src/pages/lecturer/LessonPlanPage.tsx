@@ -94,7 +94,10 @@ export default function LessonPlanPage() {
       if (modal.type === 'create') {
         await lessonPlanService.create(data);
       } else if (modal.type === 'edit' && modal.plan) {
-        await lessonPlanService.update(modal.plan.id, data);
+        const updatedPlan = await lessonPlanService.update(modal.plan.id, data);
+        if (expandedPlan?.id === updatedPlan.id) {
+          setExpandedPlan(updatedPlan);
+        }
       }
       closeModal();
       await loadPlans();

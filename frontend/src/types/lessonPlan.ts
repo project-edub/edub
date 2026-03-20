@@ -56,6 +56,7 @@ export interface LessonPlanSummary {
 }
 
 export interface CreateLessonRequest {
+  id?: number;
   name: string;
   orderIndex: number;
 }

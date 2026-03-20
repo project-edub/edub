@@ -1,9 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { AxiosError } from 'axios';
 import type { LessonDetail, DocumentResponse, AddDocumentRequest, MiniGameSummaryResponse } from '../../types/lessonPlan';
+import type { StorageItem } from '../../types/storage';
 import type { ApiError } from '../../types/common';
 import * as lessonService from '../../services/lessonService';
 import * as miniGameService from '../../services/miniGameService';
+import * as storageService from '../../services/storageService';
 import MiniGameCreateModal from './MiniGameCreateModal';
 import QuizPlayModal from './QuizPlayModal';
 import QuizViewModal from './QuizViewModal';
@@ -35,7 +37,11 @@ export default function LessonDetailModal({ lessonId, onClose }: LessonDetailMod
   const [actionLoading, setActionLoading] = useState(false);
   const [docForm, setDocForm] = useState<DocumentFormState>(INITIAL_DOC_FORM);
   const [showDocForm, setShowDocForm] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showStoragePicker, setShowStoragePicker] = useState(false);
+  const [storageItems, setStorageItems] = useState<StorageItem[]>([]);
+  const [storageLoading, setStorageLoading] = useState(false);
+  const [selectedStorageItemId, setSelectedStorageItemId] = useState<number | null>(null);
+  const [folderTrail, setFolderTrail] = useState<Array<{ id: number | null; name: string }>>([{ id: null, name: 'Kho lưu trữ' }]);
   const [showMiniGameCreate, setShowMiniGameCreate] = useState(false);
   const [playGameId, setPlayGameId] = useState<number | null>(null);
   const [viewGameId, setViewGameId] = useState<number | null>(null);
@@ -117,19 +123,59 @@ export default function LessonDetailModal({ lessonId, onClose }: LessonDetailMod
     }
   }
 
-  async function handleAddAttachment(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  async function loadStorageItems(folderId: number | null) {
+    setStorageLoading(true);
+    try {
+      const data = await storageService.listItems(folderId);
+      setStorageItems(data);
+    } catch (err) {
+      setError(extractError(err));
+    } finally {
+      setStorageLoading(false);
+    }
+  }
+
+  async function openStoragePicker() {
+    setError('');
+    setSelectedStorageItemId(null);
+    setFolderTrail([{ id: null, name: 'Kho lưu trữ' }]);
+    setShowStoragePicker(true);
+    await loadStorageItems(null);
+  }
+
+  function closeStoragePicker() {
+    setShowStoragePicker(false);
+    setSelectedStorageItemId(null);
+    setStorageItems([]);
+  }
+
+  async function enterFolder(folder: StorageItem) {
+    setFolderTrail((prev) => [...prev, { id: folder.id, name: folder.name }]);
+    setSelectedStorageItemId(null);
+    await loadStorageItems(folder.id);
+  }
+
+  async function navigateUpFolder() {
+    if (folderTrail.length <= 1) return;
+    const nextTrail = folderTrail.slice(0, -1);
+    const parentFolderId = nextTrail[nextTrail.length - 1].id;
+    setFolderTrail(nextTrail);
+    setSelectedStorageItemId(null);
+    await loadStorageItems(parentFolderId);
+  }
+
+  async function handleAddAttachmentFromStorage() {
+    if (selectedStorageItemId == null) return;
     setActionLoading(true);
     setError('');
     try {
-      await lessonService.addAttachment(lessonId, file);
+      await lessonService.addAttachmentFromStorage(lessonId, selectedStorageItemId);
+      closeStoragePicker();
       await loadLesson();
     } catch (err) {
       setError(extractError(err));
     } finally {
       setActionLoading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   }
 
@@ -285,19 +331,12 @@ export default function LessonDetailModal({ lessonId, onClose }: LessonDetailMod
                 <h4>Tệp đính kèm</h4>
                 <button
                   type="button"
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={openStoragePicker}
                   disabled={actionLoading}
                   style={{ cursor: 'pointer', padding: '4px 12px' }}
                 >
-                  Thêm tệp
+                  Chọn tệp từ kho
                 </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  data-testid="attachment-file-input"
-                  style={{ display: 'none' }}
-                  onChange={handleAddAttachment}
-                />
               </div>
 
               {lesson.attachments.length === 0 ? (
@@ -412,6 +451,100 @@ export default function LessonDetailModal({ lessonId, onClose }: LessonDetailMod
               </button>
               <button type="button" onClick={handleDeleteMiniGame} disabled={actionLoading} style={{ padding: '8px 16px', cursor: 'pointer', color: '#d32f2f' }}>
                 {actionLoading ? 'Đang xử lý...' : 'Xóa'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showStoragePicker && (
+        <div style={{ ...overlayStyle, zIndex: 1100 }}>
+          <div style={{ backgroundColor: '#fff', padding: 20, borderRadius: 8, minWidth: 620, maxWidth: 760, maxHeight: '80vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <h3 style={{ margin: 0 }}>Chọn tệp từ kho lưu trữ</h3>
+              <button type="button" onClick={closeStoragePicker} style={{ cursor: 'pointer', padding: '4px 12px' }}>
+                Đóng
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div style={{ color: '#555', fontSize: 14 }}>
+                {folderTrail.map((f) => f.name).join(' / ')}
+              </div>
+              <button
+                type="button"
+                onClick={navigateUpFolder}
+                disabled={folderTrail.length <= 1 || storageLoading}
+                style={{ cursor: folderTrail.length <= 1 ? 'not-allowed' : 'pointer', padding: '4px 10px' }}
+              >
+                Lên thư mục trên
+              </button>
+            </div>
+
+            {storageLoading ? (
+              <p>Đang tải kho lưu trữ...</p>
+            ) : storageItems.length === 0 ? (
+              <p style={{ color: '#888' }}>Thư mục này chưa có dữ liệu.</p>
+            ) : (
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <th style={thStyle}>Chọn</th>
+                    <th style={thStyle}>Tên</th>
+                    <th style={thStyle}>Loại</th>
+                    <th style={thStyle}>Hành động</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {storageItems.map((item) => {
+                    const isFolder = item.itemType === 'Folder';
+                    return (
+                      <tr key={item.id}>
+                        <td style={tdStyle}>
+                          {isFolder ? (
+                            '—'
+                          ) : (
+                            <input
+                              type="radio"
+                              name="storage-attachment"
+                              checked={selectedStorageItemId === item.id}
+                              onChange={() => setSelectedStorageItemId(item.id)}
+                            />
+                          )}
+                        </td>
+                        <td style={tdStyle}>{item.name}</td>
+                        <td style={tdStyle}>{isFolder ? 'Thư mục' : 'Tệp'}</td>
+                        <td style={tdStyle}>
+                          {isFolder ? (
+                            <button
+                              type="button"
+                              onClick={() => enterFolder(item)}
+                              style={{ cursor: 'pointer', padding: '4px 8px' }}
+                            >
+                              Mở
+                            </button>
+                          ) : (
+                            <span style={{ color: '#888' }}>Có thể chọn</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
+              <button type="button" onClick={closeStoragePicker} disabled={actionLoading} style={{ padding: '8px 16px', cursor: 'pointer' }}>
+                Hủy
+              </button>
+              <button
+                type="button"
+                onClick={handleAddAttachmentFromStorage}
+                disabled={actionLoading || selectedStorageItemId == null}
+                style={{ padding: '8px 16px', cursor: selectedStorageItemId == null ? 'not-allowed' : 'pointer' }}
+              >
+                {actionLoading ? 'Đang thêm...' : 'Thêm vào bài học'}
               </button>
             </div>
           </div>

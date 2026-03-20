@@ -28,6 +28,8 @@ public class CreateLessonPlanRequest
 
 public class UpdateLessonRequest
 {
+    public int? Id { get; set; }
+
     [Required]
     public string Name { get; set; } = string.Empty;
     public int SortOrder { get; set; }

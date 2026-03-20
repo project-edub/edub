@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "D:\\6_repositories\\edub\\TeachingManagementPlatform.Api\\TeachingManagementPlatform.Api.csproj": {}
+    "D:\\EXE\\TeachingManagementPlatform.Api\\TeachingManagementPlatform.Api.csproj": {}
   },
   "projects": {
-    "D:\\6_repositories\\edub\\TeachingManagementPlatform.Api\\TeachingManagementPlatform.Api.csproj": {
+    "D:\\EXE\\TeachingManagementPlatform.Api\\TeachingManagementPlatform.Api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\6_repositories\\edub\\TeachingManagementPlatform.Api\\TeachingManagementPlatform.Api.csproj",
+        "projectUniqueName": "D:\\EXE\\TeachingManagementPlatform.Api\\TeachingManagementPlatform.Api.csproj",
         "projectName": "TeachingManagementPlatform.Api",
-        "projectPath": "D:\\6_repositories\\edub\\TeachingManagementPlatform.Api\\TeachingManagementPlatform.Api.csproj",
-        "packagesPath": "C:\\Users\\ACER\\.nuget\\packages\\",
-        "outputPath": "D:\\6_repositories\\edub\\TeachingManagementPlatform.Api\\obj\\",
+        "projectPath": "D:\\EXE\\TeachingManagementPlatform.Api\\TeachingManagementPlatform.Api.csproj",
+        "packagesPath": "C:\\Users\\haiph\\.nuget\\packages\\",
+        "outputPath": "D:\\EXE\\TeachingManagementPlatform.Api\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\ACER\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\haiph\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -102,7 +102,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.308/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.300/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

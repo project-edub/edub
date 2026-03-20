@@ -216,7 +216,7 @@ export default function OverviewPage() {
         {editing ? (
           <>
             {occupations.map((o, i) => (
-              <div key={i} style={rowStyle}>
+              <div key={`${o.sortOrder}-${o.value || ''}-${i}`} style={rowStyle}>
                 <input type="text" value={o.value} onChange={(e) => updateSimpleRow(setOccupations, occupations, i, e.target.value)} style={{ ...inputStyle, flex: 1 }} placeholder="Nhập nghề nghiệp" />
                 <button type="button" onClick={() => removeSimpleRow(setOccupations, occupations, i)} disabled={occupations.length <= 1} style={occupations.length <= 1 ? delBtnDisabled : delBtn}>Xóa</button>
               </div>
@@ -224,7 +224,7 @@ export default function OverviewPage() {
             <button type="button" onClick={() => addSimpleRow(setOccupations, occupations)} style={addBtn}>+ Thêm</button>
           </>
         ) : profile.occupations.length > 0 ? (
-          <ul style={listStyle}>{profile.occupations.map((o) => <li key={o.id}>{o.value}</li>)}</ul>
+          <ul style={listStyle}>{profile.occupations.map((o, i) => <li key={`${o.id}-${o.value || ''}-${i}`}>{o.value}</li>)}</ul>
         ) : <p>—</p>}
       </Section>
 
@@ -233,7 +233,7 @@ export default function OverviewPage() {
         {editing ? (
           <>
             {locations.map((l, i) => (
-              <div key={i} style={rowStyle}>
+              <div key={`${l.sortOrder}-${l.value || ''}-${i}`} style={rowStyle}>
                 <input type="text" value={l.value} onChange={(e) => updateSimpleRow(setLocations, locations, i, e.target.value)} style={{ ...inputStyle, flex: 1 }} placeholder="Nhập nơi giảng dạy" />
                 <button type="button" onClick={() => removeSimpleRow(setLocations, locations, i)} disabled={locations.length <= 1} style={locations.length <= 1 ? delBtnDisabled : delBtn}>Xóa</button>
               </div>
@@ -241,7 +241,7 @@ export default function OverviewPage() {
             <button type="button" onClick={() => addSimpleRow(setLocations, locations)} style={addBtn}>+ Thêm</button>
           </>
         ) : profile.teachingLocations.length > 0 ? (
-          <ul style={listStyle}>{profile.teachingLocations.map((l) => <li key={l.id}>{l.value}</li>)}</ul>
+          <ul style={listStyle}>{profile.teachingLocations.map((l, i) => <li key={`${l.id}-${l.value || ''}-${i}`}>{l.value}</li>)}</ul>
         ) : <p>—</p>}
       </Section>
 
@@ -250,7 +250,7 @@ export default function OverviewPage() {
         {editing ? (
           <>
             {expertises.map((ex, i) => (
-              <div key={i} style={{ marginBottom: 8, padding: 8, border: '1px solid #ddd', borderRadius: 8 }}>
+              <div key={`${ex.sortOrder}-${ex.specialty || ''}-${i}`} style={{ marginBottom: 8, padding: 8, border: '1px solid #ddd', borderRadius: 8 }}>
                 <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
                   <input type="text" value={ex.specialty} onChange={(e) => { const u = [...expertises]; u[i] = { ...u[i], specialty: e.target.value }; setExpertises(u); }} style={{ ...inputStyle, flex: 1 }} placeholder="Chuyên ngành" />
                   <input type="text" value={ex.degree} onChange={(e) => { const u = [...expertises]; u[i] = { ...u[i], degree: e.target.value }; setExpertises(u); }} style={{ ...inputStyle, flex: 1 }} placeholder="Bằng cấp" />
@@ -270,8 +270,8 @@ export default function OverviewPage() {
         ) : profile.expertises.length > 0 ? (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr><th style={thStyle}>Chuyên ngành</th><th style={thStyle}>Bằng cấp</th><th style={thStyle}>Ảnh đính kèm</th></tr></thead>
-            <tbody>{profile.expertises.map((e) => (
-              <tr key={e.id}><td style={tdStyle}>{e.specialty}</td><td style={tdStyle}>{e.degree}</td><td style={tdStyle}>{e.certificateImageUrl ? <img src={profileService.getImageUrl(e.certificateImageUrl)} alt="Chứng chỉ" style={{ maxWidth: 120, maxHeight: 80 }} /> : '—'}</td></tr>
+            <tbody>{profile.expertises.map((e, i) => (
+              <tr key={`${e.id}-${i}`}><td style={tdStyle}>{e.specialty}</td><td style={tdStyle}>{e.degree}</td><td style={tdStyle}>{e.certificateImageUrl ? <img src={profileService.getImageUrl(e.certificateImageUrl)} alt="Chứng chỉ" style={{ maxWidth: 120, maxHeight: 80 }} /> : '—'}</td></tr>
             ))}</tbody>
           </table>
         ) : <p>—</p>}
@@ -282,7 +282,7 @@ export default function OverviewPage() {
         {editing ? (
           <>
             {experiences.map((ex, i) => (
-              <div key={i} style={{ marginBottom: 8, padding: 8, border: '1px solid #ddd', borderRadius: 8 }}>
+              <div key={`${ex.sortOrder}-${ex.description || ''}-${i}`} style={{ marginBottom: 8, padding: 8, border: '1px solid #ddd', borderRadius: 8 }}>
                 <input type="text" value={ex.description} onChange={(e) => { const u = [...experiences]; u[i] = { ...u[i], description: e.target.value }; setExperiences(u); }} style={{ ...inputStyle, marginBottom: 4 }} placeholder="Mô tả kinh nghiệm" />
                 <div style={rowStyle}>
                   <label style={fileLabelStyle}>
@@ -297,8 +297,8 @@ export default function OverviewPage() {
             <button type="button" onClick={() => setExperiences([...experiences, { description: '', imageUrl: '', sortOrder: experiences.length }])} style={addBtn}>+ Thêm kinh nghiệm</button>
           </>
         ) : profile.experiences.length > 0 ? (
-          <div>{profile.experiences.map((e) => (
-            <div key={e.id} style={{ marginBottom: 8, padding: 8, border: '1px solid #eee', borderRadius: 4 }}>
+          <div>{profile.experiences.map((e, i) => (
+            <div key={`${e.id}-${i}`} style={{ marginBottom: 8, padding: 8, border: '1px solid #eee', borderRadius: 4 }}>
               <p style={{ margin: 0 }}>{e.description}</p>
               {e.imageUrl && <img src={profileService.getImageUrl(e.imageUrl)} alt="Kinh nghiệm" style={{ maxWidth: 200, maxHeight: 120, marginTop: 4 }} />}
             </div>
@@ -311,7 +311,7 @@ export default function OverviewPage() {
         {editing ? (
           <>
             {skills.map((s, i) => (
-              <div key={i} style={{ marginBottom: 8, padding: 8, border: '1px solid #ddd', borderRadius: 8 }}>
+              <div key={`${s.sortOrder}-${s.description || ''}-${i}`} style={{ marginBottom: 8, padding: 8, border: '1px solid #ddd', borderRadius: 8 }}>
                 <input type="text" value={s.description} onChange={(e) => { const u = [...skills]; u[i] = { ...u[i], description: e.target.value }; setSkills(u); }} style={{ ...inputStyle, marginBottom: 4 }} placeholder="Mô tả kỹ năng" />
                 <div style={rowStyle}>
                   <label style={fileLabelStyle}>
@@ -326,8 +326,8 @@ export default function OverviewPage() {
             <button type="button" onClick={() => setSkills([...skills, { description: '', imageUrl: '', sortOrder: skills.length }])} style={addBtn}>+ Thêm kỹ năng</button>
           </>
         ) : profile.teachingSkills.length > 0 ? (
-          <div>{profile.teachingSkills.map((s) => (
-            <div key={s.id} style={{ marginBottom: 8, padding: 8, border: '1px solid #eee', borderRadius: 4 }}>
+          <div>{profile.teachingSkills.map((s, i) => (
+            <div key={`${s.id}-${i}`} style={{ marginBottom: 8, padding: 8, border: '1px solid #eee', borderRadius: 4 }}>
               <p style={{ margin: 0 }}>{s.description}</p>
               {s.imageUrl && <img src={profileService.getImageUrl(s.imageUrl)} alt="Kỹ năng" style={{ maxWidth: 200, maxHeight: 120, marginTop: 4 }} />}
             </div>
@@ -340,7 +340,7 @@ export default function OverviewPage() {
         {editing ? (
           <>
             {fees.map((f, i) => (
-              <div key={i} style={rowStyle}>
+              <div key={`${f.sortOrder}-${f.description || ''}-${i}`} style={rowStyle}>
                 <input type="text" value={f.description} onChange={(e) => { const u = [...fees]; u[i] = { ...u[i], description: e.target.value }; setFees(u); }} style={{ ...inputStyle, flex: 1 }} placeholder="Mô tả học phí" />
                 <button type="button" onClick={() => { if (fees.length > 1) setFees(fees.filter((_, j) => j !== i)); }} disabled={fees.length <= 1} style={fees.length <= 1 ? delBtnDisabled : delBtn}>Xóa</button>
               </div>
@@ -348,7 +348,7 @@ export default function OverviewPage() {
             <button type="button" onClick={() => setFees([...fees, { description: '', sortOrder: fees.length }])} style={addBtn}>+ Thêm</button>
           </>
         ) : profile.tuitionFees.length > 0 ? (
-          <ul style={listStyle}>{profile.tuitionFees.map((f) => <li key={f.id}>{f.description}</li>)}</ul>
+          <ul style={listStyle}>{profile.tuitionFees.map((f, i) => <li key={`${f.id}-${f.description || ''}-${i}`}>{f.description}</li>)}</ul>
         ) : <p>—</p>}
       </Section>
 
@@ -357,7 +357,7 @@ export default function OverviewPage() {
         {editing ? (
           <>
             {notes.map((n, i) => (
-              <div key={i} style={rowStyle}>
+              <div key={`${n.sortOrder}-${n.content || ''}-${i}`} style={rowStyle}>
                 <input type="text" value={n.content} onChange={(e) => { const u = [...notes]; u[i] = { ...u[i], content: e.target.value }; setNotes(u); }} style={{ ...inputStyle, flex: 1 }} placeholder="Nhập ghi chú" />
                 <button type="button" onClick={() => { if (notes.length > 1) setNotes(notes.filter((_, j) => j !== i)); }} disabled={notes.length <= 1} style={notes.length <= 1 ? delBtnDisabled : delBtn}>Xóa</button>
               </div>
@@ -365,7 +365,7 @@ export default function OverviewPage() {
             <button type="button" onClick={() => setNotes([...notes, { content: '', sortOrder: notes.length }])} style={addBtn}>+ Thêm</button>
           </>
         ) : profile.notes.length > 0 ? (
-          <ul style={listStyle}>{profile.notes.map((n) => <li key={n.id}>{n.content}</li>)}</ul>
+          <ul style={listStyle}>{profile.notes.map((n, i) => <li key={`${n.id}-${n.content || ''}-${i}`}>{n.content}</li>)}</ul>
         ) : <p>—</p>}
       </Section>
     </div>

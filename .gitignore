@@ -1,0 +1,33 @@
+# .NET build artifacts
+**/bin/
+**/obj/
+
+# User/IDE files
+**/*.user
+**/*.suo
+**/.vs/
+.vscode/
+
+# Logs
+*.log
+
+# Node artifacts
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Test and coverage
+**/TestResults/
+**/coverage/
+
+# Environment files
+.env
+.env.*
+
+# Sensitive app settings
+TeachingManagementPlatform.Api/appsettings.json
+TeachingManagementPlatform.Api/appsettings.*.json
+!TeachingManagementPlatform.Api/appsettings.Development.json
+
+# Upload temp/runtime data
+TeachingManagementPlatform.Api/uploads/

@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TeachingManagementPlatform.Api.Interfaces;
@@ -86,7 +87,12 @@ public class LessonPlanController : ControllerBase
     private int GetUserId()
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub)
             ?? throw new UnauthorizedAccessException("User ID not found in token.");
-        return int.Parse(userIdClaim);
+
+        if (!int.TryParse(userIdClaim, out var userId))
+            throw new UnauthorizedAccessException("Invalid user ID in token.");
+
+        return userId;
     }
 }

@@ -17,7 +17,7 @@ interface LessonPlanModalProps {
 
 function getInitialLessons(mode: string, plan?: LessonPlan | null): CreateLessonRequest[] {
   if (mode === 'edit' && plan) {
-    return plan.lessons.map((l) => ({ name: l.name, orderIndex: l.orderIndex }));
+    return plan.lessons.map((l) => ({ id: l.id, name: l.name, orderIndex: l.orderIndex }));
   }
   return [];
 }

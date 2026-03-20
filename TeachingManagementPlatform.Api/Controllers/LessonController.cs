@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TeachingManagementPlatform.Api.Interfaces;
@@ -109,6 +110,21 @@ public class LessonController : ControllerBase
         }
     }
 
+    [HttpPost("api/lessons/{id}/attachments/from-storage")]
+    public async Task<IActionResult> AddAttachmentFromStorage(int id, [FromBody] AddAttachmentFromStorageRequest request)
+    {
+        var userId = GetUserId();
+        try
+        {
+            var attachment = await _lessonService.AddAttachmentFromStorageAsync(id, userId, request.StorageItemId);
+            return Created($"api/lesson-attachments/{attachment.Id}", attachment);
+        }
+        catch (LessonNotFoundException ex)
+        {
+            return BadRequest(new { error = new { code = "INVALID_STORAGE_ITEM", message = ex.Message } });
+        }
+    }
+
     [HttpDelete("api/lesson-attachments/{id}")]
     public async Task<IActionResult> DeleteAttachment(int id)
     {
@@ -127,7 +143,12 @@ public class LessonController : ControllerBase
     private int GetUserId()
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub)
             ?? throw new UnauthorizedAccessException("User ID not found in token.");
-        return int.Parse(userIdClaim);
+
+        if (!int.TryParse(userIdClaim, out var userId))
+            throw new UnauthorizedAccessException("Invalid user ID in token.");
+
+        return userId;
     }
 }

@@ -96,14 +96,51 @@ public class LessonPlanService : ILessonPlanService
         if (request.SchoolYearEnd != null)
             plan.SchoolYearEnd = request.SchoolYearEnd;
 
-        // Replace-all strategy for lessons
         if (request.Lessons != null)
         {
-            _context.Lessons.RemoveRange(plan.Lessons);
-            plan.Lessons.Clear();
+            var existingLessonsById = plan.Lessons.ToDictionary(l => l.Id);
+            var requestLessonIds = request.Lessons
+                .Where(l => l.Id.HasValue)
+                .Select(l => l.Id!.Value)
+                .ToHashSet();
+
+            var lessonsToRemove = existingLessonsById.Values
+                .Where(l => !requestLessonIds.Contains(l.Id))
+                .ToList();
+
+            if (lessonsToRemove.Count > 0)
+            {
+                var removedLessonIds = lessonsToRemove.Select(l => l.Id).ToList();
+
+                var documents = await _context.LessonDocuments
+                    .Where(d => removedLessonIds.Contains(d.LessonId))
+                    .ToListAsync();
+                var attachments = await _context.LessonAttachments
+                    .Where(a => removedLessonIds.Contains(a.LessonId))
+                    .ToListAsync();
+                var miniGames = await _context.MiniGames
+                    .Where(g => removedLessonIds.Contains(g.LessonId))
+                    .ToListAsync();
+                var schedules = await _context.ClassLessonSchedules
+                    .Where(s => removedLessonIds.Contains(s.LessonId))
+                    .ToListAsync();
+
+                _context.LessonDocuments.RemoveRange(documents);
+                _context.LessonAttachments.RemoveRange(attachments);
+                _context.MiniGames.RemoveRange(miniGames);
+                _context.ClassLessonSchedules.RemoveRange(schedules);
+                _context.Lessons.RemoveRange(lessonsToRemove);
+            }
 
             foreach (var lessonReq in request.Lessons)
             {
+                if (lessonReq.Id.HasValue && existingLessonsById.TryGetValue(lessonReq.Id.Value, out var existingLesson))
+                {
+                    existingLesson.Name = lessonReq.Name;
+                    existingLesson.OrderIndex = lessonReq.SortOrder;
+                    continue;
+                }
+
                 plan.Lessons.Add(new Lesson
                 {
                     Name = lessonReq.Name,

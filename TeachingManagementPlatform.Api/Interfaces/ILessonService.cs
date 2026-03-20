@@ -10,5 +10,6 @@ public interface ILessonService
     Task<DocumentResponse> UpdateDocumentAsync(int documentId, int lecturerId, UpdateDocumentRequest request);
     Task DeleteDocumentAsync(int documentId, int lecturerId);
     Task<AttachmentResponse> AddAttachmentAsync(int lessonId, int lecturerId, Stream fileStream, string fileName, long fileSize);
+    Task<AttachmentResponse> AddAttachmentFromStorageAsync(int lessonId, int lecturerId, int storageItemId);
     Task DeleteAttachmentAsync(int attachmentId, int lecturerId);
 }
