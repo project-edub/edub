@@ -171,11 +171,11 @@ export default function OverviewPage() {
         <h1 style={{ color: '#000' }}>Thông tin cá nhân</h1>
         <div style={{ position: 'absolute', right: 0 }}>
         {!editing ? (
-          <button type="button" onClick={startEditing} style={greenBtn}>Chỉnh sửa</button>
+          <button type="button" className="btn btn-update" onClick={startEditing} >Chỉnh sửa</button>
         ) : (
           <div style={{ display: 'flex', gap: 8 }}>
-            <button type="button" onClick={cancelEditing} disabled={saving} style={greyBtn}>Hủy</button>
-            <button type="button" onClick={handleSave} disabled={saving || !fullName.trim()} style={greenBtn}>{saving ? 'Đang lưu...' : 'Lưu'}</button>
+            <button type="button" className="btn btn-cancel" onClick={cancelEditing} disabled={saving} >Hủy</button>
+            <button type="button" className="btn btn-save" onClick={handleSave} disabled={saving || !fullName.trim()} >{saving ? 'Đang lưu...' : 'Lưu'}</button>
           </div>
         )}
         </div>
@@ -194,7 +194,7 @@ export default function OverviewPage() {
         {editing && (
           <>
             <input ref={avatarInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} style={{ display: 'none' }} />
-            <button type="button" onClick={() => avatarInputRef.current?.click()} disabled={uploadingAvatar} style={greenBtn}>
+            <button type="button" className="btn btn-update"onClick={() => avatarInputRef.current?.click()} disabled={uploadingAvatar}>
               {uploadingAvatar ? 'Đang tải...' : 'Đổi ảnh đại diện'}
             </button>
           </>
@@ -216,12 +216,12 @@ export default function OverviewPage() {
         {editing ? (
           <>
             {occupations.map((o, i) => (
-              <div key={`${o.sortOrder}-${o.value || ''}-${i}`} style={rowStyle}>
+              <div key={`occupation-${i}`} style={rowStyle}>
                 <input type="text" value={o.value} onChange={(e) => updateSimpleRow(setOccupations, occupations, i, e.target.value)} style={{ ...inputStyle, flex: 1 }} placeholder="Nhập nghề nghiệp" />
-                <button type="button" onClick={() => removeSimpleRow(setOccupations, occupations, i)} disabled={occupations.length <= 1} style={occupations.length <= 1 ? delBtnDisabled : delBtn}>Xóa</button>
+                <button type="button" className="btn btn-delete" onClick={() => removeSimpleRow(setOccupations, occupations, i)} disabled={occupations.length <= 1} style={occupations.length <= 1 ? delBtnDisabled : delBtn}>Xóa</button>
               </div>
             ))}
-            <button type="button" onClick={() => addSimpleRow(setOccupations, occupations)} style={addBtn}>+ Thêm</button>
+            <button type="button" className="btn btn-add"onClick={() => addSimpleRow(setOccupations, occupations)}>+ Thêm</button>
           </>
         ) : profile.occupations.length > 0 ? (
           <ul style={listStyle}>{profile.occupations.map((o, i) => <li key={`${o.id}-${o.value || ''}-${i}`}>{o.value}</li>)}</ul>
@@ -233,12 +233,12 @@ export default function OverviewPage() {
         {editing ? (
           <>
             {locations.map((l, i) => (
-              <div key={`${l.sortOrder}-${l.value || ''}-${i}`} style={rowStyle}>
+              <div key={`location-${i}`} style={rowStyle}>
                 <input type="text" value={l.value} onChange={(e) => updateSimpleRow(setLocations, locations, i, e.target.value)} style={{ ...inputStyle, flex: 1 }} placeholder="Nhập nơi giảng dạy" />
                 <button type="button" onClick={() => removeSimpleRow(setLocations, locations, i)} disabled={locations.length <= 1} style={locations.length <= 1 ? delBtnDisabled : delBtn}>Xóa</button>
               </div>
             ))}
-            <button type="button" onClick={() => addSimpleRow(setLocations, locations)} style={addBtn}>+ Thêm</button>
+            <button type="button" className="btn btn-add" onClick={() => addSimpleRow(setLocations, locations)} style={addBtn}>+ Thêm</button>
           </>
         ) : profile.teachingLocations.length > 0 ? (
           <ul style={listStyle}>{profile.teachingLocations.map((l, i) => <li key={`${l.id}-${l.value || ''}-${i}`}>{l.value}</li>)}</ul>
@@ -250,7 +250,7 @@ export default function OverviewPage() {
         {editing ? (
           <>
             {expertises.map((ex, i) => (
-              <div key={`${ex.sortOrder}-${ex.specialty || ''}-${i}`} style={{ marginBottom: 8, padding: 8, border: '1px solid #ddd', borderRadius: 8 }}>
+              <div key={`expertise-${i}`} style={{ marginBottom: 8, padding: 8, border: '1px solid #ddd', borderRadius: 8 }}>
                 <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
                   <input type="text" value={ex.specialty} onChange={(e) => { const u = [...expertises]; u[i] = { ...u[i], specialty: e.target.value }; setExpertises(u); }} style={{ ...inputStyle, flex: 1 }} placeholder="Chuyên ngành" />
                   <input type="text" value={ex.degree} onChange={(e) => { const u = [...expertises]; u[i] = { ...u[i], degree: e.target.value }; setExpertises(u); }} style={{ ...inputStyle, flex: 1 }} placeholder="Bằng cấp" />
@@ -265,7 +265,7 @@ export default function OverviewPage() {
                 </div>
               </div>
             ))}
-            <button type="button" onClick={() => setExpertises([...expertises, { specialty: '', degree: '', certificateImageUrl: '', sortOrder: expertises.length }])} style={addBtn}>+ Thêm chuyên môn</button>
+            <button type="button" className="btn btn-add" onClick={() => setExpertises([...expertises, { specialty: '', degree: '', certificateImageUrl: '', sortOrder: expertises.length }])} style={addBtn}>+ Thêm chuyên môn</button>
           </>
         ) : profile.expertises.length > 0 ? (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -282,7 +282,7 @@ export default function OverviewPage() {
         {editing ? (
           <>
             {experiences.map((ex, i) => (
-              <div key={`${ex.sortOrder}-${ex.description || ''}-${i}`} style={{ marginBottom: 8, padding: 8, border: '1px solid #ddd', borderRadius: 8 }}>
+              <div key={`experience-${i}`} style={{ marginBottom: 8, padding: 8, border: '1px solid #ddd', borderRadius: 8 }}>
                 <input type="text" value={ex.description} onChange={(e) => { const u = [...experiences]; u[i] = { ...u[i], description: e.target.value }; setExperiences(u); }} style={{ ...inputStyle, marginBottom: 4 }} placeholder="Mô tả kinh nghiệm" />
                 <div style={rowStyle}>
                   <label style={fileLabelStyle}>
@@ -311,7 +311,7 @@ export default function OverviewPage() {
         {editing ? (
           <>
             {skills.map((s, i) => (
-              <div key={`${s.sortOrder}-${s.description || ''}-${i}`} style={{ marginBottom: 8, padding: 8, border: '1px solid #ddd', borderRadius: 8 }}>
+              <div key={`skill-${i}`} style={{ marginBottom: 8, padding: 8, border: '1px solid #ddd', borderRadius: 8 }}>
                 <input type="text" value={s.description} onChange={(e) => { const u = [...skills]; u[i] = { ...u[i], description: e.target.value }; setSkills(u); }} style={{ ...inputStyle, marginBottom: 4 }} placeholder="Mô tả kỹ năng" />
                 <div style={rowStyle}>
                   <label style={fileLabelStyle}>
@@ -340,7 +340,7 @@ export default function OverviewPage() {
         {editing ? (
           <>
             {fees.map((f, i) => (
-              <div key={`${f.sortOrder}-${f.description || ''}-${i}`} style={rowStyle}>
+              <div key={`fee-${i}`} style={rowStyle}>
                 <input type="text" value={f.description} onChange={(e) => { const u = [...fees]; u[i] = { ...u[i], description: e.target.value }; setFees(u); }} style={{ ...inputStyle, flex: 1 }} placeholder="Mô tả học phí" />
                 <button type="button" onClick={() => { if (fees.length > 1) setFees(fees.filter((_, j) => j !== i)); }} disabled={fees.length <= 1} style={fees.length <= 1 ? delBtnDisabled : delBtn}>Xóa</button>
               </div>
@@ -386,8 +386,6 @@ const rowStyle: React.CSSProperties = { display: 'flex', gap: 8, marginBottom: 4
 const listStyle: React.CSSProperties = { margin: 0, paddingLeft: 20 };
 const thStyle: React.CSSProperties = { textAlign: 'left', padding: '8px 12px', borderBottom: '2px solid #ccc' };
 const tdStyle: React.CSSProperties = { padding: '8px 12px', borderBottom: '1px solid #eee' };
-const greenBtn: React.CSSProperties = { padding: '8px 16px', cursor: 'pointer', backgroundColor: '#facc15', color: '#111', border: '1px solid #111', borderRadius: 8, fontWeight: 600 };
-const greyBtn: React.CSSProperties = { padding: '8px 16px', cursor: 'pointer', backgroundColor: '#f3f4f6', color: '#111', border: '1px solid #111', borderRadius: 8, fontWeight: 600 };
 const addBtn: React.CSSProperties = { padding: '4px 12px', cursor: 'pointer', marginTop: 4, backgroundColor: '#111', color: '#fff', border: '1px solid #111', borderRadius: 8 };
 const delBtn: React.CSSProperties = { padding: '4px 10px', cursor: 'pointer', backgroundColor: '#dc2626', color: '#fff', border: 'none', borderRadius: 8 };
 const delBtnDisabled: React.CSSProperties = { ...delBtn, backgroundColor: '#9ca3af', cursor: 'not-allowed' };

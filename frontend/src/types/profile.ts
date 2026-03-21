@@ -66,6 +66,29 @@ export interface LecturerProfile {
   notes: ProfileNote[];
 }
 
+export interface PublicExpertise {
+  specialty: string;
+  degree: string;
+}
+
+export interface PublicOccupation {
+  value: string;
+}
+
+export interface PublicTeachingLocation {
+  value: string;
+}
+
+export interface PublicLecturerProfile {
+  id: number;
+  fullName: string;
+  introduction?: string | null;
+  avatarUrl?: string | null;
+  occupations: PublicOccupation[];
+  teachingLocations: PublicTeachingLocation[];
+  expertises: PublicExpertise[];
+}
+
 export interface UpdateProfileRequest {
   fullName: string;
   introduction?: string | null;

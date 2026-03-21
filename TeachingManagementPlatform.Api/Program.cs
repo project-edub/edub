@@ -17,7 +17,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("http://localhost:5173")
+        policy.WithOrigins("http://localhost:5173", "http://localhost:5174")
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -118,6 +118,33 @@ app.UseStaticFiles(new StaticFileOptions
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+async Task SeedSampleDataAsync(ApplicationDbContext context)
+{
+    if (await context.LecturerProfiles.AnyAsync())
+        return; // Already seeded
+
+    var (users, profiles) = SampleData.GetSampleUsersAndProfiles();
+
+    await context.Users.AddRangeAsync(users);
+    await context.SaveChangesAsync();
+
+    // Update profile UserIds with the actual IDs from saved users
+    for (int i = 0; i < profiles.Count; i++)
+    {
+        profiles[i].UserId = users[i].Id;
+    }
+
+    await context.LecturerProfiles.AddRangeAsync(profiles);
+    await context.SaveChangesAsync();
+}
+
+// Seed sample data before starting the server
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await SeedSampleDataAsync(context);
+}
 
 app.Run();
 
