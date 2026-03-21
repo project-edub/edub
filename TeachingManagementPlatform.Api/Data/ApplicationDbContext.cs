@@ -242,6 +242,10 @@ public class ApplicationDbContext : DbContext
         // ── ClassLessonSchedule ──
         modelBuilder.Entity<ClassLessonSchedule>(entity =>
         {
+            entity.Property(cls => cls.LessonStatus)
+                .HasMaxLength(20)
+                .HasDefaultValue(ClassLessonSchedule.PendingStatus);
+
             entity.HasOne(cls => cls.Class)
                 .WithMany(c => c.LessonSchedules)
                 .HasForeignKey(cls => cls.ClassId)

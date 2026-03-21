@@ -11,6 +11,7 @@ public class AssignLessonPlanRequest
 public class UpdateLessonScheduleRequest
 {
     public DateTime? ScheduledDate { get; set; }
+    public string? LessonStatus { get; set; }
 }
 
 public class ClassLessonPlanResponse
@@ -29,6 +30,7 @@ public class ClassLessonResponse
     public string Name { get; set; } = string.Empty;
     public int OrderIndex { get; set; }
     public DateTime? ScheduledDate { get; set; }
+    public string LessonStatus { get; set; } = ClassLessonSchedule.PendingStatus;
     public List<DocumentResponse> Documents { get; set; } = new();
     public List<AttachmentResponse> Attachments { get; set; } = new();
     public List<MiniGameResponse> MiniGames { get; set; } = new();

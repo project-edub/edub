@@ -17,10 +17,11 @@ export async function updateLessonSchedule(
   classId: number,
   lessonId: number,
   scheduledDate: string | null,
+  lessonStatus?: 'finish' | 'unfinish' | 'pending',
 ): Promise<ClassLessonResponse> {
   const response = await api.put<ClassLessonResponse>(
     `/classes/${classId}/lessons/${lessonId}/schedule`,
-    { scheduledDate },
+    { scheduledDate, lessonStatus },
   );
   return response.data;
 }

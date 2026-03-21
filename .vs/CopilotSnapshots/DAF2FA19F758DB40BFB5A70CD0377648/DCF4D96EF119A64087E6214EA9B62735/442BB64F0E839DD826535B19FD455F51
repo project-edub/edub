@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { AxiosError } from 'axios';
 import type { LessonPlanSummary, LessonPlan, CreateLessonPlanRequest } from '../../types/lessonPlan';
 import type { ApiError } from '../../types/common';
@@ -94,10 +94,7 @@ export default function LessonPlanPage() {
       if (modal.type === 'create') {
         await lessonPlanService.create(data);
       } else if (modal.type === 'edit' && modal.plan) {
-        const updatedPlan = await lessonPlanService.update(modal.plan.id, data);
-        if (expandedPlan?.id === updatedPlan.id) {
-          setExpandedPlan(updatedPlan);
-        }
+        await lessonPlanService.update(modal.plan.id, data);
       }
       closeModal();
       await loadPlans();
@@ -128,7 +125,7 @@ export default function LessonPlanPage() {
   }
 
   return (
-    <div style={{ padding: 24, backgroundColor: '#fff', color: '#111' }}>
+    <div style={{ padding: 24 }}>
       <h1 style={{ marginBottom: 24, color: '#000' }}>Giáo án</h1>
 
       {error && (
@@ -147,7 +144,7 @@ export default function LessonPlanPage() {
             placeholder="Tìm kiếm môn học"
             value={filterSubject}
             onChange={(e) => setFilterSubject(e.target.value)}
-            style={{ padding: 8, width: 160, borderRadius: 8, border: '1px solid #ccc' }}
+            style={{ padding: 8, width: 160 }}
           />
         </div>
         <div>
@@ -158,7 +155,7 @@ export default function LessonPlanPage() {
             placeholder="Tìm kiếm khối"
             value={filterGrade}
             onChange={(e) => setFilterGrade(e.target.value)}
-            style={{ padding: 8, width: 160, borderRadius: 8, border: '1px solid #ccc' }}
+            style={{ padding: 8, width: 160 }}
           />
         </div>
         <div>
@@ -169,10 +166,10 @@ export default function LessonPlanPage() {
             placeholder="Tìm kiếm năm học"
             value={filterSchoolYear}
             onChange={(e) => setFilterSchoolYear(e.target.value)}
-            style={{ padding: 8, width: 160, borderRadius: 8, border: '1px solid #ccc' }}
+            style={{ padding: 8, width: 160 }}
           />
         </div>
-        <button type="button" onClick={handleFilter} style={{ padding: '8px 16px', cursor: 'pointer', borderRadius: 8, backgroundColor: 'grey', color: 'white', border: 'none' }}>
+        <button type="button" onClick={handleFilter} style={{ padding: '8px 16px', cursor: 'pointer' }}>
           Lọc
         </button>
       </div>
@@ -215,8 +212,7 @@ export default function LessonPlanPage() {
                       type="button"
                       onClick={() => toggleExpandPlan(plan)}
                       disabled={actionLoading}
-                      className="btn btn-view"
-                      style={{ marginRight: 8 }}
+                      style={{ marginRight: 8, cursor: 'pointer' }}
                     >
                       {expandedPlan?.id === plan.id ? 'Ẩn' : 'Xem'}
                     </button>
@@ -224,8 +220,7 @@ export default function LessonPlanPage() {
                       type="button"
                       onClick={() => openEditModal(plan)}
                       disabled={actionLoading}
-                      className="btn btn-update"
-                      style={{ marginRight: 8 }}
+                      style={{ marginRight: 8, cursor: 'pointer' }}
                     >
                       Sửa
                     </button>
@@ -233,7 +228,7 @@ export default function LessonPlanPage() {
                       type="button"
                       onClick={() => setDeleteTarget(plan)}
                       disabled={actionLoading}
-                      className="btn btn-delete"
+                      style={{ cursor: 'pointer' }}
                     >
                       Xóa
                     </button>
@@ -258,8 +253,7 @@ export default function LessonPlanPage() {
                   <button
                     type="button"
                     onClick={() => setLessonDetailId(lesson.id)}
-                    className="btn btn-view"
-                    style={{ fontSize: 13, padding: '4px 10px' }}
+                    style={{ background: 'none', border: 'none', color: '#1976d2', cursor: 'pointer', fontSize: 14, textDecoration: 'underline', padding: 0 }}
                   >
                     {lesson.orderIndex}. {lesson.name}
                   </button>
@@ -302,7 +296,7 @@ export default function LessonPlanPage() {
                 type="button"
                 onClick={() => setDeleteTarget(null)}
                 disabled={actionLoading}
-                className="btn btn-neutral"
+                style={{ padding: '8px 16px', cursor: 'pointer' }}
               >
                 Hủy
               </button>
@@ -310,7 +304,7 @@ export default function LessonPlanPage() {
                 type="button"
                 onClick={handleDelete}
                 disabled={actionLoading}
-                className="btn btn-delete"
+                style={{ padding: '8px 16px', cursor: 'pointer', color: '#d32f2f' }}
               >
                 {actionLoading ? 'Đang xử lý...' : 'Xóa'}
               </button>
