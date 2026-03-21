@@ -17,7 +17,7 @@ interface LessonPlanModalProps {
 
 function getInitialLessons(mode: string, plan?: LessonPlan | null): CreateLessonRequest[] {
   if (mode === 'edit' && plan) {
-    return plan.lessons.map((l) => ({ name: l.name, orderIndex: l.orderIndex }));
+    return plan.lessons.map((l) => ({ id: l.id, name: l.name, orderIndex: l.orderIndex }));
   }
   return [];
 }
@@ -131,7 +131,7 @@ export default function LessonPlanModal({ mode, plan, loading, onSubmit, onClose
           <div style={{ marginBottom: 12 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <span style={{ fontWeight: 'bold' }}>Bài học</span>
-              <button type="button" onClick={handleAddLesson} style={{ cursor: 'pointer', padding: '4px 12px' }}>
+              <button type="button" onClick={handleAddLesson} className="btn btn-add" style={{ padding: '4px 12px' }}>
                 Thêm bài học
               </button>
             </div>
@@ -152,7 +152,8 @@ export default function LessonPlanModal({ mode, plan, loading, onSubmit, onClose
                 <button
                   type="button"
                   onClick={() => handleRemoveLesson(index)}
-                  style={{ cursor: 'pointer', color: '#d32f2f', padding: '4px 8px' }}
+                  className="btn btn-delete"
+                  style={{ padding: '4px 8px' }}
                 >
                   Xóa bài học
                 </button>
@@ -165,14 +166,14 @@ export default function LessonPlanModal({ mode, plan, loading, onSubmit, onClose
               type="button"
               onClick={onClose}
               disabled={loading}
-              style={{ padding: '8px 16px', cursor: 'pointer' }}
+              className="btn btn-neutral"
             >
               Hủy
             </button>
             <button
               type="submit"
               disabled={loading}
-              style={{ padding: '8px 16px', cursor: 'pointer' }}
+              className="btn btn-update"
             >
               {loading ? 'Đang xử lý...' : 'Lưu'}
             </button>

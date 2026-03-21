@@ -40,6 +40,13 @@ export async function addAttachment(lessonId: number, file: File): Promise<Attac
   return response.data;
 }
 
+export async function addAttachmentFromStorage(lessonId: number, storageItemId: number): Promise<AttachmentResponse> {
+  const response = await api.post<AttachmentResponse>(`/lessons/${lessonId}/attachments/from-storage`, {
+    storageItemId,
+  });
+  return response.data;
+}
+
 export async function deleteAttachment(attachmentId: number): Promise<void> {
   await api.delete(`/lesson-attachments/${attachmentId}`);
 }

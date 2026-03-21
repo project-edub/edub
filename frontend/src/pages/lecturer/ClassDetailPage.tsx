@@ -54,7 +54,7 @@ export default function ClassDetailPage() {
     return (
       <div style={{ padding: 24 }}>
         <div role="alert" style={{ color: '#d32f2f', marginBottom: 16 }}>{error}</div>
-        <button type="button" onClick={() => navigate('/lecturer/classes')} style={{ cursor: 'pointer' }}>
+        <button type="button" onClick={() => navigate('/lecturer/classes')} className="btn btn-view">
           Quay lại danh sách
         </button>
       </div>
@@ -70,7 +70,8 @@ export default function ClassDetailPage() {
       <button
         type="button"
         onClick={() => navigate('/lecturer/classes')}
-        style={{ marginBottom: 16, cursor: 'pointer', padding: '6px 12px' }}
+        className="btn btn-view"
+        style={{ marginBottom: 16, padding: '6px 12px' }}
       >
         ← Quay lại danh sách
       </button>
@@ -84,14 +85,12 @@ export default function ClassDetailPage() {
             key={tab.key}
             type="button"
             onClick={() => setActiveTab(tab.key)}
+            className="btn btn-view"
             style={{
               padding: '10px 20px',
-              cursor: 'pointer',
-              border: 'none',
-              borderBottom: activeTab === tab.key ? '3px solid #1976d2' : '3px solid transparent',
-              background: 'none',
+              borderBottom: activeTab === tab.key ? '3px solid #007fff' : '3px solid transparent',
+              background: activeTab === tab.key ? '#f0f8ff' : 'none',
               fontWeight: activeTab === tab.key ? 600 : 400,
-              color: activeTab === tab.key ? '#1976d2' : '#333',
               marginBottom: -2,
             }}
           >

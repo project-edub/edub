@@ -112,7 +112,8 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          style={{ width: '100%', padding: 10, marginBottom: 12, cursor: 'pointer' }}
+          className="btn btn-update"
+          style={{ width: '100%', marginBottom: 12 }}
         >
           {loading ? 'Đang xử lý...' : 'Đăng nhập'}
         </button>
@@ -122,7 +123,8 @@ export default function LoginPage() {
         type="button"
         onClick={handleGoogleLogin}
         disabled={loading}
-        style={{ width: '100%', padding: 10, marginBottom: 16, cursor: 'pointer' }}
+        className="btn btn-neutral"
+        style={{ width: '100%', marginBottom: 16 }}
       >
         Đăng nhập bằng Google
       </button>

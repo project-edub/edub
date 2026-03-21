@@ -57,6 +57,12 @@ public class AttachmentResponse
     public long FileSize { get; set; }
 }
 
+public class AddAttachmentFromStorageRequest
+{
+    [Required]
+    public int StorageItemId { get; set; }
+}
+
 public class MiniGameResponse
 {
     public int Id { get; set; }

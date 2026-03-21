@@ -16,6 +16,21 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  function getFirstValidationMessage(data: unknown): string | null {
+    if (!data || typeof data !== 'object') return null;
+
+    const errors = (data as { errors?: unknown }).errors;
+    if (!errors || typeof errors !== 'object') return null;
+
+    for (const value of Object.values(errors as Record<string, unknown>)) {
+      if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'string') {
+        return value[0];
+      }
+    }
+
+    return null;
+  }
+
   function validate(): string | null {
     if (!fullName.trim()) return 'Vui lòng nhập họ và tên';
     if (!email.trim()) return 'Vui lòng nhập email';
@@ -43,8 +58,10 @@ export default function RegisterPage() {
       navigate('/lecturer/overview', { replace: true });
     } catch (err) {
       const axiosErr = err as AxiosError<ApiError>;
+      const responseData = axiosErr.response?.data as unknown;
       const msg = axiosErr.response?.data?.error?.message;
-      setError(msg || 'Đăng ký thất bại. Vui lòng thử lại.');
+      const validationMsg = getFirstValidationMessage(responseData);
+      setError(validationMsg || msg || 'Đăng ký thất bại. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
@@ -107,7 +124,8 @@ export default function RegisterPage() {
         <button
           type="submit"
           disabled={loading}
-          style={{ width: '100%', padding: 10, marginBottom: 16, cursor: 'pointer' }}
+          className="btn btn-update"
+          style={{ width: '100%', marginBottom: 16 }}
         >
           {loading ? 'Đang xử lý...' : 'Đăng ký'}
         </button>

@@ -102,6 +102,34 @@ public class LessonService : ILessonService
         return MapToAttachmentResponse(attachment);
     }
 
+    public async Task<AttachmentResponse> AddAttachmentFromStorageAsync(int lessonId, int lecturerId, int storageItemId)
+    {
+        await VerifyLessonOwnership(lessonId, lecturerId);
+
+        var storageItem = await _context.StorageItems
+            .FirstOrDefaultAsync(si => si.Id == storageItemId && si.LecturerId == lecturerId)
+            ?? throw new LessonNotFoundException("Không tìm thấy tệp trong kho lưu trữ");
+
+        if (!string.Equals(storageItem.ItemType, "File", StringComparison.OrdinalIgnoreCase)
+            || string.IsNullOrWhiteSpace(storageItem.FileReference))
+        {
+            throw new LessonNotFoundException("Mục đã chọn không phải là tệp hợp lệ");
+        }
+
+        var attachment = new LessonAttachment
+        {
+            LessonId = lessonId,
+            FileName = storageItem.Name,
+            FileReference = storageItem.FileReference,
+            FileSize = storageItem.FileSize ?? 0
+        };
+
+        _context.LessonAttachments.Add(attachment);
+        await _context.SaveChangesAsync();
+
+        return MapToAttachmentResponse(attachment);
+    }
+
     public async Task DeleteAttachmentAsync(int attachmentId, int lecturerId)
     {
         var attachment = await _context.LessonAttachments
@@ -113,7 +141,17 @@ public class LessonService : ILessonService
         if (attachment.Lesson.LessonPlan.LecturerId != lecturerId)
             throw new LessonNotFoundException("Không tìm thấy tệp đính kèm");
 
-        await _fileStorage.DeleteFileAsync(attachment.FileReference);
+        var hasOtherLessonReferences = await _context.LessonAttachments
+            .AnyAsync(a => a.Id != attachment.Id && a.FileReference == attachment.FileReference);
+
+        var hasStorageReferences = await _context.StorageItems
+            .AnyAsync(s => s.FileReference == attachment.FileReference);
+
+        if (!hasOtherLessonReferences && !hasStorageReferences)
+        {
+            await _fileStorage.DeleteFileAsync(attachment.FileReference);
+        }
+
         _context.LessonAttachments.Remove(attachment);
         await _context.SaveChangesAsync();
     }

@@ -190,7 +190,51 @@ public class ProfileService : IProfileService
         await _context.SaveChangesAsync();
     }
 
-    private static ProfileResponse MapToResponse(LecturerProfile profile)
+    public async Task<List<PublicLecturerProfile>> SearchLecturersAsync(string? search, string? location, string? subject, string? experience, string? rating)
+    {
+        var query = _context.LecturerProfiles
+            .Include(p => p.Occupations)
+            .Include(p => p.TeachingLocations)
+            .Include(p => p.Expertises)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(p => p.FullName.Contains(search));
+        }
+
+        if (!string.IsNullOrWhiteSpace(location))
+        {
+            query = query.Where(p => p.TeachingLocations.Any(l => l.Value.Contains(location)));
+        }
+
+        if (!string.IsNullOrWhiteSpace(subject))
+        {
+            query = query.Where(p => p.Expertises.Any(e => e.Specialty.Contains(subject) || e.Degree.Contains(subject)));
+        }
+
+        // Note: experience and rating filters would need additional database fields
+        // For now, we'll implement basic filtering and can extend later
+
+        var profiles = await query.ToListAsync();
+
+        return profiles.Select(p => new PublicLecturerProfile
+        {
+            Id = p.Id,
+            FullName = p.FullName,
+            Introduction = p.Introduction,
+            AvatarUrl = p.AvatarUrl,
+            Occupations = p.Occupations.OrderBy(o => o.SortOrder).Select(o => new PublicOccupation { Value = o.Value }).ToList(),
+            TeachingLocations = p.TeachingLocations.OrderBy(t => t.SortOrder).Select(t => new PublicTeachingLocation { Value = t.Value }).ToList(),
+            Expertises = p.Expertises.OrderBy(e => e.SortOrder).Select(e => new PublicExpertise
+            {
+                Specialty = e.Specialty,
+                Degree = e.Degree
+            }).ToList()
+        }).ToList();
+    }
+
+    private ProfileResponse MapToResponse(LecturerProfile profile)
     {
         return new ProfileResponse
         {
@@ -199,26 +243,32 @@ public class ProfileService : IProfileService
             FullName = profile.FullName,
             Introduction = profile.Introduction,
             AvatarUrl = profile.AvatarUrl,
-            Occupations = profile.Occupations.OrderBy(o => o.SortOrder).Select(o => new OccupationDto { Value = o.Value }).ToList(),
-            TeachingLocations = profile.TeachingLocations.OrderBy(t => t.SortOrder).Select(t => new TeachingLocationDto { Value = t.Value }).ToList(),
-            Expertises = profile.Expertises.OrderBy(e => e.SortOrder).Select(e => new ExpertiseDto
+            Occupations = profile.Occupations.Select(o => new OccupationDto { Value = o.Value }).ToList(),
+            TeachingLocations = profile.TeachingLocations.Select(t => new TeachingLocationDto { Value = t.Value }).ToList(),
+            Expertises = profile.Expertises.Select(e => new ExpertiseDto
             {
                 Specialty = e.Specialty,
                 Degree = e.Degree,
                 CertificateImageUrl = e.CertificateImageUrl
             }).ToList(),
-            Experiences = profile.Experiences.OrderBy(e => e.SortOrder).Select(e => new ExperienceDto
+            Experiences = profile.Experiences.Select(e => new ExperienceDto
             {
                 Description = e.Description,
                 ImageUrl = e.ImageUrl
             }).ToList(),
-            TeachingSkills = profile.TeachingSkills.OrderBy(s => s.SortOrder).Select(s => new TeachingSkillDto
+            TeachingSkills = profile.TeachingSkills.Select(s => new TeachingSkillDto
             {
                 Description = s.Description,
                 ImageUrl = s.ImageUrl
             }).ToList(),
-            TuitionFees = profile.TuitionFees.OrderBy(f => f.SortOrder).Select(f => new TuitionFeeDto { Description = f.Description }).ToList(),
-            Notes = profile.Notes.OrderBy(n => n.SortOrder).Select(n => new NoteDto { Content = n.Content }).ToList()
+            TuitionFees = profile.TuitionFees.Select(f => new TuitionFeeDto
+            {
+                Description = f.Description
+            }).ToList(),
+            Notes = profile.Notes.Select(n => new NoteDto
+            {
+                Content = n.Content
+            }).ToList()
         };
     }
 }

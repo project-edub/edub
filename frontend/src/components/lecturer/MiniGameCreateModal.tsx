@@ -54,7 +54,7 @@ export default function MiniGameCreateModal({ lessonId, onClose, onCreated }: Mi
         {error && (
           <div role="alert" style={{ color: '#d32f2f', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
             <span>{error}</span>
-            <button type="button" onClick={handleRetry} disabled={loading} style={{ cursor: 'pointer', padding: '4px 12px' }}>
+            <button type="button" onClick={handleRetry} disabled={loading} className="btn btn-update" style={{ padding: '4px 12px' }}>
               Thử lại
             </button>
           </div>
@@ -100,10 +100,10 @@ export default function MiniGameCreateModal({ lessonId, onClose, onCreated }: Mi
         </div>
 
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-          <button type="button" onClick={onClose} disabled={loading} style={{ padding: '8px 16px', cursor: 'pointer' }}>
+          <button type="button" onClick={onClose} disabled={loading} className="btn btn-neutral">
             Hủy
           </button>
-          <button type="button" onClick={handleSubmit} disabled={loading || !name.trim()} style={{ padding: '8px 16px', cursor: 'pointer' }}>
+          <button type="button" onClick={handleSubmit} disabled={loading || !name.trim()} className="btn btn-add">
             {loading ? 'Đang tạo...' : 'Tạo'}
           </button>
         </div>
