@@ -75,13 +75,33 @@ export default function ClassLessonPlanTab({ classId }: ClassLessonPlanTabProps)
     setError('');
     try {
       const scheduledDate = dateValue || null;
-      const updated = await classLessonPlanService.updateLessonSchedule(classId, lessonId, scheduledDate);
+      const currentStatus = assignedPlan?.lessons.find((l) => l.id === lessonId)?.lessonStatus;
+      const updated = await classLessonPlanService.updateLessonSchedule(classId, lessonId, scheduledDate, currentStatus);
       setAssignedPlan((prev) => {
         if (!prev) return prev;
         return {
           ...prev,
           lessons: prev.lessons.map((l) =>
-            l.id === updated.id ? { ...l, scheduledDate: updated.scheduledDate } : l,
+            l.id === updated.id ? { ...l, scheduledDate: updated.scheduledDate, lessonStatus: updated.lessonStatus } : l,
+          ),
+        };
+      });
+    } catch (err) {
+      setError(extractError(err));
+    }
+  }
+
+  async function handleStatusChange(lessonId: number, lessonStatus: 'finish' | 'unfinish' | 'pending') {
+    setError('');
+    try {
+      const currentDate = assignedPlan?.lessons.find((l) => l.id === lessonId)?.scheduledDate ?? null;
+      const updated = await classLessonPlanService.updateLessonSchedule(classId, lessonId, currentDate, lessonStatus);
+      setAssignedPlan((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          lessons: prev.lessons.map((l) =>
+            l.id === updated.id ? { ...l, scheduledDate: updated.scheduledDate, lessonStatus: updated.lessonStatus } : l,
           ),
         };
       });
@@ -167,6 +187,7 @@ export default function ClassLessonPlanTab({ classId }: ClassLessonPlanTabProps)
                   expanded={expandedLessonId === lesson.id}
                   onToggle={() => toggleLesson(lesson.id)}
                   onDateChange={(date) => handleDateChange(lesson.id, date)}
+                  onStatusChange={(status) => handleStatusChange(lesson.id, status)}
                   onPlayGame={(gameId) => setPlayGameId(gameId)}
                 />
               ))
@@ -192,10 +213,11 @@ interface LessonRowProps {
   expanded: boolean;
   onToggle: () => void;
   onDateChange: (date: string) => void;
+  onStatusChange: (status: 'finish' | 'unfinish' | 'pending') => void;
   onPlayGame: (gameId: number) => void;
 }
 
-function LessonRow({ lesson, expanded, onToggle, onDateChange, onPlayGame }: LessonRowProps) {
+function LessonRow({ lesson, expanded, onToggle, onDateChange, onStatusChange, onPlayGame }: LessonRowProps) {
   const dateValue = lesson.scheduledDate ? lesson.scheduledDate.split('T')[0] : '';
 
   return (
@@ -218,6 +240,19 @@ function LessonRow({ lesson, expanded, onToggle, onDateChange, onPlayGame }: Les
             style={{ padding: 4 }}
             aria-label={`Ngày dạy ${lesson.name}`}
           />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }} onClick={(e) => e.stopPropagation()}>
+          <label style={{ fontSize: 13, color: '#666' }}>Trạng thái</label>
+          <select
+            value={lesson.lessonStatus}
+            onChange={(e) => onStatusChange(e.target.value as 'finish' | 'unfinish' | 'pending')}
+            aria-label={`Trạng thái ${lesson.name}`}
+            style={{ padding: 4 }}
+          >
+            <option value="finish">Hoàn thành</option>
+            <option value="unfinish">Chưa hoàn thành</option>
+            <option value="pending">Đang dạy</option>
+          </select>
         </div>
       </div>
 

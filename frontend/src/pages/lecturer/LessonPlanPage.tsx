@@ -144,7 +144,7 @@ export default function LessonPlanPage() {
             placeholder="Tìm kiếm môn học"
             value={filterSubject}
             onChange={(e) => setFilterSubject(e.target.value)}
-            style={{ padding: 8, width: 160 }}
+            style={{ padding: 8, width: 160, borderRadius: 8, border: '1px solid #ccc' }}
           />
         </div>
         <div>
@@ -155,7 +155,7 @@ export default function LessonPlanPage() {
             placeholder="Tìm kiếm khối"
             value={filterGrade}
             onChange={(e) => setFilterGrade(e.target.value)}
-            style={{ padding: 8, width: 160 }}
+            style={{ padding: 8, width: 160, borderRadius: 8, border: '1px solid #ccc' }}
           />
         </div>
         <div>
@@ -166,10 +166,10 @@ export default function LessonPlanPage() {
             placeholder="Tìm kiếm năm học"
             value={filterSchoolYear}
             onChange={(e) => setFilterSchoolYear(e.target.value)}
-            style={{ padding: 8, width: 160 }}
+            style={{ padding: 8, width: 160, borderRadius: 8, border: '1px solid #ccc' }}
           />
         </div>
-        <button type="button" onClick={handleFilter} style={{ padding: '8px 16px', cursor: 'pointer' }}>
+        <button type="button" onClick={handleFilter} style={{ padding: '8px 16px', cursor: 'pointer', borderRadius: 8, backgroundColor: 'grey', color: 'white', border: 'none' }}>
           Lọc
         </button>
       </div>
@@ -177,7 +177,7 @@ export default function LessonPlanPage() {
       <button
         type="button"
         onClick={openCreateModal}
-        style={{ marginBottom: 16, padding: '8px 16px', cursor: 'pointer' }}
+        style={{ marginBottom: 16, padding: '8px 16px', cursor: 'pointer', borderRadius: 8, backgroundColor: 'green', color: 'white', border: 'none' }}
       >
         Thêm giáo án
       </button>

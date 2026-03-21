@@ -25,6 +25,7 @@ export interface ClassLessonResponse {
   name: string;
   orderIndex: number;
   scheduledDate?: string | null;
+  lessonStatus: 'finish' | 'unfinish' | 'pending';
   documents: ClassLessonDocument[];
   attachments: ClassLessonAttachment[];
   miniGames: ClassLessonMiniGame[];

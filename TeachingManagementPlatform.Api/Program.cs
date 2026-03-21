@@ -102,6 +102,20 @@ builder.Services.AddHttpClient<IAIService, AIService>(client =>
 
 var app = builder.Build();
 
+// Backfill schema drift in local/dev DBs where migration history may be out of sync.
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await dbContext.Database.ExecuteSqlRawAsync(@"
+IF COL_LENGTH('ClassLessonSchedules', 'LessonStatus') IS NULL
+BEGIN
+    ALTER TABLE [ClassLessonSchedules]
+    ADD [LessonStatus] nvarchar(20) NOT NULL
+        CONSTRAINT [DF_ClassLessonSchedules_LessonStatus] DEFAULT N'pending';
+END
+");
+}
+
 // Configure the HTTP request pipeline.
 app.UseHttpsRedirection();
 app.UseCors();

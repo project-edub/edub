@@ -42,6 +42,7 @@ const sampleAssignedPlan = {
       name: 'Bài 1: Hàm số',
       orderIndex: 0,
       scheduledDate: '2025-03-15T00:00:00',
+      lessonStatus: 'pending' as const,
       documents: [
         { id: 100, name: 'Sách giáo khoa', link: 'https://example.com/sgk', pageRange: '1-20' },
       ],
@@ -57,6 +58,7 @@ const sampleAssignedPlan = {
       name: 'Bài 2: Phương trình',
       orderIndex: 1,
       scheduledDate: null,
+      lessonStatus: 'unfinish' as const,
       documents: [],
       attachments: [],
       miniGames: [],
@@ -218,6 +220,7 @@ describe('ClassLessonPlanTab', () => {
     vi.mocked(classLessonPlanService.updateLessonSchedule).mockResolvedValue({
       ...sampleAssignedPlan.lessons[1],
       scheduledDate: '2025-04-01T00:00:00',
+      lessonStatus: 'unfinish',
     });
     render(<ClassLessonPlanTab classId={1} />);
 
@@ -245,6 +248,33 @@ describe('ClassLessonPlanTab', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('Lỗi tải dữ liệu');
+    });
+  });
+
+  it('updates lesson status', async () => {
+    const user = userEvent.setup();
+    vi.mocked(lessonPlanService.getAll).mockResolvedValue(samplePlans);
+    vi.mocked(classLessonPlanService.getAssignedPlan).mockResolvedValue(sampleAssignedPlan);
+    vi.mocked(classLessonPlanService.updateLessonSchedule).mockResolvedValue({
+      ...sampleAssignedPlan.lessons[0],
+      lessonStatus: 'finish',
+    });
+
+    render(<ClassLessonPlanTab classId={1} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Bài 1: Hàm số')).toBeInTheDocument();
+    });
+
+    await user.selectOptions(screen.getByLabelText('Trạng thái Bài 1: Hàm số'), 'finish');
+
+    await waitFor(() => {
+      expect(classLessonPlanService.updateLessonSchedule).toHaveBeenCalledWith(
+        1,
+        10,
+        '2025-03-15T00:00:00',
+        'finish',
+      );
     });
   });
 });

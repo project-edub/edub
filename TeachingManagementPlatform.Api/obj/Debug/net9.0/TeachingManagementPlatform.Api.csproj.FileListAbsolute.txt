@@ -175,3 +175,4 @@ D:\6_repositories\edub\TeachingManagementPlatform.Api\bin\Debug\net9.0\ExcelNumb
 D:\6_repositories\edub\TeachingManagementPlatform.Api\bin\Debug\net9.0\RBush.dll
 D:\6_repositories\edub\TeachingManagementPlatform.Api\bin\Debug\net9.0\SixLabors.Fonts.dll
 D:\6_repositories\edub\TeachingManagementPlatform.Api\bin\Debug\net9.0\System.IO.Packaging.dll
+D:\6_repositories\edub\TeachingManagementPlatform.Api\obj\Debug\net9.0\TeachingManagementPlatform.Api.sourcelink.json

@@ -8,6 +8,13 @@ namespace TeachingManagementPlatform.Api.Services;
 public class ClassLessonPlanService : IClassLessonPlanService
 {
     private readonly ApplicationDbContext _context;
+    private static readonly HashSet<string> ValidLessonStatuses =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            ClassLessonSchedule.FinishStatus,
+            ClassLessonSchedule.UnfinishStatus,
+            ClassLessonSchedule.PendingStatus
+        };
 
     public ClassLessonPlanService(ApplicationDbContext context)
     {
@@ -46,7 +53,8 @@ public class ClassLessonPlanService : IClassLessonPlanService
             {
                 ClassId = classId,
                 LessonId = lesson.Id,
-                ScheduledDate = null
+                ScheduledDate = null,
+                LessonStatus = ClassLessonSchedule.PendingStatus
             });
         }
 
@@ -97,24 +105,39 @@ public class ClassLessonPlanService : IClassLessonPlanService
         var schedule = await _context.ClassLessonSchedules
             .FirstOrDefaultAsync(s => s.ClassId == classId && s.LessonId == lessonId);
 
+        string? normalizedStatus = null;
+        if (!string.IsNullOrWhiteSpace(request.LessonStatus))
+        {
+            normalizedStatus = request.LessonStatus.Trim().ToLowerInvariant();
+            if (!ValidLessonStatuses.Contains(normalizedStatus))
+            {
+                throw new ClassLessonPlanNotFoundException("Trạng thái bài học không hợp lệ");
+            }
+        }
+
         if (schedule == null)
         {
             schedule = new ClassLessonSchedule
             {
                 ClassId = classId,
                 LessonId = lessonId,
-                ScheduledDate = request.ScheduledDate
+                ScheduledDate = request.ScheduledDate,
+                LessonStatus = normalizedStatus ?? ClassLessonSchedule.PendingStatus
             };
             _context.ClassLessonSchedules.Add(schedule);
         }
         else
         {
             schedule.ScheduledDate = request.ScheduledDate;
+            if (normalizedStatus != null)
+            {
+                schedule.LessonStatus = normalizedStatus;
+            }
         }
 
         await _context.SaveChangesAsync();
 
-        return MapToLessonResponse(lesson, schedule.ScheduledDate);
+        return MapToLessonResponse(lesson, schedule.ScheduledDate, schedule.LessonStatus);
     }
 
     private ClassLessonPlanResponse MapToResponse(LessonPlan plan, int classId)
@@ -122,7 +145,7 @@ public class ClassLessonPlanService : IClassLessonPlanService
         // Load schedules for this class
         var schedules = _context.ClassLessonSchedules
             .Where(s => s.ClassId == classId)
-            .ToDictionary(s => s.LessonId, s => s.ScheduledDate);
+            .ToDictionary(s => s.LessonId, s => s);
 
         return new ClassLessonPlanResponse
         {
@@ -133,12 +156,19 @@ public class ClassLessonPlanService : IClassLessonPlanService
             SchoolYearEnd = plan.SchoolYearEnd,
             Lessons = plan.Lessons
                 .OrderBy(l => l.OrderIndex)
-                .Select(l => MapToLessonResponse(l, schedules.GetValueOrDefault(l.Id)))
+                .Select(l =>
+                {
+                    var schedule = schedules.GetValueOrDefault(l.Id);
+                    return MapToLessonResponse(
+                        l,
+                        schedule?.ScheduledDate,
+                        schedule?.LessonStatus ?? ClassLessonSchedule.PendingStatus);
+                })
                 .ToList()
         };
     }
 
-    private static ClassLessonResponse MapToLessonResponse(Lesson lesson, DateTime? scheduledDate)
+    private static ClassLessonResponse MapToLessonResponse(Lesson lesson, DateTime? scheduledDate, string lessonStatus)
     {
         return new ClassLessonResponse
         {
@@ -146,6 +176,9 @@ public class ClassLessonPlanService : IClassLessonPlanService
             Name = lesson.Name,
             OrderIndex = lesson.OrderIndex,
             ScheduledDate = scheduledDate,
+            LessonStatus = string.IsNullOrWhiteSpace(lessonStatus)
+                ? ClassLessonSchedule.PendingStatus
+                : lessonStatus,
             Documents = lesson.Documents.Select(d => new DocumentResponse
             {
                 Id = d.Id,
