@@ -180,7 +180,8 @@ export default function LessonPlanPage() {
       <button
         type="button"
         onClick={openCreateModal}
-        style={{ marginBottom: 16, padding: '8px 16px', cursor: 'pointer' }}
+        style={{ marginBottom: 16, padding: '8px 16px', cursor: 'pointer', borderRadius: 8, backgroundColor: 'green', color: 'white', border: 'none' }}
+        className="btn btn-add"
       >
         Thêm giáo án
       </button>
