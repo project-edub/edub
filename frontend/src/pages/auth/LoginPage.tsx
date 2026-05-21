@@ -1,5 +1,18 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Checkbox,
+  Container,
+  FormControlLabel,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import { login, googleLogin } from '../../services/authService';
 import { Role } from '../../types/auth';
 import type { ApiError } from '../../types/common';
@@ -69,69 +82,75 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ maxWidth: 400, margin: '80px auto', padding: 24 }}>
-      <h1 style={{ textAlign: 'center', marginBottom: 24 }}>Đăng nhập</h1>
+    <Container maxWidth="sm" sx={{ py: { xs: 6, md: 10 } }}>
+      <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
+        <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
+          <Typography variant="h4" sx={{ textAlign: 'center', mb: 3, fontWeight: 700 }}>
+            Đăng nhập
+          </Typography>
 
-      {error && (
-        <div role="alert" style={{ color: '#d32f2f', marginBottom: 16, textAlign: 'center' }}>
-          {error}
-        </div>
-      )}
+          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-      <form onSubmit={handleSubmit} noValidate>
-        <div style={{ marginBottom: 16 }}>
-          <label htmlFor="email" style={{ display: 'block', marginBottom: 4 }}>Email</label>
-          <input
-            id="email"
-            type="email"
-            placeholder="Nhập email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            style={{ width: '100%', padding: 8, boxSizing: 'border-box' }}
-            autoComplete="email"
-          />
-        </div>
+          <Box component="form" onSubmit={handleSubmit} noValidate>
+            <Stack spacing={2}>
+              <TextField
+                id="email"
+                label="Email"
+                type="email"
+                placeholder="Nhập email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                fullWidth
+              />
 
-        <div style={{ marginBottom: 16 }}>
-          <label htmlFor="password" style={{ display: 'block', marginBottom: 4 }}>Mật khẩu</label>
-          <input
-            id="password"
-            type={showPassword ? 'text' : 'password'}
-            placeholder="Nhập mật khẩu"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={{ width: '100%', padding: 8, boxSizing: 'border-box' }}
-            autoComplete="current-password"
-          />
-          <label style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, fontSize: 13, cursor: 'pointer' }}>
-            <input type="checkbox" checked={showPassword} onChange={(e) => setShowPassword(e.target.checked)} />
-            Hiện mật khẩu
-          </label>
-        </div>
+              <TextField
+                id="password"
+                label="Mật khẩu"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Nhập mật khẩu"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                fullWidth
+              />
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="btn btn-update"
-          style={{ width: '100%', marginBottom: 12 }}
-        >
-          {loading ? 'Đang xử lý...' : 'Đăng nhập'}
-        </button>
-      </form>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={showPassword}
+                    onChange={(e) => setShowPassword(e.target.checked)}
+                  />
+                }
+                label="Hiện mật khẩu"
+              />
 
-      <button
-        type="button"
-        onClick={handleGoogleLogin}
-        disabled={loading}
-        className="btn btn-neutral"
-        style={{ width: '100%', marginBottom: 16 }}
-      >
-        Đăng nhập bằng Google
-      </button>
+              <Button type="submit" variant="contained" size="large" disabled={loading}>
+                {loading ? 'Đang xử lý...' : 'Đăng nhập'}
+              </Button>
+            </Stack>
+          </Box>
 
-      <p style={{ textAlign: 'center' }}>
-        Chưa có tài khoản? <Link to="/register">Đăng ký</Link>
-      </p>
-    </div>
+          <Button
+            type="button"
+            onClick={handleGoogleLogin}
+            disabled={loading}
+            variant="outlined"
+            size="large"
+            fullWidth
+            sx={{ mt: 1.5 }}
+          >
+            Đăng nhập bằng Google
+          </Button>
+
+          <Typography sx={{ mt: 2.5, textAlign: 'center' }}>
+            Chưa có tài khoản?{' '}
+            <Box component={Link} to="/register" sx={{ color: 'primary.main', textDecoration: 'none', fontWeight: 650 }}>
+              Đăng ký
+            </Box>
+          </Typography>
+        </CardContent>
+      </Card>
+    </Container>
   );
 }

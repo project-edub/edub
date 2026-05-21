@@ -241,14 +241,16 @@ export default function StudentListTabs({ classId }: Props) {
             className="btn btn-view"
             style={{
               padding: '8px 16px',
-              borderBottom: activeListId === list.id ? '3px solid #007fff' : '3px solid transparent',
-              background: activeListId === list.id ? '#f0f8ff' : 'none',
-              fontWeight: activeListId === list.id ? 600 : 400,
+              border: '1px solid transparent',
+              borderBottom: activeListId === list.id ? '3px solid #006b5f' : '3px solid transparent',
+              background: activeListId === list.id ? '#006b5f' : '#e3f3ef',
+              color: activeListId === list.id ? '#fff' : '#21403a',
+              fontWeight: activeListId === list.id ? 700 : 600,
               marginBottom: -2,
             }}
           >
             {list.name}
-            {list.isMain && <span style={{ marginLeft: 6, fontSize: 11, color: '#388e3c' }}>(Danh sách chính)</span>}
+            {list.isMain && <span style={{ marginLeft: 6, fontSize: 11, color: activeListId === list.id ? '#d8fff5' : '#2e7d32' }}>(Danh sách chính)</span>}
           </button>
         ))}
 

@@ -88,9 +88,11 @@ export default function ClassDetailPage() {
             className="btn btn-view"
             style={{
               padding: '10px 20px',
-              borderBottom: activeTab === tab.key ? '3px solid #007fff' : '3px solid transparent',
-              background: activeTab === tab.key ? '#f0f8ff' : 'none',
-              fontWeight: activeTab === tab.key ? 600 : 400,
+              border: '1px solid transparent',
+              borderBottom: activeTab === tab.key ? '3px solid #006b5f' : '3px solid transparent',
+              background: activeTab === tab.key ? '#006b5f' : '#e3f3ef',
+              color: activeTab === tab.key ? '#fff' : '#21403a',
+              fontWeight: activeTab === tab.key ? 700 : 600,
               marginBottom: -2,
             }}
           >

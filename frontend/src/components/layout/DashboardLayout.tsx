@@ -1,4 +1,17 @@
 import { NavLink, useNavigate } from 'react-router-dom';
+import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
+import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
+import {
+  Avatar,
+  Box,
+  Button,
+  Divider,
+  List,
+  ListItemButton,
+  ListItemText,
+  Paper,
+  Typography,
+} from '@mui/material';
 import { useAuth } from '../../hooks/useAuth';
 import { Role } from '../../types/auth';
 
@@ -25,61 +38,91 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', width: '100%' }}>
-      <nav
+    <Box sx={{ minHeight: '100vh', display: 'flex', p: { xs: 1.5, md: 2 }, gap: 2 }}>
+      <Paper
+        component="nav"
         aria-label="Menu chính"
-        style={{
-          width: 240,
-          backgroundColor: '#1e293b',
-          color: '#fff',
+        elevation={0}
+        sx={{
+          width: { xs: 86, sm: 260 },
+          borderRadius: 6,
+          border: '1px solid',
+          borderColor: 'divider',
+          p: { xs: 1, sm: 2 },
           display: 'flex',
           flexDirection: 'column',
-          padding: '16px 0',
-          flexShrink: 0,
+          position: 'sticky',
+          top: 16,
+          height: 'calc(100vh - 32px)',
+          overflow: 'hidden',
         }}
       >
-        <div style={{ padding: '0 16px 24px', fontSize: 20, fontWeight: 700, borderBottom: '1px solid #334155' }}>
-          EduB
-        </div>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.2, px: 1, pb: 1.5, minHeight: 56 }}>
+          <Avatar sx={{ bgcolor: 'primary.main', width: 36, height: 36 }}>
+            <SchoolOutlinedIcon fontSize="small" />
+          </Avatar>
+          <Typography variant="h6" sx={{ display: { xs: 'none', sm: 'block' }, fontWeight: 700 }}>
+            EduB
+          </Typography>
+        </Box>
 
-        <ul style={{ listStyle: 'none', padding: 0, margin: '16px 0', flex: 1 }}>
+        <Divider sx={{ mb: 1 }} />
+
+        <List sx={{ flex: 1, pt: 0.5, overflowY: 'auto', minHeight: 0 }}>
           {menuItems.map((item) => (
-            <li key={item.to}>
-              <NavLink
-                to={item.to}
-                style={({ isActive }) => ({
-                  display: 'block',
-                  padding: '10px 24px',
-                  color: isActive ? '#fff' : '#94a3b8',
-                  backgroundColor: isActive ? '#334155' : 'transparent',
-                  textDecoration: 'none',
-                  fontSize: 14,
-                  borderLeft: isActive ? '3px solid #3b82f6' : '3px solid transparent',
-                })}
-              >
-                {item.label}
-              </NavLink>
-            </li>
+            <ListItemButton
+              key={item.to}
+              component={NavLink}
+              to={item.to}
+              sx={{
+                borderRadius: 4,
+                mb: 0.5,
+                px: { xs: 1.25, sm: 1.5 },
+                justifyContent: { xs: 'center', sm: 'flex-start' },
+                color: 'text.secondary',
+                '&.active': {
+                  bgcolor: 'primary.main',
+                  color: 'primary.contrastText',
+                  '&:hover': {
+                    bgcolor: 'primary.dark',
+                  },
+                },
+                '&:hover': {
+                  bgcolor: 'rgba(0, 107, 95, 0.08)',
+                },
+              }}
+            >
+              <ListItemText
+                primary={
+                  <Typography sx={{ fontSize: 14, fontWeight: 600, display: { xs: 'none', sm: 'block' } }}>
+                    {item.label}
+                  </Typography>
+                }
+              />
+            </ListItemButton>
           ))}
-        </ul>
+        </List>
 
-        <div style={{ padding: '16px', borderTop: '1px solid #334155' }}>
-          <button
+        <Box sx={{ mt: 'auto', pt: 1 }}>
+          <Divider sx={{ mb: 1 }} />
+          <Button
             onClick={handleLogout}
-            className="btn btn-delete"
-            style={{
-              width: '100%',
-              padding: '8px 16px',
-            }}
+            variant="contained"
+            color="error"
+            fullWidth
+            startIcon={<LogoutRoundedIcon />}
+            sx={{ minWidth: 0, px: { xs: 1, sm: 2 }, justifyContent: 'center' }}
           >
-            Đăng xuất
-          </button>
-        </div>
-      </nav>
+            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+              Đăng xuất
+            </Box>
+          </Button>
+        </Box>
+      </Paper>
 
-      <main style={{ flex: 1, padding: 24, backgroundColor: '#f8fafc', overflow: 'auto' }}>
+      <Box component="main" sx={{ flex: 1, minWidth: 0, pb: 3 }}>
         {children}
-      </main>
-    </div>
+      </Box>
+    </Box>
   );
 }

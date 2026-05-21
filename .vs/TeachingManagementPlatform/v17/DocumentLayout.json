@@ -3,6 +3,10 @@
   "WorkspaceRootPath": "D:\\EXE\\edub\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{64917A45-D9F1-433D-9F65-4D1118C7E040}|TeachingManagementPlatform.Api\\TeachingManagementPlatform.Api.csproj|d:\\exe\\edub\\teachingmanagementplatform.api\\teachingmanagementplatform.api.http||{5703B403-55E7-4C63-8C88-A8F52C7A45C5}",
+      "RelativeMoniker": "D:0:0:{64917A45-D9F1-433D-9F65-4D1118C7E040}|TeachingManagementPlatform.Api\\TeachingManagementPlatform.Api.csproj|solutionrelative:teachingmanagementplatform.api\\teachingmanagementplatform.api.http||{5703B403-55E7-4C63-8C88-A8F52C7A45C5}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\EXE\\edub\\frontend\\src\\pages\\lecturer\\LessonPlanPage.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\pages\\lecturer\\LessonPlanPage.tsx||{0F2454B1-A556-402D-A7D0-1FDE7F99DEE0}"
     }
@@ -35,6 +39,19 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "TeachingManagementPlatform.Api.http",
+              "DocumentMoniker": "D:\\EXE\\edub\\TeachingManagementPlatform.Api\\TeachingManagementPlatform.Api.http",
+              "RelativeDocumentMoniker": "TeachingManagementPlatform.Api\\TeachingManagementPlatform.Api.http",
+              "ToolTip": "D:\\EXE\\edub\\TeachingManagementPlatform.Api\\TeachingManagementPlatform.Api.http",
+              "RelativeToolTip": "TeachingManagementPlatform.Api\\TeachingManagementPlatform.Api.http",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003502|",
+              "WhenOpened": "2026-05-21T07:34:58.96Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
               "Title": "LessonPlanPage.tsx",
               "DocumentMoniker": "D:\\EXE\\edub\\frontend\\src\\pages\\lecturer\\LessonPlanPage.tsx",
               "RelativeDocumentMoniker": "frontend\\src\\pages\\lecturer\\LessonPlanPage.tsx",
