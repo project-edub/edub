@@ -132,8 +132,9 @@ public class AuthService : IAuthService
 
         var client = _httpClientFactory.CreateClient();
 
-        // Read client secret explicitly from appsettings.json.
-        var settingsPath = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
+        // Read client secret explicitly from the API's runtime appsettings file only.
+        // This avoids any other configuration source overriding it.
+        var settingsPath = Path.Combine(AppContext.BaseDirectory, "appsettings.Development.json");
         if (!File.Exists(settingsPath))
         {
             throw new InvalidOperationException($"Google settings file not found: {settingsPath}");
