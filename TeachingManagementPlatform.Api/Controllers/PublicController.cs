@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using TeachingManagementPlatform.Api.Interfaces;
 using TeachingManagementPlatform.Api.Models;
 
@@ -9,11 +10,21 @@ namespace TeachingManagementPlatform.Api.Controllers;
 public class PublicController : ControllerBase
 {
     private readonly IProfileService _profileService;
+    private readonly IConfiguration _configuration;
 
-    public PublicController(IProfileService profileService)
+    public PublicController(IProfileService profileService, IConfiguration configuration)
     {
         _profileService = profileService;
-        
+        _configuration = configuration;
+    }
+
+    [HttpGet("config")]
+    public IActionResult GetConfig()
+    {
+        return Ok(new
+        {
+            googleClientId = _configuration["Google:ClientId"] ?? string.Empty,
+        });
     }
     
     [HttpGet("lecturers")]

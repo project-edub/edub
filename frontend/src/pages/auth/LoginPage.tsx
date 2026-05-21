@@ -13,10 +13,12 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { login, googleLogin } from '../../services/authService';
+import { login } from '../../services/authService';
 import { Role } from '../../types/auth';
 import type { ApiError } from '../../types/common';
 import { AxiosError } from 'axios';
+
+const API_ROOT = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api').replace(/\/?api\/?$/, '');
 
 function redirectForRole(role: string, navigate: ReturnType<typeof useNavigate>) {
   if (role === Role.Admin) {
@@ -58,27 +60,7 @@ export default function LoginPage() {
   }
 
   async function handleGoogleLogin() {
-    setError('');
-    setLoading(true);
-    try {
-      // Basic Google login — sends a placeholder token for now.
-      // Full Google SDK integration can be added later.
-      const idToken = (window as unknown as Record<string, string>).__googleIdToken ?? '';
-      if (!idToken) {
-        setError('Không thể kết nối với Google. Vui lòng thử lại.');
-        setLoading(false);
-        return;
-      }
-      const res = await googleLogin(idToken);
-      localStorage.setItem('token', res.token);
-      redirectForRole(res.role, navigate);
-    } catch (err) {
-      const axiosErr = err as AxiosError<ApiError>;
-      const msg = axiosErr.response?.data?.error?.message;
-      setError(msg || 'Đăng nhập bằng Google thất bại. Vui lòng thử lại.');
-    } finally {
-      setLoading(false);
-    }
+    window.location.assign(`${API_ROOT}/api/auth/google/start`);
   }
 
   return (
@@ -135,10 +117,19 @@ export default function LoginPage() {
             type="button"
             onClick={handleGoogleLogin}
             disabled={loading}
-            variant="outlined"
+            variant="contained"
             size="large"
             fullWidth
-            sx={{ mt: 1.5 }}
+            sx={{
+              mt: 1.5,
+              bgcolor: '#ffffff',
+              color: 'primary.main',
+              border: '1px solid',
+              borderColor: 'primary.main',
+              '&:hover': {
+                bgcolor: 'rgba(0, 107, 95, 0.08)',
+              },
+            }}
           >
             Đăng nhập bằng Google
           </Button>

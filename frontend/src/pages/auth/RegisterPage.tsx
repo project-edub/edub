@@ -17,6 +17,8 @@ import { register } from '../../services/authService';
 import type { ApiError } from '../../types/common';
 import { AxiosError } from 'axios';
 
+const API_ROOT = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api').replace(/\/?api\/?$/, '');
+
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 6;
 
@@ -80,6 +82,10 @@ export default function RegisterPage() {
     }
   }
 
+  async function handleGoogleRegister() {
+    window.location.assign(`${API_ROOT}/api/auth/google/start`);
+  }
+
   return (
     <Container maxWidth="sm" sx={{ py: { xs: 6, md: 10 } }}>
       <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
@@ -140,6 +146,27 @@ export default function RegisterPage() {
               </Button>
             </Stack>
           </Box>
+
+          <Button
+            type="button"
+            onClick={handleGoogleRegister}
+            disabled={loading}
+            variant="contained"
+            size="large"
+            fullWidth
+            sx={{
+              mt: 1.5,
+              bgcolor: '#ffffff',
+              color: 'primary.main',
+              border: '1px solid',
+              borderColor: 'primary.main',
+              '&:hover': {
+                bgcolor: 'rgba(0, 107, 95, 0.08)',
+              },
+            }}
+          >
+            Đăng ký bằng Google
+          </Button>
 
           <Typography sx={{ mt: 2.5, textAlign: 'center' }}>
             Đã có tài khoản?{' '}

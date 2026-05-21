@@ -21,7 +21,5 @@ export async function searchLecturers(
     params: Object.fromEntries(params.entries())
   });
 
-  console.log('[publicService] searchLecturers response', response.status, response.data);
-
   return response.data as PublicLecturerProfile[];
 }
