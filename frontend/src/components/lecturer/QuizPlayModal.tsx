@@ -52,11 +52,12 @@ export default function QuizPlayModal({ miniGameId, onClose }: QuizPlayModalProp
       padding: '10px 16px',
       marginBottom: 6,
       cursor: submitted[questionIndex] ? 'default' : 'pointer',
-      border: '1px solid #ccc',
+      border: '1px solid var(--edub-border)',
       borderRadius: 4,
       textAlign: 'left',
       fontSize: 14,
-      backgroundColor: '#fff',
+      backgroundColor: 'var(--edub-input-bg)',
+      color: 'var(--edub-text-primary)',
     };
 
     if (!submitted[questionIndex]) return base;
@@ -103,13 +104,13 @@ export default function QuizPlayModal({ miniGameId, onClose }: QuizPlayModalProp
         ) : playData ? (
           <>
             {answeredCount === totalQuestions && totalQuestions > 0 && (
-              <div style={{ padding: 12, backgroundColor: '#e3f2fd', borderRadius: 4, marginBottom: 16, textAlign: 'center' }}>
+              <div style={{ padding: 12, backgroundColor: 'var(--edub-surface-muted)', border: '1px solid var(--edub-border)', borderRadius: 4, marginBottom: 16, textAlign: 'center' }}>
                 <strong>Kết quả: {correctCount}/{totalQuestions} câu đúng</strong>
               </div>
             )}
 
             {playData.content.questions.map((q, idx) => (
-              <div key={idx} style={{ marginBottom: 20, padding: 12, border: '1px solid #eee', borderRadius: 4 }}>
+              <div key={idx} style={{ marginBottom: 20, padding: 12, border: '1px solid var(--edub-border)', borderRadius: 4, backgroundColor: 'var(--edub-surface-muted)' }}>
                 <p style={{ fontWeight: 'bold', marginBottom: 10 }}>
                   Câu {idx + 1}: {q.question}
                 </p>
@@ -151,7 +152,9 @@ const overlayStyle: React.CSSProperties = {
 };
 
 const modalStyle: React.CSSProperties = {
-  backgroundColor: '#fff',
+  backgroundColor: 'var(--edub-surface)',
+  color: 'var(--edub-text-primary)',
+  border: '1px solid var(--edub-border)',
   padding: 24,
   borderRadius: 8,
   minWidth: 600,

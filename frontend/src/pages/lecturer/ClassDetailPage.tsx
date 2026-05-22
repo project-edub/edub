@@ -76,22 +76,20 @@ export default function ClassDetailPage() {
         ← Quay lại danh sách
       </button>
 
-      <h1 style={{ marginBottom: 24, color: '#000' }}>{classDetail.name}</h1>
+      <h1 style={{ marginBottom: 24, color: 'var(--edub-text-primary)' }}>{classDetail.name}</h1>
 
       {/* Tab navigation */}
-      <div style={{ display: 'flex', borderBottom: '2px solid #ccc', marginBottom: 24 }}>
+      <div style={{ display: 'flex', borderBottom: '2px solid var(--edub-border)', marginBottom: 24 }}>
         {tabs.map((tab) => (
           <button
             key={tab.key}
             type="button"
             onClick={() => setActiveTab(tab.key)}
-            className="btn btn-view"
+            className={activeTab === tab.key ? 'btn btn-view' : 'btn btn-neutral'}
             style={{
               padding: '10px 20px',
               border: '1px solid transparent',
-              borderBottom: activeTab === tab.key ? '3px solid #006b5f' : '3px solid transparent',
-              background: activeTab === tab.key ? '#006b5f' : '#e3f3ef',
-              color: activeTab === tab.key ? '#fff' : '#21403a',
+              borderBottom: activeTab === tab.key ? '3px solid #1565c0' : '3px solid transparent',
               fontWeight: activeTab === tab.key ? 700 : 600,
               marginBottom: -2,
             }}
@@ -137,7 +135,7 @@ export default function ClassDetailPage() {
 const labelStyle: React.CSSProperties = {
   padding: '8px 16px 8px 0',
   fontWeight: 600,
-  color: '#555',
+  color: 'var(--edub-text-secondary)',
   verticalAlign: 'top',
 };
 

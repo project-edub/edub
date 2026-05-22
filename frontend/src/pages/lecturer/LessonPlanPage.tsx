@@ -128,8 +128,8 @@ export default function LessonPlanPage() {
   }
 
   return (
-    <div style={{ padding: 24, backgroundColor: '#fff', color: '#111' }}>
-      <h1 style={{ marginBottom: 24, color: '#000' }}>Giáo án</h1>
+    <div style={{ padding: 24, backgroundColor: 'var(--edub-surface)', color: 'var(--edub-text-primary)', border: '1px solid var(--edub-border)', borderRadius: 16 }}>
+      <h1 style={{ marginBottom: 24, color: 'var(--edub-text-primary)' }}>Giáo án</h1>
 
       {error && (
         <div role="alert" style={{ color: '#d32f2f', marginBottom: 16 }}>
@@ -147,7 +147,7 @@ export default function LessonPlanPage() {
             placeholder="Tìm kiếm môn học"
             value={filterSubject}
             onChange={(e) => setFilterSubject(e.target.value)}
-            style={{ padding: 8, width: 160, borderRadius: 8, border: '1px solid #ccc' }}
+            style={{ padding: 8, width: 160, borderRadius: 8, border: '1px solid var(--edub-input-border)', backgroundColor: 'var(--edub-input-bg)', color: 'var(--edub-text-primary)' }}
           />
         </div>
         <div>
@@ -158,7 +158,7 @@ export default function LessonPlanPage() {
             placeholder="Tìm kiếm khối"
             value={filterGrade}
             onChange={(e) => setFilterGrade(e.target.value)}
-            style={{ padding: 8, width: 160, borderRadius: 8, border: '1px solid #ccc' }}
+            style={{ padding: 8, width: 160, borderRadius: 8, border: '1px solid var(--edub-input-border)', backgroundColor: 'var(--edub-input-bg)', color: 'var(--edub-text-primary)' }}
           />
         </div>
         <div>
@@ -169,10 +169,10 @@ export default function LessonPlanPage() {
             placeholder="Tìm kiếm năm học"
             value={filterSchoolYear}
             onChange={(e) => setFilterSchoolYear(e.target.value)}
-            style={{ padding: 8, width: 160, borderRadius: 8, border: '1px solid #ccc' }}
+            style={{ padding: 8, width: 160, borderRadius: 8, border: '1px solid var(--edub-input-border)', backgroundColor: 'var(--edub-input-bg)', color: 'var(--edub-text-primary)' }}
           />
         </div>
-        <button type="button" onClick={handleFilter} style={{ padding: '8px 16px', cursor: 'pointer', borderRadius: 8, backgroundColor: 'grey', color: 'white', border: 'none' }}>
+        <button type="button" onClick={handleFilter} className="btn btn-view" style={{ padding: '8px 16px' }}>
           Lọc
         </button>
       </div>
@@ -248,10 +248,10 @@ export default function LessonPlanPage() {
 
       {/* Expanded Lesson List */}
       {expandedPlan && (
-        <div style={{ marginTop: 16, border: '1px solid #ccc', borderRadius: 8, padding: 16 }}>
+        <div style={{ marginTop: 16, border: '1px solid var(--edub-border)', borderRadius: 8, padding: 16 }}>
           <h3 style={{ marginBottom: 8 }}>Bài học — {expandedPlan.subject}</h3>
           {expandedPlan.lessons.length === 0 ? (
-            <p style={{ color: '#888', fontSize: 14 }}>Chưa có bài học nào</p>
+            <p style={{ color: 'var(--edub-text-secondary)', fontSize: 14 }}>Chưa có bài học nào</p>
           ) : (
             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
               {expandedPlan.lessons.map((lesson) => (
@@ -326,12 +326,12 @@ export default function LessonPlanPage() {
 const thStyle: React.CSSProperties = {
   textAlign: 'left',
   padding: '8px 12px',
-  borderBottom: '2px solid #ccc',
+  borderBottom: '2px solid var(--edub-border)',
 };
 
 const tdStyle: React.CSSProperties = {
   padding: '8px 12px',
-  borderBottom: '1px solid #eee',
+  borderBottom: '1px solid var(--edub-border)',
 };
 
 const overlayStyle: React.CSSProperties = {
@@ -345,7 +345,9 @@ const overlayStyle: React.CSSProperties = {
 };
 
 const deleteModalStyle: React.CSSProperties = {
-  backgroundColor: '#fff',
+  backgroundColor: 'var(--edub-surface)',
+  color: 'var(--edub-text-primary)',
+  border: '1px solid var(--edub-border)',
   padding: 24,
   borderRadius: 8,
   minWidth: 400,

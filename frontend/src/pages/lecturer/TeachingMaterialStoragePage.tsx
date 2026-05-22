@@ -162,7 +162,7 @@ export default function TeachingMaterialStoragePage() {
 
   return (
     <div style={{ padding: 24 }}>
-      <h1 style={{ marginBottom: 24, color: '#000' }}>Kho tài liệu giảng dạy</h1>
+      <h1 style={{ marginBottom: 24, color: 'var(--edub-text-primary)' }}>Kho tài liệu giảng dạy</h1>
 
       {error && (
         <div role="alert" style={{ color: '#d32f2f', marginBottom: 16 }}>
@@ -180,7 +180,7 @@ export default function TeachingMaterialStoragePage() {
                 type="button"
                 onClick={() => navigateToBreadcrumb(i)}
                 className="btn btn-view"
-                style={{ padding: 0, marginLeft: 4, marginRight: 4 }}
+                style={{ padding: '6px 12px', marginLeft: 4, marginRight: 4 }}
               >
                 {bc.name}
               </button>
@@ -428,7 +428,9 @@ const overlayStyle: React.CSSProperties = {
 };
 
 const modalStyle: React.CSSProperties = {
-  backgroundColor: '#fff',
+  backgroundColor: 'var(--edub-surface)',
+  color: 'var(--edub-text-primary)',
+  border: '1px solid var(--edub-border)',
   padding: 24,
   borderRadius: 8,
   minWidth: 400,

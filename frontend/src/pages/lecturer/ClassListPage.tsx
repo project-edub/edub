@@ -133,7 +133,7 @@ export default function ClassListPage() {
 
   return (
     <div style={{ padding: 24 }}>
-      <h1 style={{ marginBottom: 24, color: '#000' }}>Danh sách lớp học</h1>
+      <h1 style={{ marginBottom: 24, color: 'var(--edub-text-primary)' }}>Danh sách lớp học</h1>
 
       {error && (
         <div role="alert" style={{ color: '#d32f2f', marginBottom: 16 }}>
@@ -176,7 +176,7 @@ export default function ClassListPage() {
                     <button
                       type="button"
                       onClick={() => navigate(`/lecturer/classes/${cls.id}`)}
-                      style={{ background: 'none', border: 'none', color: '#1976d2', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                      style={{ background: 'none', border: 'none', color: 'var(--edub-link)', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
                     >
                       {cls.name}
                     </button>
@@ -306,12 +306,12 @@ export default function ClassListPage() {
 const thStyle: React.CSSProperties = {
   textAlign: 'left',
   padding: '8px 12px',
-  borderBottom: '2px solid #ccc',
+  borderBottom: '2px solid var(--edub-border)',
 };
 
 const tdStyle: React.CSSProperties = {
   padding: '8px 12px',
-  borderBottom: '1px solid #eee',
+  borderBottom: '1px solid var(--edub-border)',
 };
 
 const overlayStyle: React.CSSProperties = {
@@ -325,7 +325,9 @@ const overlayStyle: React.CSSProperties = {
 };
 
 const modalStyle: React.CSSProperties = {
-  backgroundColor: '#fff',
+  backgroundColor: 'var(--edub-surface)',
+  color: 'var(--edub-text-primary)',
+  border: '1px solid var(--edub-border)',
   padding: 24,
   borderRadius: 8,
   minWidth: 400,

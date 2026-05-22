@@ -232,25 +232,23 @@ export default function StudentListTabs({ classId }: Props) {
       )}
 
       {/* Tab bar with student list tabs */}
-      <div style={{ display: 'flex', alignItems: 'center', borderBottom: '2px solid #ccc', marginBottom: 16, flexWrap: 'wrap', gap: 4 }}>
+      <div style={{ display: 'flex', alignItems: 'center', borderBottom: '2px solid var(--edub-border)', marginBottom: 16, flexWrap: 'wrap', gap: 4 }}>
         {lists.map((list) => (
           <button
             key={list.id}
             type="button"
             onClick={() => setActiveListId(list.id)}
-            className="btn btn-view"
+            className={activeListId === list.id ? 'btn btn-view' : 'btn btn-neutral'}
             style={{
               padding: '8px 16px',
               border: '1px solid transparent',
-              borderBottom: activeListId === list.id ? '3px solid #006b5f' : '3px solid transparent',
-              background: activeListId === list.id ? '#006b5f' : '#e3f3ef',
-              color: activeListId === list.id ? '#fff' : '#21403a',
+              borderBottom: activeListId === list.id ? '3px solid #1565c0' : '3px solid transparent',
               fontWeight: activeListId === list.id ? 700 : 600,
               marginBottom: -2,
             }}
           >
             {list.name}
-            {list.isMain && <span style={{ marginLeft: 6, fontSize: 11, color: activeListId === list.id ? '#d8fff5' : '#2e7d32' }}>(Danh sách chính)</span>}
+            {list.isMain && <span style={{ marginLeft: 6, fontSize: 11, color: activeListId === list.id ? 'rgba(255,255,255,0.85)' : 'var(--edub-text-secondary)' }}>(Danh sách chính)</span>}
           </button>
         ))}
 
@@ -388,7 +386,7 @@ export default function StudentListTabs({ classId }: Props) {
       )}
 
       {lists.length === 0 && !creatingList && (
-        <p style={{ color: '#666' }}>Chưa có danh sách học sinh nào. Nhấn "+ Thêm danh sách" để tạo mới.</p>
+        <p style={{ color: 'var(--edub-text-secondary)' }}>Chưa có danh sách học sinh nào. Nhấn "+ Thêm danh sách" để tạo mới.</p>
       )}
     </div>
   );

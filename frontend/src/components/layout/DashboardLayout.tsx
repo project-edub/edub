@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import { useAuth } from '../../hooks/useAuth';
 import { Role } from '../../types/auth';
+import { useColorMode } from '../../theme/ColorModeContext';
 
 const lecturerMenuItems = [
   { to: '/lecturer/overview', label: 'Thông tin cá nhân' },
@@ -30,6 +31,7 @@ const adminMenuItems = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { role } = useAuth();
   const navigate = useNavigate();
+  const { mode, toggleMode } = useColorMode();
   const menuItems = role === Role.Admin ? adminMenuItems : lecturerMenuItems;
 
   function handleLogout() {
@@ -88,7 +90,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   },
                 },
                 '&:hover': {
-                  bgcolor: 'rgba(0, 107, 95, 0.08)',
+                  bgcolor: 'rgba(196, 138, 16, 0.12)',
                 },
               }}
             >
@@ -104,6 +106,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </List>
 
         <Box sx={{ mt: 'auto', pt: 1 }}>
+          <Button
+            onClick={toggleMode}
+            variant="text"
+            fullWidth
+            aria-label={mode === 'light' ? 'Chuyển sang chế độ tối' : 'Chuyển sang chế độ sáng'}
+            sx={{ minWidth: 0, mb: 0.75, py: 0.6, fontSize: 18 }}
+          >
+            {mode === 'light' ? '🌙' : '☀️'}
+          </Button>
           <Divider sx={{ mb: 1 }} />
           <Button
             onClick={handleLogout}
