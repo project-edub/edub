@@ -27,6 +27,7 @@ import {
 import type { PublicLecturerProfile } from '../types/profile';
 import type { ApiError } from '../types/common';
 import * as publicService from '../services/publicService';
+import { useColorMode } from '../theme/ColorModeContext';
 
 function toApiOrigin(): string {
   const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
@@ -135,6 +136,7 @@ function renderSelectValue(value: unknown, placeholder: string) {
 }
 
 export default function HomePage() {
+  const { mode, toggleMode } = useColorMode();
   const [lecturers, setLecturers] = useState<PublicLecturerProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -194,16 +196,26 @@ export default function HomePage() {
         color="inherit"
         elevation={0}
         sx={{
-          bgcolor: 'rgba(255,255,255,0.86)',
+          bgcolor: 'background.paper',
           borderBottom: '1px solid',
           borderColor: 'divider',
           backdropFilter: 'blur(8px)',
+          backgroundImage: 'none',
         }}
       >
         <Toolbar sx={{ gap: 1.5 }}>
           <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700 }}>
             EduB
           </Typography>
+          <Button
+            type="button"
+            onClick={toggleMode}
+            variant="text"
+            aria-label={mode === 'light' ? 'Chuyển sang chế độ tối' : 'Chuyển sang chế độ sáng'}
+            sx={{ minWidth: 0, px: 1, fontSize: 18 }}
+          >
+            {mode === 'light' ? '🌙' : '☀️'}
+          </Button>
           <Button component={Link} to="/login" variant="outlined">Đăng nhập</Button>
           <Button component={Link} to="/register" variant="contained">Đăng ký</Button>
         </Toolbar>
@@ -214,7 +226,7 @@ export default function HomePage() {
           sx={{
             p: { xs: 2.5, md: 4 },
             borderRadius: 8,
-            background: 'linear-gradient(140deg, #005e54 0%, #4d635f 100%)',
+            background: 'linear-gradient(140deg, #c48a10 0%, #e2b23a 100%)',
             color: '#fff',
             mb: 3,
           }}

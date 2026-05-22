@@ -77,7 +77,7 @@ export default function QuizViewModal({ miniGameId, onClose }: QuizViewModalProp
                 </div>
               ))
             ) : (
-              <p style={{ color: '#888' }}>Không có nội dung quiz</p>
+              <p style={{ color: 'var(--edub-text-secondary)' }}>Không có nội dung quiz</p>
             )}
           </>
         ) : null}
@@ -97,7 +97,9 @@ const overlayStyle: React.CSSProperties = {
 };
 
 const modalStyle: React.CSSProperties = {
-  backgroundColor: '#fff',
+  backgroundColor: 'var(--edub-surface)',
+  color: 'var(--edub-text-primary)',
+  border: '1px solid var(--edub-border)',
   padding: 24,
   borderRadius: 8,
   minWidth: 600,
