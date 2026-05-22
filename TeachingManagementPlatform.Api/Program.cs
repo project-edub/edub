@@ -10,16 +10,6 @@ using TeachingManagementPlatform.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var developmentConfigSources = builder.Configuration.Sources
-    .OfType<JsonConfigurationSource>()
-    .Where(source => string.Equals(source.Path, "appsettings.Development.json", StringComparison.OrdinalIgnoreCase))
-    .ToList();
-
-foreach (var source in developmentConfigSources)
-{
-    builder.Configuration.Sources.Remove(source);
-}
-
 // Add services to the container.
 builder.Services.AddControllers();
 
