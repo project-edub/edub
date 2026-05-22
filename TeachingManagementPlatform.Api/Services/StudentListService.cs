@@ -67,6 +67,17 @@ public class StudentListService : IStudentListService
     public async Task DeleteAsync(int id, int lecturerId)
     {
         var studentList = await GetStudentListWithOwnershipCheck(id, lecturerId);
+
+        if (studentList.Columns.Count > 0)
+        {
+            _context.StudentListColumns.RemoveRange(studentList.Columns);
+        }
+
+        if (studentList.Entries.Count > 0)
+        {
+            _context.StudentEntries.RemoveRange(studentList.Entries);
+        }
+
         _context.StudentLists.Remove(studentList);
         await _context.SaveChangesAsync();
     }

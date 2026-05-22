@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
+import GoogleCallbackPage from './pages/auth/GoogleCallbackPage';
 import AccountManagementPage from './pages/admin/AccountManagementPage';
 import SubscriptionPackagePage from './pages/admin/SubscriptionPackagePage';
 import OverviewPage from './pages/lecturer/OverviewPage';
@@ -22,6 +23,7 @@ export default function App() {
         {/* Auth routes (public) */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
 
         {/* Admin routes */}
         <Route element={<AdminRoute />}>

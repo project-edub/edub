@@ -1,9 +1,24 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { login, googleLogin } from '../../services/authService';
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Checkbox,
+  Container,
+  FormControlLabel,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
+import { login } from '../../services/authService';
 import { Role } from '../../types/auth';
 import type { ApiError } from '../../types/common';
 import { AxiosError } from 'axios';
+
+const API_ROOT = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api').replace(/\/?api\/?$/, '');
 
 function redirectForRole(role: string, navigate: ReturnType<typeof useNavigate>) {
   if (role === Role.Admin) {
@@ -45,93 +60,94 @@ export default function LoginPage() {
   }
 
   async function handleGoogleLogin() {
-    setError('');
-    setLoading(true);
-    try {
-      // Basic Google login — sends a placeholder token for now.
-      // Full Google SDK integration can be added later.
-      const idToken = (window as unknown as Record<string, string>).__googleIdToken ?? '';
-      if (!idToken) {
-        setError('Không thể kết nối với Google. Vui lòng thử lại.');
-        setLoading(false);
-        return;
-      }
-      const res = await googleLogin(idToken);
-      localStorage.setItem('token', res.token);
-      redirectForRole(res.role, navigate);
-    } catch (err) {
-      const axiosErr = err as AxiosError<ApiError>;
-      const msg = axiosErr.response?.data?.error?.message;
-      setError(msg || 'Đăng nhập bằng Google thất bại. Vui lòng thử lại.');
-    } finally {
-      setLoading(false);
-    }
+    window.location.assign(`${API_ROOT}/api/auth/google/start`);
   }
 
   return (
-    <div style={{ maxWidth: 400, margin: '80px auto', padding: 24 }}>
-      <h1 style={{ textAlign: 'center', marginBottom: 24 }}>Đăng nhập</h1>
+    <Container maxWidth="sm" sx={{ py: { xs: 6, md: 10 } }}>
+      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-start' }}>
+        <Button component={Link} to="/" variant="text" sx={{ color: 'text.secondary' }}>
+          Về trang chủ
+        </Button>
+      </Box>
 
-      {error && (
-        <div role="alert" style={{ color: '#d32f2f', marginBottom: 16, textAlign: 'center' }}>
-          {error}
-        </div>
-      )}
+      <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
+        <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
+          <Typography variant="h4" sx={{ textAlign: 'center', mb: 3, fontWeight: 700 }}>
+            Đăng nhập
+          </Typography>
 
-      <form onSubmit={handleSubmit} noValidate>
-        <div style={{ marginBottom: 16 }}>
-          <label htmlFor="email" style={{ display: 'block', marginBottom: 4 }}>Email</label>
-          <input
-            id="email"
-            type="email"
-            placeholder="Nhập email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            style={{ width: '100%', padding: 8, boxSizing: 'border-box' }}
-            autoComplete="email"
-          />
-        </div>
+          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-        <div style={{ marginBottom: 16 }}>
-          <label htmlFor="password" style={{ display: 'block', marginBottom: 4 }}>Mật khẩu</label>
-          <input
-            id="password"
-            type={showPassword ? 'text' : 'password'}
-            placeholder="Nhập mật khẩu"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={{ width: '100%', padding: 8, boxSizing: 'border-box' }}
-            autoComplete="current-password"
-          />
-          <label style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4, fontSize: 13, cursor: 'pointer' }}>
-            <input type="checkbox" checked={showPassword} onChange={(e) => setShowPassword(e.target.checked)} />
-            Hiện mật khẩu
-          </label>
-        </div>
+          <Box component="form" onSubmit={handleSubmit} noValidate>
+            <Stack spacing={2}>
+              <TextField
+                id="email"
+                label="Email"
+                type="email"
+                placeholder="Nhập email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                fullWidth
+              />
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="btn btn-update"
-          style={{ width: '100%', marginBottom: 12 }}
-        >
-          {loading ? 'Đang xử lý...' : 'Đăng nhập'}
-        </button>
-      </form>
+              <TextField
+                id="password"
+                label="Mật khẩu"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Nhập mật khẩu"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                fullWidth
+              />
 
-      <button
-        type="button"
-        onClick={handleGoogleLogin}
-        disabled={loading}
-        className="btn btn-neutral"
-        style={{ width: '100%', marginBottom: 16 }}
-      >
-        Đăng nhập bằng Google
-      </button>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={showPassword}
+                    onChange={(e) => setShowPassword(e.target.checked)}
+                  />
+                }
+                label="Hiện mật khẩu"
+              />
 
-      <p style={{ textAlign: 'center' }}>
-        Chưa có tài khoản? <Link to="/register">Đăng ký</Link>
-      </p>
-    </div>
+              <Button type="submit" variant="contained" size="large" disabled={loading}>
+                {loading ? 'Đang xử lý...' : 'Đăng nhập'}
+              </Button>
+            </Stack>
+          </Box>
+
+          <Button
+            type="button"
+            onClick={handleGoogleLogin}
+            disabled={loading}
+            variant="contained"
+            size="large"
+            fullWidth
+            sx={{
+              mt: 1.5,
+              bgcolor: '#ffffff',
+              color: 'primary.main',
+              border: '1px solid',
+              borderColor: 'primary.main',
+              '&:hover': {
+                bgcolor: 'rgba(0, 107, 95, 0.08)',
+              },
+            }}
+          >
+            Đăng nhập bằng Google
+          </Button>
+
+          <Typography sx={{ mt: 2.5, textAlign: 'center' }}>
+            Chưa có tài khoản?{' '}
+            <Box component={Link} to="/register" sx={{ color: 'primary.main', textDecoration: 'none', fontWeight: 650 }}>
+              Đăng ký
+            </Box>
+          </Typography>
+        </CardContent>
+      </Card>
+    </Container>
   );
 }

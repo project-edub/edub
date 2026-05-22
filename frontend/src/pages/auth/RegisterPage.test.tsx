@@ -40,6 +40,7 @@ describe('RegisterPage', () => {
   it('renders submit button and link to login', () => {
     renderRegister();
     expect(screen.getByRole('button', { name: 'Đăng ký' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Đăng ký bằng Google' })).toBeInTheDocument();
     const link = screen.getByRole('link', { name: 'Đăng nhập' });
     expect(link).toHaveAttribute('href', '/login');
   });
