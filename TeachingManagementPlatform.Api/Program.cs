@@ -2,12 +2,23 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Configuration.Json;
 using Microsoft.IdentityModel.Tokens;
 using TeachingManagementPlatform.Api.Data;
 using TeachingManagementPlatform.Api.Interfaces;
 using TeachingManagementPlatform.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var developmentConfigSources = builder.Configuration.Sources
+    .OfType<JsonConfigurationSource>()
+    .Where(source => string.Equals(source.Path, "appsettings.Development.json", StringComparison.OrdinalIgnoreCase))
+    .ToList();
+
+foreach (var source in developmentConfigSources)
+{
+    builder.Configuration.Sources.Remove(source);
+}
 
 // Add services to the container.
 builder.Services.AddControllers();
