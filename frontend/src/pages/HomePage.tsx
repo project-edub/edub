@@ -126,6 +126,14 @@ function normalizeSearchResponse(response: unknown): PublicLecturerProfile[] {
   return list.map((item, index) => normalizeLecturer(item, index + 1));
 }
 
+function renderSelectValue(value: unknown, placeholder: string) {
+  if (typeof value !== 'string' || value.trim() === '') {
+    return <Box component="span" sx={{ color: 'text.disabled' }}>{placeholder}</Box>;
+  }
+
+  return value;
+}
+
 export default function HomePage() {
   const [lecturers, setLecturers] = useState<PublicLecturerProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -236,7 +244,18 @@ export default function HomePage() {
               />
             </Box>
             <Box>
-              <TextField select fullWidth value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)}>
+              <TextField
+                select
+                fullWidth
+                value={locationFilter}
+                onChange={(e) => setLocationFilter(e.target.value)}
+                slotProps={{
+                  select: {
+                    displayEmpty: true,
+                    renderValue: (selected: unknown) => renderSelectValue(selected, 'Địa điểm'),
+                  },
+                }}
+              >
                 <MenuItem value="">Địa điểm</MenuItem>
                 <MenuItem value="Hà Nội">Hà Nội</MenuItem>
                 <MenuItem value="TP.HCM">TP.HCM</MenuItem>
@@ -246,7 +265,18 @@ export default function HomePage() {
               </TextField>
             </Box>
             <Box>
-              <TextField select fullWidth value={subjectFilter} onChange={(e) => setSubjectFilter(e.target.value)}>
+              <TextField
+                select
+                fullWidth
+                value={subjectFilter}
+                onChange={(e) => setSubjectFilter(e.target.value)}
+                slotProps={{
+                  select: {
+                    displayEmpty: true,
+                    renderValue: (selected: unknown) => renderSelectValue(selected, 'Môn học'),
+                  },
+                }}
+              >
                 <MenuItem value="">Môn học</MenuItem>
                 <MenuItem value="Toán">Toán</MenuItem>
                 <MenuItem value="Tiếng Anh">Tiếng Anh</MenuItem>
@@ -255,7 +285,18 @@ export default function HomePage() {
               </TextField>
             </Box>
             <Box>
-              <TextField select fullWidth value={experienceFilter} onChange={(e) => setExperienceFilter(e.target.value)}>
+              <TextField
+                select
+                fullWidth
+                value={experienceFilter}
+                onChange={(e) => setExperienceFilter(e.target.value)}
+                slotProps={{
+                  select: {
+                    displayEmpty: true,
+                    renderValue: (selected: unknown) => renderSelectValue(selected, 'Kinh nghiệm'),
+                  },
+                }}
+              >
                 <MenuItem value="">Kinh nghiệm</MenuItem>
                 <MenuItem value="1-3">1-3 năm</MenuItem>
                 <MenuItem value="3-5">3-5 năm</MenuItem>
@@ -264,7 +305,18 @@ export default function HomePage() {
               </TextField>
             </Box>
             <Box>
-              <TextField select fullWidth value={ratingFilter} onChange={(e) => setRatingFilter(e.target.value)}>
+              <TextField
+                select
+                fullWidth
+                value={ratingFilter}
+                onChange={(e) => setRatingFilter(e.target.value)}
+                slotProps={{
+                  select: {
+                    displayEmpty: true,
+                    renderValue: (selected: unknown) => renderSelectValue(selected, 'Đánh giá'),
+                  },
+                }}
+              >
                 <MenuItem value="">Đánh giá</MenuItem>
                 <MenuItem value="4.5+">4.5+ sao</MenuItem>
                 <MenuItem value="4.0+">4.0+ sao</MenuItem>
@@ -272,7 +324,7 @@ export default function HomePage() {
             </Box>
             <Box>
               <Button type="submit" variant="contained" fullWidth sx={{ height: '100%' }}>
-                Tìm
+                Tìm kiếm
               </Button>
             </Box>
           </Box>

@@ -65,6 +65,12 @@ export default function LoginPage() {
 
   return (
     <Container maxWidth="sm" sx={{ py: { xs: 6, md: 10 } }}>
+      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-start' }}>
+        <Button component={Link} to="/" variant="text" sx={{ color: 'text.secondary' }}>
+          Về trang chủ
+        </Button>
+      </Box>
+
       <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
         <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
           <Typography variant="h4" sx={{ textAlign: 'center', mb: 3, fontWeight: 700 }}>
