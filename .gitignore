@@ -32,7 +32,7 @@ TeachingManagementPlatform.Api/appsettings.*.json
 TeachingManagementPlatform.Api/shared-secrets.json
 
 # Upload temp/runtime data
-TeachingManagementPlatform.Api/uploads/
+TeachingManagementPlatform.Api/uploads
 
 
 
