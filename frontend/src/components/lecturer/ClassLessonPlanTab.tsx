@@ -137,7 +137,7 @@ export default function ClassLessonPlanTab({ classId }: ClassLessonPlanTabProps)
         <select
           value={selectedPlanId}
           onChange={(e) => setSelectedPlanId(e.target.value ? Number(e.target.value) : '')}
-          style={{ padding: 8, minWidth: 300 }}
+          style={{ padding: 8, minWidth: 300, backgroundColor: 'var(--edub-input-bg)', border: '1px solid var(--edub-input-border)', color: 'var(--edub-text-primary)', borderRadius: 8 }}
           aria-label="Chọn giáo án"
         >
           <option value="">Chọn giáo án</option>
@@ -171,14 +171,14 @@ export default function ClassLessonPlanTab({ classId }: ClassLessonPlanTabProps)
               placeholder="Tìm kiếm bài học"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              style={{ padding: 8, width: 300 }}
+              style={{ padding: 8, width: 300, backgroundColor: 'var(--edub-input-bg)', border: '1px solid var(--edub-input-border)', color: 'var(--edub-text-primary)', borderRadius: 8 }}
             />
           </div>
 
           {/* Scrollable lesson list */}
-          <div style={{ maxHeight: 500, overflowY: 'auto', border: '1px solid #ddd', borderRadius: 4 }}>
+          <div style={{ maxHeight: 500, overflowY: 'auto', border: '1px solid var(--edub-border)', borderRadius: 4 }}>
             {filteredLessons.length === 0 ? (
-              <p style={{ padding: 16, color: '#888' }}>Không tìm thấy bài học nào</p>
+              <p style={{ padding: 16, color: 'var(--edub-text-secondary)' }}>Không tìm thấy bài học nào</p>
             ) : (
               filteredLessons.map((lesson) => (
                 <LessonRow
@@ -195,7 +195,7 @@ export default function ClassLessonPlanTab({ classId }: ClassLessonPlanTabProps)
           </div>
         </div>
       ) : (
-        <p style={{ color: '#888' }}>Chưa gán giáo án cho lớp này.</p>
+        <p style={{ color: 'var(--edub-text-secondary)' }}>Chưa gán giáo án cho lớp này.</p>
       )}
 
       {/* Quiz Play Modal */}
@@ -221,7 +221,7 @@ function LessonRow({ lesson, expanded, onToggle, onDateChange, onStatusChange, o
   const dateValue = lesson.scheduledDate ? lesson.scheduledDate.split('T')[0] : '';
 
   return (
-    <div style={{ borderBottom: '1px solid #eee' }}>
+    <div style={{ borderBottom: '1px solid var(--edub-border)' }}>
       <div
         style={{ display: 'flex', alignItems: 'center', padding: '10px 12px', gap: 12, cursor: 'pointer' }}
         onClick={onToggle}
@@ -232,7 +232,7 @@ function LessonRow({ lesson, expanded, onToggle, onDateChange, onStatusChange, o
         <span style={{ minWidth: 20 }}>{expanded ? '▼' : '▶'}</span>
         <span style={{ flex: 1, fontWeight: 500 }}>{lesson.name}</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }} onClick={(e) => e.stopPropagation()}>
-          <label style={{ fontSize: 13, color: '#666' }}>Ngày dạy</label>
+          <label style={{ fontSize: 13, color: 'var(--edub-text-secondary)' }}>Ngày dạy</label>
           <input
             type="date"
             value={dateValue}
@@ -242,7 +242,7 @@ function LessonRow({ lesson, expanded, onToggle, onDateChange, onStatusChange, o
           />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }} onClick={(e) => e.stopPropagation()}>
-          <label style={{ fontSize: 13, color: '#666' }}>Trạng thái</label>
+          <label style={{ fontSize: 13, color: 'var(--edub-text-secondary)' }}>Trạng thái</label>
           <select
             value={lesson.lessonStatus}
             onChange={(e) => onStatusChange(e.target.value as 'finish' | 'unfinish' | 'pending')}
@@ -262,7 +262,7 @@ function LessonRow({ lesson, expanded, onToggle, onDateChange, onStatusChange, o
           <section style={{ marginBottom: 12 }}>
             <h4 style={{ margin: '0 0 6px' }}>Tài liệu</h4>
             {lesson.documents.length === 0 ? (
-              <p style={{ color: '#888', fontSize: 13 }}>Không có tài liệu</p>
+              <p style={{ color: 'var(--edub-text-secondary)', fontSize: 13 }}>Không có tài liệu</p>
             ) : (
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
@@ -291,7 +291,7 @@ function LessonRow({ lesson, expanded, onToggle, onDateChange, onStatusChange, o
           <section style={{ marginBottom: 12 }}>
             <h4 style={{ margin: '0 0 6px' }}>Tệp đính kèm</h4>
             {lesson.attachments.length === 0 ? (
-              <p style={{ color: '#888', fontSize: 13 }}>Không có tệp đính kèm</p>
+              <p style={{ color: 'var(--edub-text-secondary)', fontSize: 13 }}>Không có tệp đính kèm</p>
             ) : (
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
@@ -316,7 +316,7 @@ function LessonRow({ lesson, expanded, onToggle, onDateChange, onStatusChange, o
           <section>
             <h4 style={{ margin: '0 0 6px' }}>Mini game</h4>
             {lesson.miniGames.length === 0 ? (
-              <p style={{ color: '#888', fontSize: 13 }}>Không có mini game</p>
+              <p style={{ color: 'var(--edub-text-secondary)', fontSize: 13 }}>Không có mini game</p>
             ) : (
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
@@ -352,5 +352,5 @@ function LessonRow({ lesson, expanded, onToggle, onDateChange, onStatusChange, o
   );
 }
 
-const thStyle: React.CSSProperties = { textAlign: 'left', padding: '4px 8px', borderBottom: '1px solid #ccc' };
-const tdStyle: React.CSSProperties = { padding: '4px 8px', borderBottom: '1px solid #eee' };
+const thStyle: React.CSSProperties = { textAlign: 'left', padding: '4px 8px', borderBottom: '1px solid var(--edub-border)' };
+const tdStyle: React.CSSProperties = { padding: '4px 8px', borderBottom: '1px solid var(--edub-border)' };

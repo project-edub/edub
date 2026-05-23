@@ -18,7 +18,13 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:5174")
+        var allowedOriginsSetting = builder.Configuration["Cors:AllowedOrigins"];
+        var allowedOrigins = string.IsNullOrWhiteSpace(allowedOriginsSetting)
+            ? new[] { "http://localhost:5173", "http://localhost:5174" }
+            : allowedOriginsSetting
+                .Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -104,10 +110,13 @@ builder.Services.AddHttpClient<IAIService, AIService>(client =>
 var app = builder.Build();
 
 // Backfill schema drift in local/dev DBs where migration history may be out of sync.
-using (var scope = app.Services.CreateScope())
+try
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await dbContext.Database.ExecuteSqlRawAsync(@"
+    // Attempt DB backfill; if connection string is missing or invalid, log and continue.
+    using (var scope = app.Services.CreateScope())
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        await dbContext.Database.ExecuteSqlRawAsync(@"
 IF COL_LENGTH('ClassLessonSchedules', 'LessonStatus') IS NULL
 BEGIN
     ALTER TABLE [ClassLessonSchedules]
@@ -115,10 +124,23 @@ BEGIN
         CONSTRAINT [DF_ClassLessonSchedules_LessonStatus] DEFAULT N'pending';
 END
 ");
+    }
+}
+catch (Exception ex)
+{
+    app.Logger.LogWarning(ex, "DB backfill skipped at startup (connection string may be missing or invalid).");
 }
 
 // Configure the HTTP request pipeline.
-app.UseHttpsRedirection();
+var runningInContainer = string.Equals(
+    Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER"),
+    "true",
+    StringComparison.OrdinalIgnoreCase);
+
+if (!runningInContainer)
+{
+    app.UseHttpsRedirection();
+}
 app.UseCors();
 
 // Serve uploaded files as static content
@@ -133,6 +155,9 @@ app.UseStaticFiles(new StaticFileOptions
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// Lightweight health endpoint for load balancers and smoke checks
+app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
 async Task SeedSampleDataAsync(ApplicationDbContext context)
 {
@@ -155,10 +180,17 @@ async Task SeedSampleDataAsync(ApplicationDbContext context)
 }
 
 // Seed sample data before starting the server
-using (var scope = app.Services.CreateScope())
+try
 {
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await SeedSampleDataAsync(context);
+    using (var scope = app.Services.CreateScope())
+    {
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        await SeedSampleDataAsync(context);
+    }
+}
+catch (Exception ex)
+{
+    app.Logger.LogWarning(ex, "Sample data seeding skipped at startup (DB may be unavailable).");
 }
 
 app.Run();

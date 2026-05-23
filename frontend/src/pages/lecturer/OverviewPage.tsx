@@ -168,7 +168,7 @@ export default function OverviewPage() {
   return (
     <div style={{ padding: 24 }}>
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 24, position: 'relative' }}>
-        <h1 style={{ color: '#000' }}>Thông tin cá nhân</h1>
+        <h1 style={{ color: 'var(--edub-text-primary)' }}>Thông tin cá nhân</h1>
         <div style={{ position: 'absolute', right: 0 }}>
         {!editing ? (
           <button type="button" className="btn btn-update" onClick={startEditing} >Chỉnh sửa</button>
@@ -374,20 +374,20 @@ export default function OverviewPage() {
 
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '400px 1fr', gap: 16, marginBottom: 20, paddingTop: 10, fontSize: 20, textAlign: 'left', color: '#000', alignItems: 'start' }}>
-      <h3 style={{ margin: 0, fontSize: 25, color: '#000', fontWeight: 700}}>{label}</h3>
+    <div style={{ display: 'grid', gridTemplateColumns: '400px 1fr', gap: 16, marginBottom: 20, paddingTop: 10, fontSize: 20, textAlign: 'left', color: 'var(--edub-text-primary)', alignItems: 'start' }}>
+      <h3 style={{ margin: 0, fontSize: 25, color: 'var(--edub-text-primary)', fontWeight: 700}}>{label}</h3>
       <div>{children}</div>
     </div>
   );
 }
 
-const inputStyle: React.CSSProperties = { width: '100%', padding: 8, boxSizing: 'border-box', backgroundColor: '#fff', border: '1px solid #000', color: '#000', borderRadius: 8};
+const inputStyle: React.CSSProperties = { width: '100%', padding: 8, boxSizing: 'border-box', backgroundColor: 'var(--edub-input-bg)', border: '1px solid var(--edub-input-border)', color: 'var(--edub-text-primary)', borderRadius: 8};
 const rowStyle: React.CSSProperties = { display: 'flex', gap: 8, marginBottom: 4, alignItems: 'center' };
 const listStyle: React.CSSProperties = { margin: 0, paddingLeft: 20 };
-const thStyle: React.CSSProperties = { textAlign: 'left', padding: '8px 12px', borderBottom: '2px solid #ccc' };
-const tdStyle: React.CSSProperties = { padding: '8px 12px', borderBottom: '1px solid #eee' };
-const addBtn: React.CSSProperties = { padding: '4px 12px', cursor: 'pointer', marginTop: 4, backgroundColor: '#111', color: '#fff', border: '1px solid #111', borderRadius: 8 };
+const thStyle: React.CSSProperties = { textAlign: 'left', padding: '8px 12px', borderBottom: '2px solid var(--edub-border)' };
+const tdStyle: React.CSSProperties = { padding: '8px 12px', borderBottom: '1px solid var(--edub-border)' };
+const addBtn: React.CSSProperties = { padding: '4px 12px', cursor: 'pointer', marginTop: 4, backgroundColor: '#2e7d32', color: '#fff', border: '1px solid #2e7d32', borderRadius: 8 };
 const delBtn: React.CSSProperties = { padding: '4px 10px', cursor: 'pointer', backgroundColor: '#dc2626', color: '#fff', border: 'none', borderRadius: 8 };
 const delBtnDisabled: React.CSSProperties = { ...delBtn, backgroundColor: '#9ca3af', cursor: 'not-allowed' };
-const fileLabelStyle: React.CSSProperties = { padding: '4px 12px', cursor: 'pointer', backgroundColor: '#111', color: '#fff', border: '1px solid #111', borderRadius: 8, fontSize: 14, display: 'inline-block' };
+const fileLabelStyle: React.CSSProperties = { padding: '4px 12px', cursor: 'pointer', backgroundColor: '#1565c0', color: '#fff', border: '1px solid #1565c0', borderRadius: 8, fontSize: 14, display: 'inline-block' };
 const thumbStyle: React.CSSProperties = { maxWidth: 80, maxHeight: 60, borderRadius: 4, objectFit: 'cover' };

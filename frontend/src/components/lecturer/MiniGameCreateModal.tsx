@@ -123,7 +123,9 @@ const overlayStyle: React.CSSProperties = {
 };
 
 const modalStyle: React.CSSProperties = {
-  backgroundColor: '#fff',
+  backgroundColor: 'var(--edub-surface)',
+  color: 'var(--edub-text-primary)',
+  border: '1px solid var(--edub-border)',
   padding: 24,
   borderRadius: 8,
   minWidth: 450,
@@ -131,4 +133,4 @@ const modalStyle: React.CSSProperties = {
 };
 
 const labelStyle: React.CSSProperties = { display: 'block', marginBottom: 4 };
-const inputStyle: React.CSSProperties = { width: '100%', padding: 8, boxSizing: 'border-box' };
+const inputStyle: React.CSSProperties = { width: '100%', padding: 8, boxSizing: 'border-box', backgroundColor: 'var(--edub-input-bg)', border: '1px solid var(--edub-input-border)', color: 'var(--edub-text-primary)', borderRadius: 8 };

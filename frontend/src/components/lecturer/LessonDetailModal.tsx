@@ -441,7 +441,7 @@ export default function LessonDetailModal({ lessonId, onClose }: LessonDetailMod
       {/* Delete Mini Game Confirmation */}
       {deleteGameTarget && (
         <div style={{ ...overlayStyle, zIndex: 1100 }}>
-          <div style={{ backgroundColor: '#fff', padding: 24, borderRadius: 8, minWidth: 400, maxWidth: 500 }}>
+          <div style={{ backgroundColor: 'var(--edub-surface)', color: 'var(--edub-text-primary)', border: '1px solid var(--edub-border)', padding: 24, borderRadius: 8, minWidth: 400, maxWidth: 500 }}>
             <h2 style={{ marginBottom: 16 }}>Xác nhận xóa</h2>
             <p style={{ marginBottom: 16 }}>
               Bạn có chắc chắn muốn xóa mini game <strong>{deleteGameTarget.name}</strong>?
@@ -460,7 +460,7 @@ export default function LessonDetailModal({ lessonId, onClose }: LessonDetailMod
 
       {showStoragePicker && (
         <div style={{ ...overlayStyle, zIndex: 1100 }}>
-          <div style={{ backgroundColor: '#fff', padding: 20, borderRadius: 8, minWidth: 620, maxWidth: 760, maxHeight: '80vh', overflowY: 'auto' }}>
+          <div style={{ backgroundColor: 'var(--edub-surface)', color: 'var(--edub-text-primary)', border: '1px solid var(--edub-border)', padding: 20, borderRadius: 8, minWidth: 620, maxWidth: 760, maxHeight: '80vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <h3 style={{ margin: 0 }}>Chọn tệp từ kho lưu trữ</h3>
               <button type="button" onClick={closeStoragePicker} className="btn btn-neutral" style={{ padding: '4px 12px' }}>
@@ -469,7 +469,7 @@ export default function LessonDetailModal({ lessonId, onClose }: LessonDetailMod
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <div style={{ color: '#555', fontSize: 14 }}>
+              <div style={{ color: 'var(--edub-text-secondary)', fontSize: 14 }}>
                 {folderTrail.map((f) => f.name).join(' / ')}
               </div>
               <button
@@ -486,7 +486,7 @@ export default function LessonDetailModal({ lessonId, onClose }: LessonDetailMod
             {storageLoading ? (
               <p>Đang tải kho lưu trữ...</p>
             ) : storageItems.length === 0 ? (
-              <p style={{ color: '#888' }}>Thư mục này chưa có dữ liệu.</p>
+              <p style={{ color: 'var(--edub-text-secondary)' }}>Thư mục này chưa có dữ liệu.</p>
             ) : (
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
@@ -527,7 +527,7 @@ export default function LessonDetailModal({ lessonId, onClose }: LessonDetailMod
                               Mở
                             </button>
                           ) : (
-                            <span style={{ color: '#888' }}>Có thể chọn</span>
+                            <span style={{ color: 'var(--edub-text-secondary)' }}>Có thể chọn</span>
                           )}
                         </td>
                       </tr>
@@ -568,7 +568,9 @@ const overlayStyle: React.CSSProperties = {
 };
 
 const modalStyle: React.CSSProperties = {
-  backgroundColor: '#fff',
+  backgroundColor: 'var(--edub-surface)',
+  color: 'var(--edub-text-primary)',
+  border: '1px solid var(--edub-border)',
   padding: 24,
   borderRadius: 8,
   minWidth: 600,
@@ -579,5 +581,5 @@ const modalStyle: React.CSSProperties = {
 
 const labelStyle: React.CSSProperties = { display: 'block', marginBottom: 4 };
 const inputStyle: React.CSSProperties = { width: '100%', padding: 8, boxSizing: 'border-box' };
-const thStyle: React.CSSProperties = { textAlign: 'left', padding: '6px 8px', borderBottom: '2px solid #ccc' };
-const tdStyle: React.CSSProperties = { padding: '6px 8px', borderBottom: '1px solid #eee' };
+const thStyle: React.CSSProperties = { textAlign: 'left', padding: '6px 8px', borderBottom: '2px solid var(--edub-border)' };
+const tdStyle: React.CSSProperties = { padding: '6px 8px', borderBottom: '1px solid var(--edub-border)' };
