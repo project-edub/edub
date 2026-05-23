@@ -27,16 +27,8 @@ import {
 import type { PublicLecturerProfile } from '../types/profile';
 import type { ApiError } from '../types/common';
 import * as publicService from '../services/publicService';
+import { getApiOrigin } from '../services/apiConfig';
 import { useColorMode } from '../theme/ColorModeContext';
-
-function toApiOrigin(): string {
-  const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
-  try {
-    return new URL(apiBase, window.location.origin).origin;
-  } catch {
-    return window.location.origin;
-  }
-}
 
 function resolveImageUrl(value: unknown): string {
   if (typeof value !== 'string') return '';
@@ -45,7 +37,7 @@ function resolveImageUrl(value: unknown): string {
   if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
     return url;
   }
-  const origin = toApiOrigin();
+  const origin = getApiOrigin();
   return `${origin}${url.startsWith('/') ? '' : '/'}${url}`;
 }
 

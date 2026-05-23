@@ -131,20 +131,8 @@ public class AuthService : IAuthService
             ?? throw new InvalidOperationException("Google:ClientId is not configured");
 
         var client = _httpClientFactory.CreateClient();
-
-        // Read client secret explicitly from the API's runtime appsettings file only.
-        // This avoids any other configuration source overriding it.
-        var settingsPath = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
-        if (!File.Exists(settingsPath))
-        {
-            throw new InvalidOperationException($"Google settings file not found: {settingsPath}");
-        }
-
-        var localConfig = new ConfigurationBuilder()
-            .AddJsonFile(settingsPath, optional: false, reloadOnChange: false)
-            .Build();
-
-        var clientSecret = localConfig["Google:ClientSecret"];
+        var clientSecret = _configuration["Google:ClientSecret"]
+            ?? throw new InvalidOperationException("Google:ClientSecret is not configured");
 
         var form = new Dictionary<string, string>
         {
@@ -155,10 +143,7 @@ public class AuthService : IAuthService
             ["grant_type"] = "authorization_code",
         };
 
-        if (!string.IsNullOrWhiteSpace(clientSecret))
-        {
-            form["client_secret"] = clientSecret;
-        }
+        form["client_secret"] = clientSecret;
 
         var tokenRequest = new HttpRequestMessage(HttpMethod.Post, "https://oauth2.googleapis.com/token")
         {

@@ -1,11 +1,10 @@
 import api from './api';
+import { getApiOrigin } from './apiConfig';
 import type { LecturerProfile, UpdateProfileRequest } from '../types/profile';
-
-const API_HOST = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5000';
 
 export function getImageUrl(path: string): string {
   if (path.startsWith('http')) return path;
-  return `${API_HOST}${path}`;
+  return `${getApiOrigin()}${path}`;
 }
 
 export async function getProfile(): Promise<LecturerProfile> {
