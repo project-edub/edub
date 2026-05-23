@@ -1,7 +1,5 @@
-import axios from 'axios';
+import api from './api';
 import type { PublicLecturerProfile } from '../types/profile';
-
-const API_BASE = '/api/public';
 
 export async function searchLecturers(
   search?: string,
@@ -17,7 +15,7 @@ export async function searchLecturers(
   if (experience) params.append('experience', experience);
   if (rating) params.append('rating', rating);
 
-  const response = await axios.get(`${API_BASE}/lecturers`, {
+  const response = await api.get('/public/lecturers', {
     params: Object.fromEntries(params.entries())
   });
 

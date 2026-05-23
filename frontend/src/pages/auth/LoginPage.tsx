@@ -20,9 +20,10 @@ import { Role } from '../../types/auth';
 import type { ApiError } from '../../types/common';
 import { AxiosError } from 'axios';
 import WestRoundedIcon from '@mui/icons-material/WestRounded';
+import { getApiRootUrl } from '../../services/apiConfig';
 import { useColorMode } from '../../theme/ColorModeContext';
 
-const API_ROOT = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api').replace(/\/?api\/?$/, '');
+const API_ROOT = getApiRootUrl();
 
 function redirectForRole(role: string, navigate: ReturnType<typeof useNavigate>) {
   if (role === Role.Admin) {
