@@ -10,6 +10,25 @@ using TeachingManagementPlatform.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+string? GetGoogleConfigurationValue(string key, string? developmentDefault = null)
+{
+    return builder.Configuration[$"Google:{key}"]
+        ?? builder.Configuration[$"Authentication:Google:{key}"]
+        ?? (builder.Environment.IsDevelopment() ? developmentDefault : null);
+}
+
+builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+{
+    ["Google:ClientId"] = GetGoogleConfigurationValue("ClientId"),
+    ["Google:ClientSecret"] = GetGoogleConfigurationValue("ClientSecret"),
+    ["Google:RedirectUri"] = GetGoogleConfigurationValue(
+        "RedirectUri",
+        "http://localhost:5000/api/auth/google/callback"),
+    ["Google:FrontendCallbackUrl"] = GetGoogleConfigurationValue(
+        "FrontendCallbackUrl",
+        "http://localhost:5173/auth/google/callback"),
+});
+
 // Add services to the container.
 builder.Services.AddControllers();
 
@@ -83,6 +102,9 @@ builder.Services.AddScoped<IStudentListService, StudentListService>();
 // Register Excel service
 builder.Services.AddScoped<IExcelService, ExcelService>();
 
+// Register file parsing service (docx, pdf, xlsx)
+builder.Services.AddScoped<IFileParsingService, FileParsingService>();
+
 // Register lesson plan service
 builder.Services.AddScoped<ILessonPlanService, LessonPlanService>();
 
@@ -106,6 +128,11 @@ builder.Services.AddHttpClient<IAIService, AIService>(client =>
 {
     client.Timeout = TimeSpan.FromSeconds(60);
 });
+
+// Register quiz mapping/validation service
+builder.Services.AddScoped<IQuizMappingService, QuizMappingService>();
+// Register Google Forms service
+builder.Services.AddScoped<IGoogleFormsService, GoogleFormsService>();
 
 var app = builder.Build();
 

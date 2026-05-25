@@ -10,6 +10,7 @@ import ClassListPage from './pages/lecturer/ClassListPage';
 import ClassDetailPage from './pages/lecturer/ClassDetailPage';
 import LessonPlanPage from './pages/lecturer/LessonPlanPage';
 import TeachingMaterialStoragePage from './pages/lecturer/TeachingMaterialStoragePage';
+import QuizGeneratorPage from './pages/lecturer/QuizGeneratorPage';
 import AdminRoute from './components/common/AdminRoute';
 import LecturerRoute from './components/common/LecturerRoute';
 
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="/lecturer/classes/:id" element={<ClassDetailPage />} />
           <Route path="/lecturer/lesson-plans" element={<LessonPlanPage />} />
           <Route path="/lecturer/storage" element={<TeachingMaterialStoragePage />} />
+          <Route path="/lecturer/quiz-generator" element={<QuizGeneratorPage />} />
         </Route>
 
         {/* Default redirect */}

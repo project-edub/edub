@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { AxiosError } from 'axios';
+import { useNavigate } from 'react-router-dom';
 import type { StorageItem, StorageFilter } from '../../types/storage';
 import type { ApiError } from '../../types/common';
 import { ItemType } from '../../types/common';
@@ -12,6 +13,7 @@ interface BreadcrumbEntry {
 }
 
 export default function TeachingMaterialStoragePage() {
+  const navigate = useNavigate();
   const [items, setItems] = useState<StorageItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -216,6 +218,14 @@ export default function TeachingMaterialStoragePage() {
           style={{ display: 'none' }}
           data-testid="file-upload-input"
         />
+        <button
+          type="button"
+          onClick={() => navigate('/lecturer/quiz-generator')}
+          disabled={actionLoading}
+          className="btn btn-update"
+        >
+          Tạo quiz từ tài liệu
+        </button>
         <input
           type="text"
           placeholder="Tìm kiếm"

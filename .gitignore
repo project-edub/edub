@@ -14,9 +14,9 @@
 *.log
 
 # Node artifacts
-frontend/node_modules/
-frontend/dist/
-frontend/.vite/
+TeachingManagementPlatform.Frontend/node_modules/
+TeachingManagementPlatform.Frontend/dist/
+TeachingManagementPlatform.Frontend/.vite/
 
 # Test and coverage
 **/TestResults/
