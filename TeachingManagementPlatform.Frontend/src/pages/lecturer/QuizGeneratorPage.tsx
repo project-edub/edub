@@ -10,13 +10,13 @@ export default function QuizGeneratorPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [questionCount, setQuestionCount] = useState(10);
   const [topic, setTopic] = useState('');
-  const [difficulty, setDifficulty] = useState('');
-  const [language, setLanguage] = useState('vi');
+  const [difficulty, setDifficulty] = useState('dễ');
+  const [language] = useState('vi');
   const [teacherGoogleEmail, setTeacherGoogleEmail] = useState('');
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<QuizGenerationResponse | null>(null);
-  const [error, setError] = useState<{ code?: string; message: string; details?: any } | null>(null);
+  const [error, setError] = useState<{ code?: string; message: string; details?: unknown } | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   function localizeErrorMessage(code?: string, fallback?: string) {
@@ -76,11 +76,12 @@ export default function QuizGeneratorPage() {
             <Field label="Chủ đề" helper="Ví dụ: Hàm số, Hóa học hữu cơ">
               <input type="text" value={topic} onChange={(e) => setTopic(e.target.value)} style={inputStyle} placeholder="Nhập chủ đề" />
             </Field>
-            <Field label="Mức độ khó" helper="Dễ, trung bình, khó">
-              <input type="text" value={difficulty} onChange={(e) => setDifficulty(e.target.value)} style={inputStyle} placeholder="Ví dụ: trung bình" />
-            </Field>
-            <Field label="Ngôn ngữ" helper="Mặc định: vi">
-              <input type="text" value={language} onChange={(e) => setLanguage(e.target.value)} style={inputStyle} />
+            <Field label="Mức độ khó" helper="Chọn một trong ba mức">
+              <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)} style={inputStyle}>
+                <option value="dễ">Dễ</option>
+                <option value="trung bình">Trung bình</option>
+                <option value="khó">Khó</option>
+              </select>
             </Field>
             <Field label="Email Google của GV" helper="Dùng để share form sau khi tạo">
               <input type="email" value={teacherGoogleEmail} onChange={(e) => { setTeacherGoogleEmail(e.target.value); setFieldErrors(prev => ({ ...prev, teacherGoogleEmail: '' })); }} style={inputStyle} placeholder="teacher@gmail.com" />
@@ -125,12 +126,11 @@ export default function QuizGeneratorPage() {
                 setPreview(res);
                 setError(null);
               } catch (err) {
-                // display structured server message when available
-                // eslint-disable-next-line no-console
                 console.error(err);
-                if (err && (err as any).message) {
-                  const e = err as any;
-                  setError({ code: e.code, message: localizeErrorMessage(e.code, e.message), details: e.details });
+                if (err && typeof err === 'object' && 'message' in err && typeof err.message === 'string') {
+                  const code = 'code' in err && typeof err.code === 'string' ? err.code : undefined;
+                  const details = 'details' in err ? err.details : undefined;
+                  setError({ code, message: localizeErrorMessage(code, err.message), details });
                 } else {
                   setError({ message: 'Lỗi khi gọi AI. Vui lòng thử lại.' });
                 }
@@ -153,11 +153,11 @@ export default function QuizGeneratorPage() {
                 setError(null);
                 alert(`Form created: ${res.editUrl}`);
               } catch (err) {
-                // eslint-disable-next-line no-console
                 console.error(err);
-                if (err && (err as any).message) {
-                  const e = err as any;
-                  setError({ code: e.code, message: localizeErrorMessage(e.code, e.message), details: e.details });
+                if (err && typeof err === 'object' && 'message' in err && typeof err.message === 'string') {
+                  const code = 'code' in err && typeof err.code === 'string' ? err.code : undefined;
+                  const details = 'details' in err ? err.details : undefined;
+                  setError({ code, message: localizeErrorMessage(code, err.message), details });
                 } else {
                   setError({ message: 'Lỗi tạo Google Form. Kiểm tra cấu hình server.' });
                 }
@@ -169,29 +169,26 @@ export default function QuizGeneratorPage() {
         </div>
       </section>
 
-      <section style={{ ...cardStyle, marginTop: 20 }}>
-        <h2 style={sectionTitleStyle}>Trạng thái hiện tại</h2>
-        <p style={{ marginBottom: 8 }}>Trang này mới là điểm vào UI cho luồng tạo quiz.</p>
-        <ul style={statusListStyle}>
-          <li>Đã gắn route riêng cho lecturer.</li>
-          <li>Đã gắn nút chuyển từ kho tài liệu sang trang tạo quiz.</li>
-          <li>Đã chốt các input chính cho bước AI và xuất form.</li>
-          {preview && (
-            <li style={{ marginTop: 8 }}>Preview: đã tạo {preview.generatedQuestionCount} câu hỏi</li>
-          )}
-        </ul>
-        {error && (
+      {error && (
+        <section style={{ ...cardStyle, marginTop: 20 }}>
+          <h2 style={sectionTitleStyle}>Lỗi</h2>
           <div style={{ marginTop: 12, padding: 12, borderRadius: 8, background: 'rgba(255,235,238,0.8)', border: '1px solid #f44336', position: 'relative' }}>
             <button type="button" onClick={() => setError(null)} style={{ position: 'absolute', right: 8, top: 8, background: 'transparent', border: 'none', cursor: 'pointer' }}>✕</button>
             <strong style={{ color: '#b71c1c' }}>{error.code ?? 'ERROR'}</strong>
             <div style={{ marginTop: 6 }}>{error.message}</div>
-            {error.details && <pre style={{ marginTop: 8, whiteSpace: 'pre-wrap' }}>{JSON.stringify(error.details, null, 2)}</pre>}
+            {error.details != null && (
+              <pre style={{ marginTop: 8, whiteSpace: 'pre-wrap' }}>
+                {typeof error.details === 'string' ? error.details : JSON.stringify(error.details, null, 2)}
+              </pre>
+            )}
           </div>
-        )}
+        </section>
+      )}
 
-        {preview && (
+      {preview && (
+        <section style={{ ...cardStyle, marginTop: 20 }}>
+          <h2 style={sectionTitleStyle}>Kết quả - Xem trước</h2>
           <div style={{ marginTop: 12 }}>
-            <h3>Kết quả - Xem trước</h3>
             {preview.questions.map((q, idx) => (
               <div key={idx} style={{ padding: 12, border: '1px solid var(--edub-border)', borderRadius: 8, marginBottom: 8 }}>
                 <strong>{idx + 1}. {q.question}</strong>
@@ -203,8 +200,8 @@ export default function QuizGeneratorPage() {
               </div>
             ))}
           </div>
-        )}
-      </section>
+        </section>
+      )}
     </div>
   );
 }
@@ -338,9 +335,3 @@ const actionRowStyle: React.CSSProperties = {
   flexWrap: 'wrap',
 };
 
-const statusListStyle: React.CSSProperties = {
-  margin: 0,
-  paddingLeft: 18,
-  color: 'var(--edub-text-secondary)',
-  lineHeight: 1.7,
-};
