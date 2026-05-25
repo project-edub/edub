@@ -24,6 +24,7 @@ const lecturerMenuItems = [
   { to: '/lecturer/classes', label: 'Danh sách lớp' },
   { to: '/lecturer/lesson-plans', label: 'Giáo án' },
   { to: '/lecturer/storage', label: 'Kho tài liệu' },
+  { to: '/lecturer/quiz-generator', label: 'Tạo Quiz' },
 ];
 
 const adminMenuItems = [
