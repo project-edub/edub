@@ -29,6 +29,7 @@ export function useAuth() {
 
   return {
     isAuthenticated: decoded !== null,
+    email: decoded?.email ?? null,
     role: decoded?.role ?? null,
     token,
   };

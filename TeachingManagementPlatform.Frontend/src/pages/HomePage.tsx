@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AxiosError } from 'axios';
 import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
 import {
@@ -18,6 +18,7 @@ import {
   DialogContent,
   DialogTitle,
   LinearProgress,
+  IconButton,
   MenuItem,
   Stack,
   TextField,
@@ -29,6 +30,8 @@ import type { ApiError } from '../types/common';
 import * as publicService from '../services/publicService';
 import { getApiOrigin } from '../services/apiConfig';
 import { useColorMode } from '../theme/ColorModeContext';
+import { useAuth } from '../hooks/useAuth';
+import { Role } from '../types/auth';
 
 function resolveImageUrl(value: unknown): string {
   if (typeof value !== 'string') return '';
@@ -95,7 +98,7 @@ function normalizeLecturer(input: unknown, fallbackId: number): PublicLecturerPr
   const fullName =
     typeof source.fullName === 'string' && source.fullName.trim()
       ? source.fullName.trim()
-      : 'Gia sư chưa cập nhật tên';
+      : 'Giáo viên chưa cập nhật tên';
   const introduction = typeof source.introduction === 'string' ? source.introduction.trim() : null;
 
   return {
@@ -129,6 +132,8 @@ function renderSelectValue(value: unknown, placeholder: string) {
 
 export default function HomePage() {
   const { mode, toggleMode } = useColorMode();
+  const { isAuthenticated, email, role } = useAuth();
+  const navigate = useNavigate();
   const [lecturers, setLecturers] = useState<PublicLecturerProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -199,17 +204,63 @@ export default function HomePage() {
           <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700 }}>
             EduB
           </Typography>
-          <Button
-            type="button"
-            onClick={toggleMode}
-            variant="text"
-            aria-label={mode === 'light' ? 'Chuyển sang chế độ tối' : 'Chuyển sang chế độ sáng'}
-            sx={{ minWidth: 0, px: 1, fontSize: 18 }}
-          >
-            {mode === 'light' ? '🌙' : '☀️'}
-          </Button>
-          <Button component={Link} to="/login" variant="outlined">Đăng nhập</Button>
-          <Button component={Link} to="/register" variant="contained">Đăng ký</Button>
+          {!isAuthenticated ? (
+            <>
+              <IconButton
+                onClick={toggleMode}
+                aria-label={mode === 'light' ? 'Chuyển sang chế độ tối' : 'Chuyển sang chế độ sáng'}
+                size="large"
+                sx={{ p: 0.5 }}
+              >
+                {mode === 'light' ? '🌙' : '☀️'}
+              </IconButton>
+              <Button component={Link} to="/login" variant="outlined">Đăng nhập</Button>
+              <Button component={Link} to="/register" variant="contained">Đăng ký</Button>
+            </>
+          ) : (
+            <>
+              <Button
+                onClick={() => navigate(role === Role.Admin ? '/admin/accounts' : '/lecturer/overview')}
+                variant="text"
+                sx={{ whiteSpace: 'nowrap' }}
+              >
+                Bảng điều khiển
+              </Button>
+
+              <IconButton
+                onClick={toggleMode}
+                aria-label={mode === 'light' ? 'Chuyển sang chế độ tối' : 'Chuyển sang chế độ sáng'}
+                size="large"
+                sx={{ p: 0.5 }}
+              >
+                {mode === 'light' ? '🌙' : '☀️'}
+              </IconButton>
+
+              <IconButton
+                aria-label="Tài khoản"
+                size="large"
+                sx={{ p: 0.5 }}
+              >
+                <Avatar sx={{ width: 36, height: 36, bgcolor: 'primary.main' }}>{email ? email.charAt(0).toUpperCase() : 'U'}</Avatar>
+              </IconButton>
+
+              <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 220, wordBreak: 'break-word' }}>
+                {email}
+              </Typography>
+
+              <Button
+                onClick={() => {
+                  localStorage.removeItem('token');
+                  navigate('/login', { replace: true });
+                }}
+                variant="outlined"
+                color="error"
+                sx={{ whiteSpace: 'nowrap' }}
+              >
+                Đăng xuất
+              </Button>
+            </>
+          )}
         </Toolbar>
       </AppBar>
 
@@ -223,7 +274,7 @@ export default function HomePage() {
             mb: 3,
           }}
         >
-          <Typography variant="h2" sx={{ color: '#fff', mb: 0.5 }}>Tìm gia sư phù hợp</Typography>
+          <Typography variant="h2" sx={{ color: '#fff', mb: 0.5 }}>Tìm giáo viên phù hợp</Typography>
           <Typography sx={{ opacity: 0.86 }}>Khám phá giảng viên chất lượng với chuyên môn đúng nhu cầu học tập.</Typography>
         </Box>
 
@@ -242,7 +293,7 @@ export default function HomePage() {
             <Box sx={{ gridColumn: { md: 'span 2' } }}>
               <TextField
                 fullWidth
-                placeholder="Tìm theo tên gia sư"
+                placeholder="Tìm theo tên giáo viên"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -339,7 +390,7 @@ export default function HomePage() {
 
         {!loading && (
           <Typography variant="h6" sx={{ mb: 2 }}>
-            {safeLecturers.length} gia sư được tìm thấy
+            {safeLecturers.length} giáo viên được tìm thấy
           </Typography>
         )}
 
@@ -355,14 +406,14 @@ export default function HomePage() {
           <Card elevation={0} sx={{ border: '1px dashed', borderColor: 'divider', textAlign: 'center', mt: 2 }}>
             <CardContent>
               <Typography color="text.secondary">
-                Không tìm thấy gia sư nào phù hợp với tiêu chí tìm kiếm.
+                Không tìm thấy giáo viên nào phù hợp với tiêu chí tìm kiếm.
               </Typography>
             </CardContent>
           </Card>
         )}
 
         <Dialog open={Boolean(selectedLecturer)} onClose={handleCloseProfile} maxWidth="sm" fullWidth>
-          <DialogTitle>Thông tin gia sư</DialogTitle>
+          <DialogTitle>Thông tin giáo viên</DialogTitle>
           <DialogContent dividers>
             {selectedLecturer && (
               <Stack spacing={2}>
