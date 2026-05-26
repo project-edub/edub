@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration.Json;
 using Microsoft.IdentityModel.Tokens;
 using TeachingManagementPlatform.Api.Data;
 using TeachingManagementPlatform.Api.Interfaces;
+using TeachingManagementPlatform.Api.Models;
 using TeachingManagementPlatform.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -206,12 +207,35 @@ async Task SeedSampleDataAsync(ApplicationDbContext context)
     await context.SaveChangesAsync();
 }
 
+async Task EnsureAdminAccountAsync(ApplicationDbContext context)
+{
+    const string adminEmail = "edub-admin@gmail.com";
+
+    var adminExists = await context.Users.AnyAsync(u => u.Email == adminEmail);
+    if (adminExists)
+        return;
+
+    context.Users.Add(new User
+    {
+        FullName = "edub-admin",
+        Email = adminEmail,
+        PasswordHash = BCrypt.Net.BCrypt.HashPassword("eb192837"),
+        Role = "Admin",
+        Status = "Active",
+        CreatedAt = DateTime.UtcNow,
+        UpdatedAt = DateTime.UtcNow
+    });
+
+    await context.SaveChangesAsync();
+}
+
 // Seed sample data before starting the server
 try
 {
     using (var scope = app.Services.CreateScope())
     {
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        await EnsureAdminAccountAsync(context);
         await SeedSampleDataAsync(context);
     }
 }
