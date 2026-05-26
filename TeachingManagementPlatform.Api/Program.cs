@@ -151,6 +151,27 @@ BEGIN
     ADD [LessonStatus] nvarchar(20) NOT NULL
         CONSTRAINT [DF_ClassLessonSchedules_LessonStatus] DEFAULT N'pending';
 END
+
+IF COL_LENGTH('SubscriptionPackages', 'IsDefault') IS NULL
+BEGIN
+    ALTER TABLE [SubscriptionPackages]
+    ADD [IsDefault] bit NOT NULL
+        CONSTRAINT [DF_SubscriptionPackages_IsDefault] DEFAULT CAST(0 AS bit);
+END
+
+IF COL_LENGTH('SubscriptionPackages', 'MaxFilesPerQuizGeneration') IS NULL
+BEGIN
+    ALTER TABLE [SubscriptionPackages]
+    ADD [MaxFilesPerQuizGeneration] int NOT NULL
+        CONSTRAINT [DF_SubscriptionPackages_MaxFilesPerQuizGeneration] DEFAULT 1;
+END
+
+IF COL_LENGTH('SubscriptionPackages', 'MaxQuestionsPerQuiz') IS NULL
+BEGIN
+    ALTER TABLE [SubscriptionPackages]
+    ADD [MaxQuestionsPerQuiz] int NOT NULL
+        CONSTRAINT [DF_SubscriptionPackages_MaxQuestionsPerQuiz] DEFAULT 10;
+END
 ");
     }
 }
@@ -167,7 +188,10 @@ var runningInContainer = string.Equals(
 
 if (!runningInContainer)
 {
-    app.UseHttpsRedirection();
+    if (!app.Environment.IsDevelopment())
+    {
+        app.UseHttpsRedirection();
+    }
 }
 app.UseCors();
 
@@ -229,6 +253,27 @@ async Task EnsureAdminAccountAsync(ApplicationDbContext context)
     await context.SaveChangesAsync();
 }
 
+async Task SeedDefaultSubscriptionPackageAsync(ApplicationDbContext context)
+{
+    if (await context.SubscriptionPackages.AnyAsync())
+        return;
+
+    context.SubscriptionPackages.Add(new SubscriptionPackage
+    {
+        Name = "Gói miễn phí",
+        Price = 0,
+        StorageLimitBytes = 1L * 1024 * 1024 * 1024,
+        MaxFilesPerQuizGeneration = 1,
+        MaxQuestionsPerQuiz = 10,
+        IsDefault = true,
+        UnlockedFeatures = new List<string> { "quiz_generator" },
+        CreatedAt = DateTime.UtcNow,
+        UpdatedAt = DateTime.UtcNow
+    });
+
+    await context.SaveChangesAsync();
+}
+
 // Seed sample data before starting the server
 try
 {
@@ -237,6 +282,7 @@ try
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         await EnsureAdminAccountAsync(context);
         await SeedSampleDataAsync(context);
+        await SeedDefaultSubscriptionPackageAsync(context);
     }
 }
 catch (Exception ex)

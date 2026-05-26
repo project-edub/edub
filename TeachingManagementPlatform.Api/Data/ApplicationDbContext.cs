@@ -118,6 +118,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<SubscriptionPackage>(entity =>
         {
             entity.Property(sp => sp.Price).HasColumnType("decimal(18,2)");
+            entity.Property(sp => sp.IsDefault).HasDefaultValue(false);
             entity.Property(sp => sp.UnlockedFeatures)
                 .HasConversion(
                     v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
