@@ -19,6 +19,7 @@ export default function GoogleCallbackPage() {
   useEffect(() => {
     const token = searchParams.get('token');
     const role = searchParams.get('role');
+    const googleAccessToken = searchParams.get('googleAccessToken');
     const error = searchParams.get('error');
     const errorDescription = searchParams.get('error_description');
 
@@ -33,6 +34,9 @@ export default function GoogleCallbackPage() {
     }
 
     localStorage.setItem('token', token);
+    if (googleAccessToken) {
+      localStorage.setItem('googleAccessToken', googleAccessToken);
+    }
     redirectForRole(role, navigate);
   }, [navigate, searchParams]);
 

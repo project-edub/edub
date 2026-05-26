@@ -4,10 +4,8 @@ namespace TeachingManagementPlatform.Api.Models;
 
 public class QuizGenerationRequest
 {
-    [Required]
-    [MinLength(1)]
     [MaxLength(5000)]
-    public string Prompt { get; set; } = string.Empty;
+    public string? Prompt { get; set; }
 
     [Range(1, 30)]
     public int QuestionCount { get; set; } = 10;
@@ -24,13 +22,11 @@ public class QuizGenerationRequest
     [EmailAddress]
     public string? TeacherGoogleEmail { get; set; }
 
-    [Required]
     [MaxLength(260)]
-    public string SourceFileName { get; set; } = string.Empty;
+    public string? SourceFileName { get; set; }
 
-    [Required]
     [MaxLength(20)]
-    public string SourceFileExtension { get; set; } = string.Empty;
+    public string? SourceFileExtension { get; set; }
 }
 
 public class QuizGenerationResponse
@@ -101,6 +97,6 @@ public class CreateGoogleFormRequest
 {
     public string Title { get; set; } = "Quiz";
     public List<GeneratedQuizQuestion> Questions { get; set; } = new();
-    [EmailAddress]
-    public string TeacherGoogleEmail { get; set; } = string.Empty;
+    public string? TeacherGoogleEmail { get; set; }
+    public string? GoogleAccessToken { get; set; }
 }

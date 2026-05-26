@@ -28,54 +28,70 @@ public class QuizGenerationController : ControllerBase
     }
 
     [HttpPost("generate")]
-    public async Task<IActionResult> Generate([FromForm] QuizGenerationRequest request, IFormFile? file)
+    public async Task<IActionResult> Generate([FromForm] QuizGenerationRequest request)
     {
-        if (file == null || file.Length == 0)
+        var files = Request.Form.Files;
+        if (files == null || files.Count == 0)
             return BadRequest(new { error = new { code = "VALIDATION_ERROR", message = "Tệp nguồn bắt buộc" } });
 
         // Load limits from configuration
         var limitsSection = _configuration.GetSection("QuizGeneration:Limits");
         var maxQuestions = limitsSection.GetValue<int?>("MaxQuestions") ?? 30;
         var maxFileSizeMb = limitsSection.GetValue<int?>("MaxFileSizeMb") ?? 20;
+        var maxFiles = limitsSection.GetValue<int?>("MaxFiles") ?? 5;
         var maxInputCharacters = limitsSection.GetValue<int?>("MaxInputCharacters") ?? 50000;
-        var allowedExtensions = limitsSection.GetSection("AllowedExtensions").Get<string[]>() ?? new[] { ".docx", ".xlsx", ".pdf" };
+        var allowedExtensions = limitsSection.GetSection("AllowedExtensions").Get<string[]>() ?? new[] { ".docx", ".xlsx", ".pdf", ".pptx" };
 
         if (request.QuestionCount > maxQuestions)
             return BadRequest(new { error = new { code = "TOO_MANY_QUESTIONS", message = $"Số câu hỏi yêu cầu vượt quá giới hạn ({maxQuestions})." } });
 
-        if (!allowedExtensions.Contains(Path.GetExtension(file.FileName).ToLowerInvariant()))
-            return BadRequest(new { error = new { code = "INVALID_EXTENSION", message = $"Định dạng tệp không hợp lệ. Hỗ trợ: {string.Join(',', allowedExtensions)}." } });
+        if (files.Count > maxFiles)
+            return BadRequest(new { error = new { code = "TOO_MANY_FILES", message = $"Chỉ cho phép tối đa {maxFiles} tệp." } });
 
-        if (file.Length > (long)maxFileSizeMb * 1024 * 1024)
-            return BadRequest(new { error = new { code = "FILE_TOO_LARGE", message = $"Kích thước tệp vượt quá giới hạn {maxFileSizeMb} MB." } });
-        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        var attachments = new List<AttachmentInfo>();
+        foreach (var file in files)
+        {
+            if (!allowedExtensions.Contains(Path.GetExtension(file.FileName).ToLowerInvariant()))
+                return BadRequest(new { error = new { code = "INVALID_EXTENSION", message = $"Định dạng tệp không hợp lệ: {file.FileName}. Hỗ trợ: {string.Join(',', allowedExtensions)}." } });
+
+            if (file.Length > (long)maxFileSizeMb * 1024 * 1024)
+                return BadRequest(new { error = new { code = "FILE_TOO_LARGE", message = $"Kích thước tệp vượt quá giới hạn {maxFileSizeMb} MB: {file.FileName}" } });
+        }
 
         try
         {
-            using var stream = file.OpenReadStream();
-            var content = await _fileParsingService.ExtractTextAsync(stream, ext);
-
-            if (content.Length > maxInputCharacters)
+            // Extract text from each file
+            foreach (var f in files)
             {
-                return BadRequest(new
+                using var stream = f.OpenReadStream();
+                var ext = Path.GetExtension(f.FileName).ToLowerInvariant();
+                var content = await _fileParsingService.ExtractTextAsync(stream, ext);
+
+                if (content.Length > maxInputCharacters)
                 {
-                    error = new
+                    return BadRequest(new
                     {
-                        code = "INPUT_TOO_LONG",
-                        message = $"Nội dung trích xuất ({content.Length} ký tự) vượt quá giới hạn {maxInputCharacters} ký tự. Vui lòng chọn phạm vi ngắn hơn hoặc tách tài liệu.",
-                        extractedCharacters = content.Length,
-                        maxAllowed = maxInputCharacters
-                    }
-                });
+                        error = new
+                        {
+                            code = "INPUT_TOO_LONG",
+                            message = $"Nội dung trích xuất từ {f.FileName} ({content.Length} ký tự) vượt quá giới hạn {maxInputCharacters} ký tự. Vui lòng chọn phạm vi ngắn hơn hoặc tách tài liệu.",
+                            extractedCharacters = content.Length,
+                            maxAllowed = maxInputCharacters
+                        }
+                    });
+                }
+
+                attachments.Add(new AttachmentInfo { FileName = f.FileName, Content = content });
             }
 
-            var attachment = new AttachmentInfo
-            {
-                FileName = file.FileName,
-                Content = content
-            };
-
-            var quizContent = await _aiService.GenerateQuizAsync(new List<DocumentInfo>(), new List<AttachmentInfo> { attachment });
+            var quizContent = await _aiService.GenerateQuizAsync(
+                new List<DocumentInfo>(),
+                attachments,
+                request.QuestionCount,
+                request.Prompt,
+                request.Topic,
+                request.Difficulty,
+                request.Language);
 
             var (questions, warnings) = _mappingService.ValidateAndMap(quizContent, request.QuestionCount);
 
@@ -110,7 +126,7 @@ public class QuizGenerationController : ControllerBase
                 return BadRequest(new { error = new { code = "VALIDATION_ERROR", message = "Questions are required" } });
 
             var service = (IGoogleFormsService)HttpContext.RequestServices.GetService(typeof(IGoogleFormsService))!;
-            var (formId, editUrl, driveWebView) = await service.CreateFormAsync(request.Title, request.Questions, request.TeacherGoogleEmail);
+            var (formId, editUrl, driveWebView) = await service.CreateFormAsync(request.Title, request.Questions, request.TeacherGoogleEmail, request.GoogleAccessToken);
 
             return Ok(new { formId, editUrl, driveWebView });
         }

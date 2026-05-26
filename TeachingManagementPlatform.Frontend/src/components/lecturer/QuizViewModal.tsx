@@ -9,6 +9,8 @@ interface QuizViewModalProps {
   onClose: () => void;
 }
 
+const OPTION_LABELS = ['A', 'B', 'C', 'D'];
+
 function extractError(err: unknown): string {
   const axiosErr = err as AxiosError<ApiError>;
   return axiosErr.response?.data?.error?.message || 'Đã xảy ra lỗi. Vui lòng thử lại.';
@@ -67,10 +69,10 @@ export default function QuizViewModal({ miniGameId, onClose }: QuizViewModalProp
                   <p style={{ fontWeight: 'bold', marginBottom: 8 }}>
                     Câu {idx + 1}: {q.question}
                   </p>
-                  <ul style={{ margin: 0, paddingLeft: 20 }}>
-                    {q.options.map((opt) => (
+                  <ul style={{ margin: 0, paddingLeft: 0, listStyle: 'none' }}>
+                    {q.options.map((opt, optionIndex) => (
                       <li key={opt} style={{ marginBottom: 4, fontWeight: opt === q.answer ? 'bold' : 'normal', color: opt === q.answer ? '#2e7d32' : 'inherit' }}>
-                        {opt} {opt === q.answer && '(Đáp án đúng)'}
+                        <strong>{OPTION_LABELS[optionIndex] ?? String(optionIndex + 1)}.</strong> {opt} {opt === q.answer && '(Đáp án đúng)'}
                       </li>
                     ))}
                   </ul>

@@ -163,7 +163,9 @@ public class AuthService : IAuthService
         }
 
         var googleUser = await GetGoogleUserInfoAsync(tokenPayload.AccessToken);
-        return await CompleteGoogleLoginAsync(googleUser);
+        var response = await CompleteGoogleLoginAsync(googleUser);
+        response.GoogleAccessToken = tokenPayload.AccessToken;
+        return response;
     }
 
     private async Task<GoogleUserInfo> GetGoogleUserInfoAsync(string accessToken)
