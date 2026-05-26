@@ -31,9 +31,16 @@ public class AIService : IAIService
         _model = configuration["OpenAI:Model"] ?? "gpt-4o-mini";
     }
 
-    public async Task<QuizContent> GenerateQuizAsync(List<DocumentInfo> documents, List<AttachmentInfo> attachments)
+    public async Task<QuizContent> GenerateQuizAsync(
+        List<DocumentInfo> documents,
+        List<AttachmentInfo> attachments,
+        int requestedQuestionCount = 5,
+        string? customPrompt = null,
+        string? topic = null,
+        string? difficulty = null,
+        string language = "vi")
     {
-        var prompt = BuildPrompt(documents, attachments);
+        var prompt = BuildPrompt(documents, attachments, requestedQuestionCount, customPrompt, topic, difficulty, language);
 
         var requestBody = new OpenAIRequest
         {
@@ -86,17 +93,42 @@ public class AIService : IAIService
         return ParseQuizResponse(responseJson);
     }
 
-    internal static string BuildPrompt(List<DocumentInfo> documents, List<AttachmentInfo> attachments)
+    internal static string BuildPrompt(
+        List<DocumentInfo> documents,
+        List<AttachmentInfo> attachments,
+        int requestedQuestionCount = 5,
+        string? customPrompt = null,
+        string? topic = null,
+        string? difficulty = null,
+        string language = "vi")
     {
+        requestedQuestionCount = Math.Clamp(requestedQuestionCount, 1, 30);
+
         var sb = new StringBuilder();
-        sb.AppendLine("Dựa trên các tài liệu giảng dạy sau, hãy tạo 5 câu hỏi trắc nghiệm.");
+        sb.AppendLine($"Dựa trên các tài liệu giảng dạy sau, hãy tạo đúng {requestedQuestionCount} câu hỏi trắc nghiệm.");
         sb.AppendLine("Trả về JSON theo format:");
         sb.AppendLine("{\"questions\":[{\"question\":\"...\",\"options\":[\"A\",\"B\",\"C\",\"D\"],\"correctAnswerIndex\":0}]}");
         sb.AppendLine();
         sb.AppendLine("Yêu cầu:");
+        sb.AppendLine($"- Tạo đúng {requestedQuestionCount} câu hỏi");
         sb.AppendLine("- Mỗi câu hỏi có đúng 4 lựa chọn");
         sb.AppendLine("- correctAnswerIndex là chỉ số (0-3) của đáp án đúng");
         sb.AppendLine("- Chỉ trả về JSON, không thêm text khác");
+
+        if (!string.IsNullOrWhiteSpace(language))
+            sb.AppendLine($"- Ngôn ngữ câu hỏi: {language}");
+        if (!string.IsNullOrWhiteSpace(topic))
+            sb.AppendLine($"- Chủ đề ưu tiên: {topic}");
+        if (!string.IsNullOrWhiteSpace(difficulty))
+            sb.AppendLine($"- Mức độ khó: {difficulty}");
+
+        if (!string.IsNullOrWhiteSpace(customPrompt))
+        {
+            sb.AppendLine();
+            sb.AppendLine("Yêu cầu bổ sung từ giảng viên:");
+            sb.AppendLine(customPrompt.Trim());
+        }
+
         sb.AppendLine();
 
         if (documents.Count > 0)

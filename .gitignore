@@ -34,5 +34,6 @@ TeachingManagementPlatform.Api/shared-secrets.json
 # Upload temp/runtime data
 TeachingManagementPlatform.Api/uploads
 
-
+secret
+artifacts
 

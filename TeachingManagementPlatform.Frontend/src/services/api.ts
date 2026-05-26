@@ -3,9 +3,6 @@ import { getApiBaseUrl } from './apiConfig';
 
 const api = axios.create({
   baseURL: getApiBaseUrl(),
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 // Request interceptor: attach JWT token from localStorage

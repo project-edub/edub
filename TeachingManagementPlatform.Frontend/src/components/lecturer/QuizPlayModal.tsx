@@ -9,6 +9,8 @@ interface QuizPlayModalProps {
   onClose: () => void;
 }
 
+const OPTION_LABELS = ['A', 'B', 'C', 'D'];
+
 function extractError(err: unknown): string {
   const axiosErr = err as AxiosError<ApiError>;
   return axiosErr.response?.data?.error?.message || 'Đã xảy ra lỗi. Vui lòng thử lại.';
@@ -114,7 +116,7 @@ export default function QuizPlayModal({ miniGameId, onClose }: QuizPlayModalProp
                 <p style={{ fontWeight: 'bold', marginBottom: 10 }}>
                   Câu {idx + 1}: {q.question}
                 </p>
-                {q.options.map((option) => (
+                {q.options.map((option, optionIndex) => (
                   <button
                     key={option}
                     type="button"
@@ -122,14 +124,18 @@ export default function QuizPlayModal({ miniGameId, onClose }: QuizPlayModalProp
                     disabled={submitted[idx]}
                     style={getOptionStyle(idx, option)}
                   >
-                    {option}
+                    <strong>{OPTION_LABELS[optionIndex] ?? String(optionIndex + 1)}.</strong> {option}
                     {submitted[idx] && option === q.answer && ' ✓'}
                     {submitted[idx] && answers[idx] === option && option !== q.answer && ' ✗'}
                   </button>
                 ))}
                 {submitted[idx] && answers[idx] !== q.answer && (
                   <p style={{ color: '#d32f2f', fontSize: 13, marginTop: 4 }}>
-                    Đáp án đúng: {q.answer}
+                    Đáp án đúng: {(() => {
+                      const answerIndex = q.options.indexOf(q.answer);
+                      const answerLabel = OPTION_LABELS[answerIndex] ?? (answerIndex >= 0 ? String(answerIndex + 1) : '?');
+                      return `${answerLabel}. ${q.answer}`;
+                    })()}
                   </p>
                 )}
               </div>

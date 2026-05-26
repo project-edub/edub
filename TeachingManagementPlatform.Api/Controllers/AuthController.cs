@@ -164,6 +164,12 @@ public class AuthController : ControllerBase
         {
             var response = await _authService.GoogleLoginFromCodeAsync(code, codeVerifier);
             var successUrl = $"{frontendCallbackUrl}?token={Uri.EscapeDataString(response.Token)}&role={Uri.EscapeDataString(response.Role)}";
+
+            if (!string.IsNullOrWhiteSpace(response.GoogleAccessToken))
+            {
+                successUrl += $"&googleAccessToken={Uri.EscapeDataString(response.GoogleAccessToken)}";
+            }
+
             return Redirect(successUrl);
         }
         catch (AccountInactiveException ex)

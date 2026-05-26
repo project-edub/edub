@@ -3,6 +3,8 @@ using TeachingManagementPlatform.Api.Interfaces;
 using TeachingManagementPlatform.Api.Services;
 using Xceed.Words.NET;
 using UglyToad.PdfPig;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Drawing;
 
 namespace TeachingManagementPlatform.Api.Services;
 
@@ -32,6 +34,8 @@ public class FileParsingService : IFileParsingService
                     return await ExtractDocxTextAsync(stream);
                 case ".pdf":
                     return await ExtractPdfTextAsync(stream);
+                case ".pptx":
+                    return await ExtractPptxTextAsync(stream);
                 case ".xlsx":
                 case ".xls":
                     return await ExtractExcelTextAsync(stream);
@@ -73,6 +77,52 @@ public class FileParsingService : IFileParsingService
             {
                 sb.AppendLine(pageText.Trim());
             }
+        }
+
+        return Task.FromResult(sb.ToString().Trim());
+    }
+
+    private Task<string> ExtractPptxTextAsync(Stream stream)
+    {
+        using var mem = new MemoryStream();
+        stream.CopyTo(mem);
+        mem.Position = 0;
+
+        var sb = new StringBuilder();
+        try
+        {
+            using var presentation = PresentationDocument.Open(mem, false);
+            var presentationPart = presentation.PresentationPart;
+            if (presentationPart == null)
+                return Task.FromResult(string.Empty);
+
+            foreach (var slidePart in presentationPart.SlideParts)
+            {
+                var texts = slidePart.Slide.Descendants<DocumentFormat.OpenXml.Drawing.Text>();
+                foreach (var t in texts)
+                {
+                    if (!string.IsNullOrWhiteSpace(t.Text))
+                    {
+                        sb.AppendLine(t.Text.Trim());
+                    }
+                }
+
+                if (slidePart.NotesSlidePart != null)
+                {
+                    var noteTexts = slidePart.NotesSlidePart.NotesSlide.Descendants<DocumentFormat.OpenXml.Drawing.Text>();
+                    foreach (var nt in noteTexts)
+                    {
+                        if (!string.IsNullOrWhiteSpace(nt.Text))
+                            sb.AppendLine(nt.Text.Trim());
+                    }
+                }
+
+                sb.AppendLine();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to extract PPTX text");
         }
 
         return Task.FromResult(sb.ToString().Trim());

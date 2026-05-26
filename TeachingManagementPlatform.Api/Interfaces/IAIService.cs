@@ -4,7 +4,14 @@ namespace TeachingManagementPlatform.Api.Interfaces;
 
 public interface IAIService
 {
-    Task<QuizContent> GenerateQuizAsync(List<DocumentInfo> documents, List<AttachmentInfo> attachments);
+    Task<QuizContent> GenerateQuizAsync(
+        List<DocumentInfo> documents,
+        List<AttachmentInfo> attachments,
+        int requestedQuestionCount = 5,
+        string? customPrompt = null,
+        string? topic = null,
+        string? difficulty = null,
+        string language = "vi");
 }
 
 public class DocumentInfo
