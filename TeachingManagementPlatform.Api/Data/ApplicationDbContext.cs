@@ -21,6 +21,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<ProfileTuitionFee> ProfileTuitionFees => Set<ProfileTuitionFee>();
     public DbSet<ProfileNote> ProfileNotes => Set<ProfileNote>();
     public DbSet<SubscriptionPackage> SubscriptionPackages => Set<SubscriptionPackage>();
+    public DbSet<CoinPackage> CoinPackages => Set<CoinPackage>();
+    public DbSet<CoinPurchaseTransaction> CoinPurchaseTransactions => Set<CoinPurchaseTransaction>();
     public DbSet<Class> Classes => Set<Class>();
     public DbSet<StudentList> StudentLists => Set<StudentList>();
     public DbSet<StudentListColumn> StudentListColumns => Set<StudentListColumn>();
@@ -118,11 +120,41 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<SubscriptionPackage>(entity =>
         {
             entity.Property(sp => sp.Price).HasColumnType("decimal(18,2)");
+            entity.Property(sp => sp.IsDefault).HasDefaultValue(false);
             entity.Property(sp => sp.UnlockedFeatures)
                 .HasConversion(
                     v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
                     v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null) ?? new List<string>())
                 .HasColumnType("nvarchar(max)");
+        });
+
+        // ── CoinPackage ──
+        modelBuilder.Entity<CoinPackage>(entity =>
+        {
+            entity.Property(cp => cp.Price).HasColumnType("decimal(18,2)");
+            entity.Property(cp => cp.Description).HasColumnType("nvarchar(max)");
+            entity.Property(cp => cp.IsActive).HasDefaultValue(true);
+        });
+
+        // ── CoinPurchaseTransaction ──
+        modelBuilder.Entity<CoinPurchaseTransaction>(entity =>
+        {
+            entity.ToTable("CoinPurchaseTransactions");
+            entity.HasIndex(item => item.OrderCode).IsUnique();
+            entity.Property(item => item.Amount).HasColumnType("decimal(18,2)");
+            entity.Property(item => item.Status).HasMaxLength(30);
+            entity.Property(item => item.CheckoutUrl).HasColumnType("nvarchar(max)");
+            entity.Property(item => item.ErrorMessage).HasColumnType("nvarchar(max)");
+
+            entity.HasOne(item => item.User)
+                .WithMany()
+                .HasForeignKey(item => item.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(item => item.CoinPackage)
+                .WithMany()
+                .HasForeignKey(item => item.CoinPackageId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // ── Class ──

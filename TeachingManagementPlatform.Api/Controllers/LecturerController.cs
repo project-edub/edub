@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TeachingManagementPlatform.Api.Interfaces;
@@ -14,11 +15,22 @@ public class LecturerController : ControllerBase
 {
     private readonly IProfileService _profileService;
     private readonly IFileStorage _fileStorage;
+    private readonly ICoinService _coinService;
+    private readonly ICoinPackageService _coinPackageService;
+    private readonly IPaymentService _paymentService;
 
-    public LecturerController(IProfileService profileService, IFileStorage fileStorage)
+    public LecturerController(
+        IProfileService profileService,
+        IFileStorage fileStorage,
+        ICoinService coinService,
+        ICoinPackageService coinPackageService,
+        IPaymentService paymentService)
     {
         _profileService = profileService;
         _fileStorage = fileStorage;
+        _coinService = coinService;
+        _coinPackageService = coinPackageService;
+        _paymentService = paymentService;
     }
 
     [HttpGet("profile")]
@@ -95,9 +107,45 @@ public class LecturerController : ControllerBase
         }
     }
 
+    [HttpGet("coin-wallet")]
+    public async Task<IActionResult> GetCoinWallet()
+    {
+        var userId = GetUserId();
+        var wallet = await _coinService.GetWalletAsync(userId);
+        return Ok(wallet);
+    }
+
+    [HttpGet("coin-packages")]
+    public async Task<IActionResult> GetCoinPackages()
+    {
+        var packages = await _coinPackageService.GetAllAsync(onlyActive: true);
+        return Ok(packages);
+    }
+
+    [HttpPost("coin-packages/{id}/purchase")]
+    public async Task<IActionResult> PurchaseCoinPackage(int id, [FromBody] CreateCoinPurchaseRequest request)
+    {
+        var userId = GetUserId();
+
+        try
+        {
+            var checkout = await _paymentService.CreateCoinPurchaseCheckoutAsync(userId, id, request);
+            return Ok(checkout);
+        }
+        catch (CoinPackageNotFoundException ex)
+        {
+            return NotFound(new { error = new { code = "COIN_PACKAGE_NOT_FOUND", message = ex.Message } });
+        }
+        catch (CoinPurchasePaymentException ex)
+        {
+            return BadRequest(new { error = new { code = "PAYMENT_ERROR", message = ex.Message } });
+        }
+    }
+
     private int GetUserId()
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub)
             ?? throw new UnauthorizedAccessException("User ID not found in token.");
         return int.Parse(userIdClaim);
     }

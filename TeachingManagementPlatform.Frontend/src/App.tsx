@@ -5,12 +5,14 @@ import RegisterPage from './pages/auth/RegisterPage';
 import GoogleCallbackPage from './pages/auth/GoogleCallbackPage';
 import AccountManagementPage from './pages/admin/AccountManagementPage';
 import SubscriptionPackagePage from './pages/admin/SubscriptionPackagePage';
+import CoinPackagePage from './pages/admin/CoinPackagePage';
 import OverviewPage from './pages/lecturer/OverviewPage';
 import ClassListPage from './pages/lecturer/ClassListPage';
 import ClassDetailPage from './pages/lecturer/ClassDetailPage';
 import LessonPlanPage from './pages/lecturer/LessonPlanPage';
 import TeachingMaterialStoragePage from './pages/lecturer/TeachingMaterialStoragePage';
 import QuizGeneratorPage from './pages/lecturer/QuizGeneratorPage';
+import CoinPurchasePage from './pages/lecturer/CoinPurchasePage';
 import AdminRoute from './components/common/AdminRoute';
 import LecturerRoute from './components/common/LecturerRoute';
 
@@ -30,6 +32,7 @@ export default function App() {
         <Route element={<AdminRoute />}>
           <Route path="/admin/accounts" element={<AccountManagementPage />} />
           <Route path="/admin/subscriptions" element={<SubscriptionPackagePage />} />
+          <Route path="/admin/coin-packages" element={<CoinPackagePage />} />
         </Route>
 
         {/* Lecturer routes */}
@@ -40,6 +43,7 @@ export default function App() {
           <Route path="/lecturer/lesson-plans" element={<LessonPlanPage />} />
           <Route path="/lecturer/storage" element={<TeachingMaterialStoragePage />} />
           <Route path="/lecturer/quiz-generator" element={<QuizGeneratorPage />} />
+          <Route path="/lecturer/coin-packages" element={<CoinPurchasePage />} />
         </Route>
 
         {/* Default redirect */}

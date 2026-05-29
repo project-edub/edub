@@ -606,12 +606,22 @@ namespace TeachingManagementPlatform.Api.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("MaxFilesPerQuizGeneration")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxQuestionsPerQuiz")
+                        .HasColumnType("int");
 
                     b.Property<long>("StorageLimitBytes")
                         .HasColumnType("bigint");

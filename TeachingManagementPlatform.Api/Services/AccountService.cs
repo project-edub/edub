@@ -44,6 +44,7 @@ public class AccountService : IAccountService
             FullName = request.FullName,
             Role = "Lecturer",
             Status = "Active",
+            CoinBalance = 0,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -74,6 +75,9 @@ public class AccountService : IAccountService
 
         if (request.Password != null)
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+
+        if (request.CoinBalance.HasValue)
+            user.CoinBalance = request.CoinBalance.Value;
 
         user.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
@@ -113,6 +117,7 @@ public class AccountService : IAccountService
             FullName = user.FullName,
             Role = user.Role,
             Status = user.Status,
+            CoinBalance = user.CoinBalance,
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt
         };

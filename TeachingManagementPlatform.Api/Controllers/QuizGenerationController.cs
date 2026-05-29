@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
 using TeachingManagementPlatform.Api.Interfaces;
 using TeachingManagementPlatform.Api.Models;
 using TeachingManagementPlatform.Api.Services;
@@ -15,14 +17,22 @@ public class QuizGenerationController : ControllerBase
     private readonly IFileParsingService _fileParsingService;
     private readonly IAIService _aiService;
     private readonly IQuizMappingService _mappingService;
+    private readonly ICoinService _coinService;
     private readonly IConfiguration _configuration;
     private readonly ILogger<QuizGenerationController> _logger;
 
-    public QuizGenerationController(IFileParsingService fileParsingService, IAIService aiService, IQuizMappingService mappingService, IConfiguration configuration, ILogger<QuizGenerationController> logger)
+    public QuizGenerationController(
+        IFileParsingService fileParsingService,
+        IAIService aiService,
+        IQuizMappingService mappingService,
+        ICoinService coinService,
+        IConfiguration configuration,
+        ILogger<QuizGenerationController> logger)
     {
         _fileParsingService = fileParsingService;
         _aiService = aiService;
         _mappingService = mappingService;
+        _coinService = coinService;
         _configuration = configuration;
         _logger = logger;
     }
@@ -34,6 +44,8 @@ public class QuizGenerationController : ControllerBase
         if (files == null || files.Count == 0)
             return BadRequest(new { error = new { code = "VALIDATION_ERROR", message = "Tệp nguồn bắt buộc" } });
 
+        var userId = GetUserId();
+
         // Load limits from configuration
         var limitsSection = _configuration.GetSection("QuizGeneration:Limits");
         var maxQuestions = limitsSection.GetValue<int?>("MaxQuestions") ?? 30;
@@ -44,6 +56,23 @@ public class QuizGenerationController : ControllerBase
 
         if (request.QuestionCount > maxQuestions)
             return BadRequest(new { error = new { code = "TOO_MANY_QUESTIONS", message = $"Số câu hỏi yêu cầu vượt quá giới hạn ({maxQuestions})." } });
+
+        var coinCostPerQuestion = _configuration.GetValue<int?>("QuizGeneration:CoinCostPerQuestion") ?? 1;
+        var requiredCoin = Math.Max(1, request.QuestionCount) * Math.Max(1, coinCostPerQuestion);
+        var currentCoinBalance = await _coinService.GetBalanceAsync(userId);
+        if (currentCoinBalance < requiredCoin)
+        {
+            return StatusCode(402, new
+            {
+                error = new
+                {
+                    code = "INSUFFICIENT_ECOIN",
+                    message = $"Không đủ ECoin để tạo quiz. Cần {requiredCoin} ECoin, hiện có {currentCoinBalance} ECoin.",
+                    requiredCoin,
+                    currentCoinBalance
+                }
+            });
+        }
 
         if (files.Count > maxFiles)
             return BadRequest(new { error = new { code = "TOO_MANY_FILES", message = $"Chỉ cho phép tối đa {maxFiles} tệp." } });
@@ -103,6 +132,8 @@ public class QuizGenerationController : ControllerBase
                 Warnings = warnings
             };
 
+            await _coinService.DeductCoinsAsync(userId, requiredCoin);
+
             return Ok(response);
         }
         catch (AIServiceException ex)
@@ -115,6 +146,15 @@ public class QuizGenerationController : ControllerBase
             _logger.LogError(ex, "Failed to generate quiz");
             return StatusCode(500, new { error = new { code = "INTERNAL_ERROR", message = "Không thể xử lý yêu cầu" } });
         }
+    }
+
+    private int GetUserId()
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+            ?? throw new UnauthorizedAccessException("User ID not found in token.");
+
+        return int.Parse(userIdClaim);
     }
 
     [HttpPost("create-form")]

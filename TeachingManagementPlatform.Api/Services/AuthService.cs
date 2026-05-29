@@ -68,6 +68,7 @@ public class AuthService : IAuthService
             FullName = request.FullName,
             Role = "Lecturer",
             Status = "Active",
+            CoinBalance = 0,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -260,6 +261,7 @@ public class AuthService : IAuthService
                     Role = "Lecturer",
                     GoogleId = verifiedGoogleId,
                     Status = "Active",
+                    CoinBalance = 0,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
