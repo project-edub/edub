@@ -25,11 +25,13 @@ const lecturerMenuItems = [
   { to: '/lecturer/lesson-plans', label: 'Giáo án' },
   { to: '/lecturer/storage', label: 'Kho tài liệu' },
   { to: '/lecturer/quiz-generator', label: 'Tạo Quiz' },
+  { to: '/lecturer/coin-packages', label: 'Mua ECoin' },
 ];
 
 const adminMenuItems = [
   { to: '/admin/accounts', label: 'Quản lý tài khoản' },
   { to: '/admin/subscriptions', label: 'Gói đăng ký' },
+  { to: '/admin/coin-packages', label: 'Gói ECoin' },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

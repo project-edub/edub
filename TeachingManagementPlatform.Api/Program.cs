@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Configuration.Json;
 using Microsoft.IdentityModel.Tokens;
+using PayOS;
 using TeachingManagementPlatform.Api.Data;
 using TeachingManagementPlatform.Api.Interfaces;
 using TeachingManagementPlatform.Api.Models;
@@ -17,6 +18,14 @@ string? GetGoogleConfigurationValue(string key, string? developmentDefault = nul
         ?? builder.Configuration[$"Authentication:Google:{key}"]
         ?? (builder.Environment.IsDevelopment() ? developmentDefault : null);
 }
+
+string? GetPayOsConfigurationValue(string key)
+{
+    return builder.Configuration[$"PayOS:{key}"]
+        ?? builder.Configuration[$"Payment:PayOS:{key}"];
+}
+
+builder.Configuration.AddJsonFile("shared-secrets.json", optional: true, reloadOnChange: true);
 
 builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
 {
@@ -91,6 +100,10 @@ builder.Services.AddScoped<IAccountService, AccountService>();
 // Register subscription service
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 
+// Register coin services
+builder.Services.AddScoped<ICoinService, CoinService>();
+builder.Services.AddScoped<ICoinPackageService, CoinPackageService>();
+
 // Register profile service
 builder.Services.AddScoped<IProfileService, ProfileService>();
 
@@ -117,6 +130,15 @@ builder.Services.AddScoped<IClassLessonPlanService, ClassLessonPlanService>();
 
 // Register Google token validator
 builder.Services.AddScoped<IGoogleTokenValidator, GoogleTokenValidator>();
+
+// Register PayOS client and payment service
+builder.Services.AddSingleton(_ => new PayOSClient(new PayOSOptions
+{
+    ClientId = GetPayOsConfigurationValue("ClientId") ?? throw new InvalidOperationException("PayOS:ClientId is not configured"),
+    ApiKey = GetPayOsConfigurationValue("ApiKey") ?? throw new InvalidOperationException("PayOS:ApiKey is not configured"),
+    ChecksumKey = GetPayOsConfigurationValue("ChecksumKey") ?? throw new InvalidOperationException("PayOS:ChecksumKey is not configured")
+}));
+builder.Services.AddScoped<IPaymentService, PaymentService>();
 
 // Register mini game service
 builder.Services.AddScoped<IMiniGameService, MiniGameService>();
@@ -171,6 +193,49 @@ BEGIN
     ALTER TABLE [SubscriptionPackages]
     ADD [MaxQuestionsPerQuiz] int NOT NULL
         CONSTRAINT [DF_SubscriptionPackages_MaxQuestionsPerQuiz] DEFAULT 10;
+END
+
+IF COL_LENGTH('Users', 'CoinBalance') IS NULL
+BEGIN
+    ALTER TABLE [Users]
+    ADD [CoinBalance] int NOT NULL
+        CONSTRAINT [DF_Users_CoinBalance] DEFAULT 0;
+END
+
+IF OBJECT_ID('CoinPackages', 'U') IS NULL
+BEGIN
+    CREATE TABLE [CoinPackages] (
+        [Id] int IDENTITY(1,1) NOT NULL CONSTRAINT [PK_CoinPackages] PRIMARY KEY,
+        [Name] nvarchar(200) NOT NULL,
+        [Price] decimal(18,2) NOT NULL,
+        [CoinAmount] int NOT NULL,
+        [Description] nvarchar(max) NULL,
+        [IsActive] bit NOT NULL CONSTRAINT [DF_CoinPackages_IsActive] DEFAULT CAST(1 AS bit),
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NOT NULL
+    );
+END
+
+IF OBJECT_ID('CoinPurchaseTransactions', 'U') IS NULL
+BEGIN
+    CREATE TABLE [CoinPurchaseTransactions] (
+        [Id] int IDENTITY(1,1) NOT NULL CONSTRAINT [PK_CoinPurchaseTransactions] PRIMARY KEY,
+        [OrderCode] bigint NOT NULL,
+        [UserId] int NOT NULL,
+        [CoinPackageId] int NOT NULL,
+        [Amount] decimal(18,2) NOT NULL,
+        [CoinAmount] int NOT NULL,
+        [Status] nvarchar(30) NOT NULL,
+        [CheckoutUrl] nvarchar(max) NULL,
+        [PaymentLinkId] nvarchar(200) NULL,
+        [ErrorMessage] nvarchar(max) NULL,
+        [PaidAt] datetime2 NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NOT NULL,
+        CONSTRAINT [UQ_CoinPurchaseTransactions_OrderCode] UNIQUE ([OrderCode]),
+        CONSTRAINT [FK_CoinPurchaseTransactions_Users_UserId] FOREIGN KEY ([UserId]) REFERENCES [Users]([Id]) ON DELETE CASCADE,
+        CONSTRAINT [FK_CoinPurchaseTransactions_CoinPackages_CoinPackageId] FOREIGN KEY ([CoinPackageId]) REFERENCES [CoinPackages]([Id])
+    );
 END
 ");
     }
@@ -274,6 +339,46 @@ async Task SeedDefaultSubscriptionPackageAsync(ApplicationDbContext context)
     await context.SaveChangesAsync();
 }
 
+async Task SeedDefaultCoinPackagesAsync(ApplicationDbContext context)
+{
+    if (await context.CoinPackages.AnyAsync())
+        return;
+
+    context.CoinPackages.AddRange(
+        new CoinPackage
+        {
+            Name = "Gói 100 ECoin",
+            Price = 49000,
+            CoinAmount = 100,
+            Description = "Gói khởi đầu cho nhu cầu tạo quiz nhỏ.",
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        },
+        new CoinPackage
+        {
+            Name = "Gói 300 ECoin",
+            Price = 129000,
+            CoinAmount = 300,
+            Description = "Phù hợp cho giảng viên tạo quiz thường xuyên.",
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        },
+        new CoinPackage
+        {
+            Name = "Gói 1000 ECoin",
+            Price = 349000,
+            CoinAmount = 1000,
+            Description = "Dành cho nhu cầu sử dụng AI với tần suất cao.",
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        });
+
+    await context.SaveChangesAsync();
+}
+
 // Seed sample data before starting the server
 try
 {
@@ -283,6 +388,7 @@ try
         await EnsureAdminAccountAsync(context);
         await SeedSampleDataAsync(context);
         await SeedDefaultSubscriptionPackageAsync(context);
+        await SeedDefaultCoinPackagesAsync(context);
     }
 }
 catch (Exception ex)
