@@ -13,10 +13,14 @@ public class LocalFileStorage : IFileStorage
         Directory.CreateDirectory(_basePath);
     }
 
-    public async Task<string> SaveFileAsync(Stream fileStream, string fileName)
+    public async Task<string> SaveFileAsync(Stream fileStream, string fileName, string? folderPrefix = null, long? contentLength = null)
     {
-        var fileReference = $"{Guid.NewGuid()}{Path.GetExtension(fileName)}";
-        var filePath = Path.Combine(_basePath, fileReference);
+        var fileReference = CreateFileReference(fileName, folderPrefix);
+        var filePath = Path.Combine(_basePath, fileReference.Replace('/', Path.DirectorySeparatorChar));
+        var directoryPath = Path.GetDirectoryName(filePath);
+
+        if (!string.IsNullOrWhiteSpace(directoryPath))
+            Directory.CreateDirectory(directoryPath);
 
         using var outputStream = new FileStream(filePath, FileMode.Create, FileAccess.Write);
         await fileStream.CopyToAsync(outputStream);
@@ -64,5 +68,35 @@ public class LocalFileStorage : IFileStorage
             Size = fileInfo.Length,
             ModifiedAt = fileInfo.LastWriteTimeUtc
         });
+    }
+
+    public string GetPublicUrl(string fileReference)
+    {
+        return $"/uploads/{fileReference.Replace('\\', '/')}";
+    }
+
+    private static string CreateFileReference(string fileName, string? folderPrefix)
+    {
+        var extension = Path.GetExtension(fileName);
+        var normalizedPrefix = NormalizePrefix(folderPrefix);
+        var fileNamePart = $"{Guid.NewGuid()}{extension}";
+
+        return string.IsNullOrWhiteSpace(normalizedPrefix)
+            ? fileNamePart
+            : $"{normalizedPrefix}/{fileNamePart}";
+    }
+
+    private static string? NormalizePrefix(string? folderPrefix)
+    {
+        if (string.IsNullOrWhiteSpace(folderPrefix))
+            return null;
+
+        var segments = folderPrefix
+            .Replace('\\', '/')
+            .Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(segment => segment.Trim())
+            .Where(segment => segment.Length > 0 && segment != "." && segment != "..");
+
+        return string.Join('/', segments);
     }
 }

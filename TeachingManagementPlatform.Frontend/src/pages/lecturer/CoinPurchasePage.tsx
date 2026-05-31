@@ -13,8 +13,15 @@ export default function CoinPurchasePage() {
   const [packages, setPackages] = useState<CoinPackage[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
+  const [syncingPayment, setSyncingPayment] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+
+  function wait(ms: number) {
+    return new Promise((resolve) => {
+      window.setTimeout(resolve, ms);
+    });
+  }
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -39,17 +46,114 @@ export default function CoinPurchasePage() {
 
   useEffect(() => {
     const paymentStatus = searchParams.get('paymentStatus');
-    const orderCode = searchParams.get('orderCode');
+    const orderCodeRaw = searchParams.get('orderCode');
 
     if (paymentStatus === 'success') {
-      setSuccessMessage(orderCode ? `Thanh toán order #${orderCode} đang được xác nhận.` : 'Thanh toán đang được xác nhận.');
-      void loadData();
+      const orderCode = orderCodeRaw ? Number(orderCodeRaw) : NaN;
+
+      if (Number.isNaN(orderCode)) {
+        setSuccessMessage('Thanh toán đang được xác nhận.');
+        void loadData();
+        return;
+      }
+
+      let cancelled = false;
+
+      const syncPurchase = async () => {
+        setSuccessMessage(`Thanh toán order #${orderCode} đang được xác nhận.`);
+        setError('');
+        setSyncingPayment(true);
+
+        try {
+          let latestStatus = '';
+          let latestOrderCode = orderCode;
+
+          for (let attempt = 1; attempt <= 6; attempt += 1) {
+            const result = await coinService.syncLecturerCoinPurchase(orderCode);
+            if (cancelled) return;
+
+            latestStatus = result.status.toLowerCase();
+            latestOrderCode = result.orderCode;
+
+            if (latestStatus === 'paid') {
+              setSuccessMessage(
+                `Thanh toán order #${result.orderCode} thành công. Bạn đã nhận ${result.coinAmount.toLocaleString('vi-VN')} ECoin.`,
+              );
+              setError('');
+              break;
+            }
+
+            if (latestStatus === 'failed') {
+              setError(`Thanh toán order #${result.orderCode} không thành công. Vui lòng thử lại.`);
+              setSuccessMessage('');
+              break;
+            }
+
+            setSuccessMessage(`Order #${result.orderCode} đang chờ xác nhận từ cổng thanh toán (lần ${attempt}/6)...`);
+
+            if (attempt < 6) {
+              await wait(2000);
+            }
+          }
+
+          if (latestStatus !== 'paid' && latestStatus !== 'failed') {
+            setSuccessMessage(
+              `Order #${latestOrderCode} vẫn đang chờ xác nhận. Bạn có thể bấm "Đồng bộ giao dịch gần nhất" sau vài giây.`,
+            );
+          }
+
+          await loadData();
+        } catch (err) {
+          if (cancelled) return;
+          setError(extractError(err));
+          setSuccessMessage('');
+          await loadData();
+        } finally {
+          if (!cancelled) {
+            setSyncingPayment(false);
+          }
+        }
+      };
+
+      void syncPurchase();
+
+      return () => {
+        cancelled = true;
+      };
     }
 
     if (paymentStatus === 'cancel') {
       setError('Bạn đã hủy thanh toán hoặc quay lại từ cổng PayOS.');
     }
   }, [loadData, searchParams]);
+
+  async function syncLatestPurchase() {
+    setSyncingPayment(true);
+    setError('');
+
+    try {
+      const result = await coinService.syncLatestLecturerCoinPurchase();
+      const normalizedStatus = result.status.toLowerCase();
+
+      if (normalizedStatus === 'paid') {
+        setSuccessMessage(
+          `Đã đồng bộ order #${result.orderCode}: +${result.coinAmount.toLocaleString('vi-VN')} ECoin thành công.`,
+        );
+      } else if (normalizedStatus === 'failed') {
+        setError(`Order #${result.orderCode} đã thất bại. Vui lòng tạo giao dịch mới.`);
+        setSuccessMessage('');
+      } else {
+        setSuccessMessage(`Order #${result.orderCode} hiện ở trạng thái ${result.status}. Vui lòng thử đồng bộ lại sau.`);
+      }
+
+      await loadData();
+    } catch (err) {
+      setError(extractError(err));
+      setSuccessMessage('');
+    } finally {
+      setSyncingPayment(false);
+    }
+  }
 
   function extractError(err: unknown): string {
     const axiosErr = err as AxiosError<ApiError>;
@@ -90,6 +194,14 @@ export default function CoinPurchasePage() {
         <div style={walletCardStyle}>
           <span style={walletLabelStyle}>Số dư hiện tại</span>
           <span style={walletValueStyle}>{wallet.coinBalance.toLocaleString('vi-VN')} ECoin</span>
+          <button
+            type="button"
+            className="btn btn-neutral"
+            onClick={() => void syncLatestPurchase()}
+            disabled={syncingPayment}
+          >
+            {syncingPayment ? 'Đang đồng bộ...' : 'Đồng bộ giao dịch gần nhất'}
+          </button>
           <button type="button" className="btn btn-neutral" onClick={() => navigate('/lecturer/quiz-generator')}>
             Quay lại tạo quiz
           </button>

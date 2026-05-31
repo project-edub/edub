@@ -11,4 +11,8 @@ public interface IPaymentService
         CreateCoinPurchaseRequest request);
 
     Task<CoinPurchaseWebhookResult> HandleCoinPurchaseWebhookAsync(Webhook webhook);
+
+    Task<CoinPurchaseWebhookResult> SyncCoinPurchaseStatusAsync(int userId, long orderCode);
+
+    Task<CoinPurchaseWebhookResult?> SyncLatestCoinPurchaseAsync(int userId);
 }

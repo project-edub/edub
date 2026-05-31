@@ -18,17 +18,49 @@ public class AccountService : IAccountService
     {
         return await _context.Users
             .Where(u => u.Role == "Lecturer")
-            .Select(u => MapToResponse(u))
+            .Select(u => new AccountResponse
+            {
+                Id = u.Id,
+                Email = u.Email,
+                FullName = u.FullName,
+                Role = u.Role,
+                Status = u.Status,
+                CoinBalance = u.CoinBalance,
+                SubscriptionPackageId = u.SubscriptionPackageId ?? 0,
+                SubscriptionPackageName = u.SubscriptionPackage != null ? u.SubscriptionPackage.Name : string.Empty,
+                StorageLimitBytes = u.SubscriptionPackage != null ? u.SubscriptionPackage.StorageLimitBytes : 0,
+                StorageUsedBytes = u.StorageItems.Where(si => si.ItemType == "File").Sum(si => (long?)si.FileSize) ?? 0,
+                CreatedAt = u.CreatedAt,
+                UpdatedAt = u.UpdatedAt
+            })
             .ToListAsync();
     }
 
     public async Task<AccountResponse> GetByIdAsync(int id)
     {
-        var user = await _context.Users.FindAsync(id);
-        if (user == null || user.Role != "Lecturer")
+        var user = await _context.Users
+            .Where(u => u.Id == id && u.Role == "Lecturer")
+            .Select(u => new AccountResponse
+            {
+                Id = u.Id,
+                Email = u.Email,
+                FullName = u.FullName,
+                Role = u.Role,
+                Status = u.Status,
+                CoinBalance = u.CoinBalance,
+                SubscriptionPackageId = u.SubscriptionPackageId ?? 0,
+                SubscriptionPackageName = u.SubscriptionPackage != null ? u.SubscriptionPackage.Name : string.Empty,
+                StorageLimitBytes = u.SubscriptionPackage != null ? u.SubscriptionPackage.StorageLimitBytes : 0,
+                StorageUsedBytes = u.StorageItems.Where(si => si.ItemType == "File").Sum(si => (long?)si.FileSize) ?? 0,
+                CreatedAt = u.CreatedAt,
+                UpdatedAt = u.UpdatedAt
+            })
+            .FirstOrDefaultAsync();
+
+        if (user == null)
             throw new AccountNotFoundException("Không tìm thấy tài khoản");
 
-        return MapToResponse(user);
+        return user;
     }
 
     public async Task<AccountResponse> CreateAsync(CreateAccountRequest request)
@@ -36,6 +68,8 @@ public class AccountService : IAccountService
         var emailExists = await _context.Users.AnyAsync(u => u.Email == request.Email);
         if (emailExists)
             throw new EmailAlreadyExistsException("Email đã được sử dụng");
+
+        var package = await ResolveSubscriptionPackageAsync(request.SubscriptionPackageId);
 
         var user = new User
         {
@@ -45,6 +79,7 @@ public class AccountService : IAccountService
             Role = "Lecturer",
             Status = "Active",
             CoinBalance = 0,
+            SubscriptionPackageId = package.Id,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -52,7 +87,7 @@ public class AccountService : IAccountService
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
-        return MapToResponse(user);
+        return await GetByIdAsync(user.Id);
     }
 
     public async Task<AccountResponse> UpdateAsync(int id, UpdateAccountRequest request)
@@ -79,10 +114,13 @@ public class AccountService : IAccountService
         if (request.CoinBalance.HasValue)
             user.CoinBalance = request.CoinBalance.Value;
 
+        if (request.SubscriptionPackageId.HasValue)
+            user.SubscriptionPackageId = (await ResolveSubscriptionPackageAsync(request.SubscriptionPackageId)).Id;
+
         user.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
-        return MapToResponse(user);
+        return await GetByIdAsync(user.Id);
     }
 
     public async Task DeleteAsync(int id)
@@ -105,22 +143,26 @@ public class AccountService : IAccountService
         user.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
-        return MapToResponse(user);
+        return await GetByIdAsync(user.Id);
     }
 
-    private static AccountResponse MapToResponse(User user)
+    private async Task<SubscriptionPackage> ResolveSubscriptionPackageAsync(int? subscriptionPackageId)
     {
-        return new AccountResponse
+        SubscriptionPackage? package;
+
+        if (subscriptionPackageId.HasValue)
         {
-            Id = user.Id,
-            Email = user.Email,
-            FullName = user.FullName,
-            Role = user.Role,
-            Status = user.Status,
-            CoinBalance = user.CoinBalance,
-            CreatedAt = user.CreatedAt,
-            UpdatedAt = user.UpdatedAt
-        };
+            package = await _context.SubscriptionPackages.FirstOrDefaultAsync(sp => sp.Id == subscriptionPackageId.Value);
+            if (package == null)
+                throw new AccountNotFoundException("Không tìm thấy gói subscription");
+        }
+        else
+        {
+            package = await _context.SubscriptionPackages.FirstOrDefaultAsync(sp => sp.IsDefault)
+                ?? throw new AccountNotFoundException("Không tìm thấy gói subscription mặc định");
+        }
+
+        return package;
     }
 }
 

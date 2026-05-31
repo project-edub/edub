@@ -13,4 +13,6 @@ public class UpdateAccountRequest
     public string? FullName { get; set; }
 
     public int? CoinBalance { get; set; }
+
+    public int? SubscriptionPackageId { get; set; }
 }

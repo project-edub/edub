@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { AxiosError } from 'axios';
 import { useNavigate } from 'react-router-dom';
-import type { StorageItem, StorageFilter } from '../../types/storage';
+import type { StorageItem, StorageFilter, StorageQuota } from '../../types/storage';
 import type { ApiError } from '../../types/common';
 import { ItemType } from '../../types/common';
 import * as storageService from '../../services/storageService';
@@ -37,6 +37,7 @@ export default function TeachingMaterialStoragePage() {
   const [renameTarget, setRenameTarget] = useState<StorageItem | null>(null);
   const [renameName, setRenameName] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<StorageItem | null>(null);
+  const [quota, setQuota] = useState<StorageQuota | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function extractError(err: unknown): string {
@@ -65,9 +66,22 @@ export default function TeachingMaterialStoragePage() {
     }
   }, [currentFolderId, search, fileTypeFilter, dateRangeFilter, sortBy, sortDirection, foldersFirst]);
 
+  const loadQuota = useCallback(async () => {
+    try {
+      const data = await storageService.getQuota();
+      setQuota(data);
+    } catch (err) {
+      setError(extractError(err));
+    }
+  }, []);
+
   useEffect(() => {
     loadItems();
   }, [loadItems]);
+
+  useEffect(() => {
+    loadQuota();
+  }, [loadQuota]);
 
   function openFolder(item: StorageItem) {
     setBreadcrumbs((prev) => [...prev, { id: item.id, name: item.name }]);
@@ -98,7 +112,7 @@ export default function TeachingMaterialStoragePage() {
     setActionLoading(true);
     try {
       await storageService.uploadFile(file, currentFolderId);
-      await loadItems();
+      await Promise.all([loadItems(), loadQuota()]);
     } catch (err) {
       setError(extractError(err));
     } finally {
@@ -119,7 +133,7 @@ export default function TeachingMaterialStoragePage() {
       await storageService.renameItem(renameTarget.id, { name: renameName.trim() });
       setRenameTarget(null);
       setRenameName('');
-      await loadItems();
+      await Promise.all([loadItems(), loadQuota()]);
     } catch (err) {
       setError(extractError(err));
     } finally {
@@ -133,7 +147,7 @@ export default function TeachingMaterialStoragePage() {
     try {
       await storageService.deleteItem(deleteTarget.id);
       setDeleteTarget(null);
-      await loadItems();
+      await Promise.all([loadItems(), loadQuota()]);
     } catch (err) {
       setError(extractError(err));
       setDeleteTarget(null);
@@ -142,11 +156,43 @@ export default function TeachingMaterialStoragePage() {
     }
   }
 
+  async function handleDownload(item: StorageItem) {
+    if (item.itemType === ItemType.Folder) return;
+    setActionLoading(true);
+    try {
+      const { blob, fileName } = await storageService.downloadItem(item.id);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName || item.name;
+      link.rel = 'noopener';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(extractError(err));
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  function handleOpen(item: StorageItem) {
+    if (item.itemType === ItemType.Folder) return;
+    const url = storageService.resolveStorageFileUrl(item.fileUrl || null);
+    if (!url) return;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
   function formatFileSize(bytes?: number | null): string {
     if (bytes == null) return '—';
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  function formatQuotaPercent(value: number): string {
+    return `${Math.round(value)}%`;
   }
 
   function handleSortChange(value: string) {
@@ -169,6 +215,32 @@ export default function TeachingMaterialStoragePage() {
       {error && (
         <div role="alert" style={{ color: '#d32f2f', marginBottom: 16 }}>
           {error}
+        </div>
+      )}
+
+      {quota && (
+        <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, background: 'linear-gradient(135deg, rgba(25,118,210,0.08), rgba(46,125,50,0.08))', border: '1px solid rgba(0,0,0,0.08)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
+            <div>
+              <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 4 }}>Gói hiện tại</div>
+              <div style={{ fontWeight: 700 }}>{quota.subscriptionPackageName}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 4 }}>Đã dùng</div>
+              <div style={{ fontWeight: 700 }}>{formatFileSize(quota.storageUsedBytes)} / {formatFileSize(quota.storageLimitBytes)}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 4 }}>Còn lại</div>
+              <div style={{ fontWeight: 700 }}>{formatFileSize(quota.remainingBytes)}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 4 }}>Mức sử dụng</div>
+              <div style={{ fontWeight: 700 }}>{formatQuotaPercent(quota.usagePercent)}</div>
+            </div>
+          </div>
+          <div style={{ height: 10, borderRadius: 999, background: 'rgba(0,0,0,0.08)', overflow: 'hidden' }}>
+            <div style={{ width: `${Math.min(100, Math.max(0, quota.usagePercent))}%`, height: '100%', background: quota.usagePercent >= 90 ? '#d32f2f' : '#1976d2', transition: 'width 200ms ease' }} />
+          </div>
         </div>
       )}
 
@@ -352,6 +424,28 @@ export default function TeachingMaterialStoragePage() {
                     >
                       Đổi tên
                     </button>
+                    {item.itemType === ItemType.File && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleOpen(item)}
+                          disabled={actionLoading || !item.fileUrl}
+                          className="btn btn-view"
+                          style={{ marginRight: 8 }}
+                        >
+                          Mở
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDownload(item)}
+                          disabled={actionLoading}
+                          className="btn btn-add"
+                          style={{ marginRight: 8 }}
+                        >
+                          Tải xuống
+                        </button>
+                      </>
+                    )}
                     <button
                       type="button"
                       onClick={() => setDeleteTarget(item)}

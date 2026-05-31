@@ -1,5 +1,6 @@
 import api from './api';
-import type { StorageItem, CreateFolderRequest, RenameItemRequest, StorageFilter } from '../types/storage';
+import { getApiOrigin } from './apiConfig';
+import type { StorageItem, StorageQuota, CreateFolderRequest, RenameItemRequest, StorageFilter } from '../types/storage';
 
 export async function listItems(folderId?: number | null, params?: StorageFilter): Promise<StorageItem[]> {
   const query: Record<string, string> = {};
@@ -41,4 +42,29 @@ export async function renameItem(id: number, data: RenameItemRequest): Promise<S
 
 export async function deleteItem(id: number): Promise<void> {
   await api.delete(`/storage/${id}`);
+}
+
+export async function getQuota(): Promise<StorageQuota> {
+  const response = await api.get<StorageQuota>('/storage/quota');
+  return response.data;
+}
+
+export function resolveStorageFileUrl(fileUrl?: string | null): string {
+  if (!fileUrl) return '';
+  if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://') || fileUrl.startsWith('data:')) {
+    return fileUrl;
+  }
+  return `${getApiOrigin()}${fileUrl.startsWith('/') ? '' : '/'}${fileUrl}`;
+}
+
+export async function downloadItem(id: number): Promise<{ blob: Blob; fileName: string }> {
+  const response = await api.get<Blob>(`/storage/${id}/download`, {
+    responseType: 'blob',
+  });
+
+  const disposition = response.headers['content-disposition'] as string | undefined;
+  const fileNameMatch = disposition?.match(/filename\*?=(?:UTF-8''|\")?([^\";]+)/i);
+  const fileName = fileNameMatch ? decodeURIComponent(fileNameMatch[1].replace(/\"/g, '')) : `file-${id}`;
+
+  return { blob: response.data, fileName };
 }

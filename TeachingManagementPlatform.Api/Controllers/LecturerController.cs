@@ -74,9 +74,10 @@ public class LecturerController : ControllerBase
         if (!allowedTypes.Contains(file.ContentType))
             return BadRequest(new { error = new { code = "INVALID_TYPE", message = "Chỉ chấp nhận ảnh JPEG, PNG, GIF, WEBP." } });
 
+        var userId = GetUserId();
         using var stream = file.OpenReadStream();
-        var fileRef = await _fileStorage.SaveFileAsync(stream, file.FileName);
-        var imageUrl = $"/uploads/{fileRef}";
+        var fileRef = await _fileStorage.SaveFileAsync(stream, file.FileName, $"lecturers/{userId}/profile", file.Length);
+        var imageUrl = _fileStorage.GetPublicUrl(fileRef);
         return Ok(new { imageUrl });
     }
 
@@ -93,8 +94,8 @@ public class LecturerController : ControllerBase
 
         var userId = GetUserId();
         using var stream = file.OpenReadStream();
-        var fileRef = await _fileStorage.SaveFileAsync(stream, file.FileName);
-        var avatarUrl = $"/uploads/{fileRef}";
+        var fileRef = await _fileStorage.SaveFileAsync(stream, file.FileName, $"lecturers/{userId}/avatar", file.Length);
+        var avatarUrl = _fileStorage.GetPublicUrl(fileRef);
 
         try
         {
@@ -139,6 +140,45 @@ public class LecturerController : ControllerBase
         catch (CoinPurchasePaymentException ex)
         {
             return BadRequest(new { error = new { code = "PAYMENT_ERROR", message = ex.Message } });
+        }
+    }
+
+    [HttpPost("coin-purchases/{orderCode:long}/sync")]
+    public async Task<IActionResult> SyncCoinPurchase(long orderCode)
+    {
+        var userId = GetUserId();
+
+        try
+        {
+            var result = await _paymentService.SyncCoinPurchaseStatusAsync(userId, orderCode);
+            return Ok(result);
+        }
+        catch (CoinPurchaseNotFoundException ex)
+        {
+            return NotFound(new { error = new { code = "COIN_PURCHASE_NOT_FOUND", message = ex.Message } });
+        }
+        catch (CoinPurchasePaymentException ex)
+        {
+            return BadRequest(new { error = new { code = "PAYMENT_SYNC_ERROR", message = ex.Message } });
+        }
+    }
+
+    [HttpPost("coin-purchases/sync-latest")]
+    public async Task<IActionResult> SyncLatestCoinPurchase()
+    {
+        var userId = GetUserId();
+
+        try
+        {
+            var result = await _paymentService.SyncLatestCoinPurchaseAsync(userId);
+            if (result == null)
+                return NotFound(new { error = new { code = "COIN_PURCHASE_NOT_FOUND", message = "Không tìm thấy giao dịch cần đồng bộ." } });
+
+            return Ok(result);
+        }
+        catch (CoinPurchasePaymentException ex)
+        {
+            return BadRequest(new { error = new { code = "PAYMENT_SYNC_ERROR", message = ex.Message } });
         }
     }
 

@@ -6,6 +6,7 @@ using PayOS.Models.Webhooks;
 using TeachingManagementPlatform.Api.Data;
 using TeachingManagementPlatform.Api.Interfaces;
 using TeachingManagementPlatform.Api.Models;
+using System.Reflection;
 
 namespace TeachingManagementPlatform.Api.Services;
 
@@ -123,7 +124,7 @@ public class PaymentService : IPaymentService
             };
         }
 
-        if (!string.Equals(verifiedWebhook.Code, "00", StringComparison.OrdinalIgnoreCase))
+        if (!IsWebhookPaymentSuccessful(verifiedWebhook))
         {
             transaction.Status = "failed";
             transaction.ErrorMessage = verifiedWebhook.Description;
@@ -154,6 +155,67 @@ public class PaymentService : IPaymentService
             CoinAmount = transaction.CoinAmount,
             CoinBalance = coinBalance
         };
+    }
+
+    public async Task<CoinPurchaseWebhookResult> SyncCoinPurchaseStatusAsync(int userId, long orderCode)
+    {
+        var transaction = await _context.CoinPurchaseTransactions
+            .Include(item => item.User)
+            .FirstOrDefaultAsync(item => item.OrderCode == orderCode && item.UserId == userId);
+
+        if (transaction == null)
+            throw new CoinPurchaseNotFoundException($"Không tìm thấy giao dịch orderCode {orderCode}.");
+
+        if (string.Equals(transaction.Status, "paid", StringComparison.OrdinalIgnoreCase))
+            return BuildResult(transaction, transaction.User.CoinBalance);
+
+        PayOS.Models.V2.PaymentRequests.PaymentLink paymentLink;
+        try
+        {
+            paymentLink = await _payOSClient.PaymentRequests.GetAsync(orderCode);
+        }
+        catch (Exception ex)
+        {
+            throw new CoinPurchasePaymentException("Không thể đồng bộ trạng thái thanh toán từ PayOS.", ex);
+        }
+
+        if (IsPaymentLinkPaid(paymentLink))
+        {
+            var coinBalance = await _coinService.AddCoinsAsync(transaction.UserId, transaction.CoinAmount);
+
+            transaction.Status = "paid";
+            transaction.PaidAt = DateTime.UtcNow;
+            transaction.PaymentLinkId = ExtractPaymentLinkId(paymentLink) ?? transaction.PaymentLinkId;
+            transaction.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return BuildResult(transaction, coinBalance);
+        }
+
+        if (IsPaymentLinkFailed(paymentLink))
+        {
+            transaction.Status = "failed";
+            transaction.ErrorMessage = "Giao dịch PayOS không thành công.";
+            transaction.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+        }
+
+        return BuildResult(transaction, transaction.User.CoinBalance);
+    }
+
+    public async Task<CoinPurchaseWebhookResult?> SyncLatestCoinPurchaseAsync(int userId)
+    {
+        var candidate = await _context.CoinPurchaseTransactions
+            .AsNoTracking()
+            .Where(item => item.UserId == userId)
+            .Where(item => !string.Equals(item.Status, "paid", StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(item => item.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        if (candidate == null)
+            return null;
+
+        return await SyncCoinPurchaseStatusAsync(userId, candidate.OrderCode);
     }
 
     private async Task<long> GenerateUniqueOrderCodeAsync()
@@ -194,6 +256,81 @@ public class PaymentService : IPaymentService
 
         return string.IsNullOrWhiteSpace(queryString) ? url : $"{url}{separator}{queryString}";
     }
+
+    private static CoinPurchaseWebhookResult BuildResult(CoinPurchaseTransaction transaction, int coinBalance)
+    {
+        return new CoinPurchaseWebhookResult
+        {
+            OrderCode = transaction.OrderCode,
+            Status = transaction.Status,
+            CoinAmount = transaction.CoinAmount,
+            CoinBalance = coinBalance
+        };
+    }
+
+    private static bool IsWebhookPaymentSuccessful(WebhookData webhookData)
+    {
+        return string.Equals(webhookData.Code, "00", StringComparison.OrdinalIgnoreCase)
+            || IsSuccessfulStatusName(GetPropertyValue(webhookData, "Code")?.ToString())
+            || ContainsVietnameseSuccessText(GetPropertyValue(webhookData, "Description2")?.ToString());
+    }
+
+    private static bool IsPaymentLinkPaid(object paymentLink)
+    {
+        var status = GetPropertyValue(paymentLink, "Status")?.ToString();
+        if (IsSuccessfulStatusName(status))
+            return true;
+
+        if (GetPropertyValue(paymentLink, "Paid") is bool paid && paid)
+            return true;
+
+        if (GetPropertyValue(paymentLink, "IsPaid") is bool isPaid && isPaid)
+            return true;
+
+        return false;
+    }
+
+    private static bool IsPaymentLinkFailed(object paymentLink)
+    {
+        var status = GetPropertyValue(paymentLink, "Status")?.ToString();
+        if (string.IsNullOrWhiteSpace(status))
+            return false;
+
+        return status.Contains("cancel", StringComparison.OrdinalIgnoreCase)
+            || status.Contains("failed", StringComparison.OrdinalIgnoreCase)
+            || status.Contains("expired", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsSuccessfulStatusName(string? status)
+    {
+        if (string.IsNullOrWhiteSpace(status))
+            return false;
+
+        return status.Contains("00", StringComparison.OrdinalIgnoreCase)
+            || status.Contains("paid", StringComparison.OrdinalIgnoreCase)
+            || status.Contains("success", StringComparison.OrdinalIgnoreCase)
+            || status.Contains("completed", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool ContainsVietnameseSuccessText(string? description)
+    {
+        if (string.IsNullOrWhiteSpace(description))
+            return false;
+
+        return description.Contains("thanh cong", StringComparison.OrdinalIgnoreCase)
+            || description.Contains("thành công", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string? ExtractPaymentLinkId(object paymentLink)
+    {
+        return GetPropertyValue(paymentLink, "PaymentLinkId")?.ToString()
+            ?? GetPropertyValue(paymentLink, "Id")?.ToString();
+    }
+
+    private static object? GetPropertyValue(object source, string propertyName)
+    {
+        return source.GetType().GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance)?.GetValue(source);
+    }
 }
 
 public class CoinPurchasePaymentException : Exception
@@ -216,6 +353,13 @@ public class CoinPurchaseWebhookException : Exception
 
     public CoinPurchaseWebhookException(string message, Exception innerException)
         : base(message, innerException)
+    {
+    }
+}
+
+public class CoinPurchaseNotFoundException : Exception
+{
+    public CoinPurchaseNotFoundException(string message) : base(message)
     {
     }
 }

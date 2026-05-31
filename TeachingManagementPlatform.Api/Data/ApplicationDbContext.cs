@@ -128,6 +128,14 @@ public class ApplicationDbContext : DbContext
                 .HasColumnType("nvarchar(max)");
         });
 
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.HasOne(u => u.SubscriptionPackage)
+                .WithMany()
+                .HasForeignKey(u => u.SubscriptionPackageId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
         // ── CoinPackage ──
         modelBuilder.Entity<CoinPackage>(entity =>
         {

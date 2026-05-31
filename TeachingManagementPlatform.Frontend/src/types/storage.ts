@@ -7,10 +7,19 @@ export interface StorageItem {
   name: string;
   itemType: ItemType;
   fileReference?: string | null;
+  fileUrl?: string | null;
   fileType?: string | null;
   fileSize?: number | null;
   modifiedAt: string;
   createdAt: string;
+}
+
+export interface StorageQuota {
+  storageUsedBytes: number;
+  storageLimitBytes: number;
+  subscriptionPackageName: string;
+  usagePercent: number;
+  remainingBytes: number;
 }
 
 export interface CreateFolderRequest {

@@ -86,7 +86,7 @@ public class LessonService : ILessonService
     {
         await VerifyLessonOwnership(lessonId, lecturerId);
 
-        var fileReference = await _fileStorage.SaveFileAsync(fileStream, fileName);
+        var fileReference = await _fileStorage.SaveFileAsync(fileStream, fileName, $"lecturers/{lecturerId}/lessons/{lessonId}", fileSize);
 
         var attachment = new LessonAttachment
         {

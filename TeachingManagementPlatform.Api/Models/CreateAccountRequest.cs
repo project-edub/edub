@@ -14,4 +14,6 @@ public class CreateAccountRequest
 
     [Required]
     public string FullName { get; set; } = string.Empty;
+
+    public int? SubscriptionPackageId { get; set; }
 }

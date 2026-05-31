@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { AxiosError } from 'axios';
 import type { AccountResponse, CreateAccountRequest, UpdateAccountRequest } from '../../types/account';
+import type { SubscriptionPackage } from '../../types/subscription';
 import { AccountStatus, type ApiError } from '../../types/common';
 import * as accountService from '../../services/accountService';
+import * as subscriptionService from '../../services/subscriptionService';
 
 interface ModalState {
   type: 'create' | 'edit' | null;
@@ -11,6 +13,7 @@ interface ModalState {
 
 export default function AccountManagementPage() {
   const [accounts, setAccounts] = useState<AccountResponse[]>([]);
+  const [packages, setPackages] = useState<SubscriptionPackage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [modal, setModal] = useState<ModalState>({ type: null });
@@ -22,14 +25,27 @@ export default function AccountManagementPage() {
   const [formPassword, setFormPassword] = useState('');
   const [formFullName, setFormFullName] = useState('');
   const [formCoinBalance, setFormCoinBalance] = useState('0');
+  const [formSubscriptionPackageId, setFormSubscriptionPackageId] = useState('');
   const [formError, setFormError] = useState('');
+
+  const formatBytes = useCallback((bytes: number | undefined | null) => {
+    if (bytes == null) return '—';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+  }, []);
 
   const loadAccounts = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const data = await accountService.getAll();
+      const [data, packageList] = await Promise.all([
+        accountService.getAll(),
+        subscriptionService.getAll(),
+      ]);
       setAccounts(data);
+      setPackages(packageList);
     } catch (err) {
       setError(extractError(err));
     } finally {
@@ -51,6 +67,7 @@ export default function AccountManagementPage() {
     setFormPassword('');
     setFormFullName('');
     setFormCoinBalance('0');
+    setFormSubscriptionPackageId(packages.find((pkg) => pkg.isDefault)?.id?.toString() ?? '');
     setFormError('');
     setModal({ type: 'create' });
   }
@@ -60,6 +77,7 @@ export default function AccountManagementPage() {
     setFormPassword('');
     setFormFullName(account.fullName);
     setFormCoinBalance(String(account.coinBalance));
+    setFormSubscriptionPackageId(String(account.subscriptionPackageId || ''));
     setFormError('');
     setModal({ type: 'edit', account });
   }
@@ -85,6 +103,9 @@ export default function AccountManagementPage() {
         password: formPassword,
         fullName: formFullName.trim(),
       };
+      if (formSubscriptionPackageId) {
+        data.subscriptionPackageId = Number(formSubscriptionPackageId);
+      }
       await accountService.create(data);
       closeModal();
       await loadAccounts();
@@ -117,6 +138,9 @@ export default function AccountManagementPage() {
       const coinBalance = Number(formCoinBalance);
       if (!Number.isNaN(coinBalance)) {
         data.coinBalance = coinBalance;
+      }
+      if (formSubscriptionPackageId) {
+        data.subscriptionPackageId = Number(formSubscriptionPackageId);
       }
       await accountService.update(modal.account.id, data);
       closeModal();
@@ -186,6 +210,8 @@ export default function AccountManagementPage() {
               <th style={thStyle}>Email</th>
               <th style={thStyle}>Họ và tên</th>
               <th style={thStyle}>ECoin</th>
+              <th style={thStyle}>Gói</th>
+              <th style={thStyle}>Dung lượng</th>
               <th style={thStyle}>Trạng thái</th>
               <th style={thStyle}>Hành động</th>
             </tr>
@@ -193,7 +219,7 @@ export default function AccountManagementPage() {
           <tbody>
             {accounts.length === 0 ? (
               <tr>
-                <td colSpan={5} style={{ textAlign: 'center', padding: 16 }}>
+                <td colSpan={7} style={{ textAlign: 'center', padding: 16 }}>
                   Không có tài khoản nào
                 </td>
               </tr>
@@ -203,6 +229,8 @@ export default function AccountManagementPage() {
                   <td style={tdStyle}>{account.email}</td>
                   <td style={tdStyle}>{account.fullName}</td>
                   <td style={tdStyle}>{account.coinBalance.toLocaleString('vi-VN')}</td>
+                  <td style={tdStyle}>{account.subscriptionPackageName || '—'}</td>
+                  <td style={tdStyle}>{`${formatBytes(account.storageUsedBytes)} / ${formatBytes(account.storageLimitBytes)}`}</td>
                   <td style={tdStyle}>
                     {account.status === AccountStatus.Active ? 'Hoạt động' : 'Vô hiệu hóa'}
                   </td>
@@ -309,6 +337,23 @@ export default function AccountManagementPage() {
                   />
                 </div>
               )}
+
+              <div style={{ marginBottom: 16 }}>
+                <label htmlFor="modal-subscription-package" style={{ display: 'block', marginBottom: 4 }}>Gói subscription</label>
+                <select
+                  id="modal-subscription-package"
+                  value={formSubscriptionPackageId}
+                  onChange={(e) => setFormSubscriptionPackageId(e.target.value)}
+                  style={inputStyle}
+                >
+                  <option value="">Tự động theo gói mặc định</option>
+                  {packages.map((pkg) => (
+                    <option key={pkg.id} value={pkg.id}>
+                      {pkg.name} - {formatBytes(pkg.storageLimitBytes)}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
               <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                 <button
