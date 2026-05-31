@@ -10,11 +10,13 @@ public class User
     public string? GoogleId { get; set; }
     public string Status { get; set; } = "Active"; // "Active" | "Inactive"
     public int CoinBalance { get; set; }
+    public int? SubscriptionPackageId { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 
     // Navigation properties
     public LecturerProfile? LecturerProfile { get; set; }
+    public SubscriptionPackage? SubscriptionPackage { get; set; }
     public ICollection<Class> Classes { get; set; } = new List<Class>();
     public ICollection<LessonPlan> LessonPlans { get; set; } = new List<LessonPlan>();
     public ICollection<StorageItem> StorageItems { get; set; } = new List<StorageItem>();

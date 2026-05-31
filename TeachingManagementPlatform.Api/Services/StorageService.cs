@@ -127,6 +127,41 @@ public class StorageService : IStorageService
         return items.Select(MapToResponse).ToList();
     }
 
+    public async Task<StorageItemResponse> GetByIdAsync(int id, int lecturerId)
+    {
+        var item = await GetOwnedItemAsync(id, lecturerId);
+        return MapToResponse(item);
+    }
+
+    public async Task<StorageFileResponse> GetFileAsync(int id, int lecturerId)
+    {
+        var item = await GetOwnedItemAsync(id, lecturerId);
+
+        if (!string.Equals(item.ItemType, "File", StringComparison.OrdinalIgnoreCase) || string.IsNullOrWhiteSpace(item.FileReference))
+            throw new StorageItemNotFoundException("Không tìm thấy tệp hợp lệ");
+
+        var stream = await _fileStorage.GetFileAsync(item.FileReference);
+
+        return new StorageFileResponse
+        {
+            Stream = stream,
+            FileName = item.Name,
+            ContentType = GetContentType(item)
+        };
+    }
+
+    public async Task<StorageQuotaResponse> GetQuotaAsync(int lecturerId)
+    {
+        var quota = await GetStorageQuotaAsync(lecturerId);
+        return new StorageQuotaResponse
+        {
+            StorageUsedBytes = quota.usedBytes,
+            StorageLimitBytes = quota.limitBytes,
+            SubscriptionPackageName = quota.packageName,
+            UsagePercent = quota.limitBytes <= 0 ? 0 : Math.Min(100d, quota.usedBytes * 100d / quota.limitBytes)
+        };
+    }
+
     public async Task<StorageItemResponse> CreateFolderAsync(int lecturerId, CreateFolderRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Name))
@@ -165,6 +200,10 @@ public class StorageService : IStorageService
         if (string.IsNullOrWhiteSpace(fileName))
             throw new StorageValidationException("Tên tệp không được để trống");
 
+        var quota = await GetStorageQuotaAsync(lecturerId);
+        if (quota.usedBytes + fileSize > quota.limitBytes)
+            throw new StorageQuotaExceededException($"Vượt giới hạn lưu trữ của gói {quota.packageName}");
+
         // Validate parent folder belongs to lecturer
         if (parentFolderId.HasValue)
         {
@@ -177,7 +216,7 @@ public class StorageService : IStorageService
                 throw new StorageItemNotFoundException("Không tìm thấy thư mục cha");
         }
 
-        var fileReference = await _fileStorage.SaveFileAsync(fileStream, fileName);
+        var fileReference = await _fileStorage.SaveFileAsync(fileStream, fileName, $"lecturers/{lecturerId}/storage", fileSize);
         var extension = Path.GetExtension(fileName).ToLower();
         var fileType = GetFileTypeFromExtension(extension);
 
@@ -264,7 +303,57 @@ public class StorageService : IStorageService
         return null;
     }
 
-    private static StorageItemResponse MapToResponse(StorageItem item)
+    private static string GetContentType(StorageItem item)
+    {
+        var extension = Path.GetExtension(item.Name).ToLowerInvariant();
+        return extension switch
+        {
+            ".pdf" => "application/pdf",
+            ".txt" => "text/plain",
+            ".doc" => "application/msword",
+            ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            ".xls" => "application/vnd.ms-excel",
+            ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            ".ppt" => "application/vnd.ms-powerpoint",
+            ".pptx" => "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            ".png" => "image/png",
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".gif" => "image/gif",
+            ".webp" => "image/webp",
+            _ => "application/octet-stream"
+        };
+    }
+
+    private async Task<StorageItem> GetOwnedItemAsync(int id, int lecturerId)
+    {
+        var item = await _context.StorageItems
+            .FirstOrDefaultAsync(si => si.Id == id && si.LecturerId == lecturerId);
+
+        if (item == null)
+            throw new StorageItemNotFoundException("Không tìm thấy mục lưu trữ");
+
+        return item;
+    }
+
+    private async Task<(long usedBytes, long limitBytes, string packageName)> GetStorageQuotaAsync(int lecturerId)
+    {
+        var user = await _context.Users
+            .Include(u => u.SubscriptionPackage)
+            .FirstOrDefaultAsync(u => u.Id == lecturerId && u.Role == "Lecturer")
+            ?? throw new StorageItemNotFoundException("Không tìm thấy tài khoản");
+
+        var package = user.SubscriptionPackage
+            ?? await _context.SubscriptionPackages.FirstOrDefaultAsync(sp => sp.IsDefault)
+            ?? throw new StorageValidationException("Không tìm thấy gói subscription mặc định");
+
+        var usedBytes = await _context.StorageItems
+            .Where(si => si.LecturerId == lecturerId && si.ItemType == "File")
+            .SumAsync(si => (long?)si.FileSize) ?? 0;
+
+        return (usedBytes, package.StorageLimitBytes, package.Name);
+    }
+
+    private StorageItemResponse MapToResponse(StorageItem item)
     {
         return new StorageItemResponse
         {
@@ -275,7 +364,8 @@ public class StorageService : IStorageService
             FileSize = item.FileSize,
             ModifiedAt = item.ModifiedAt,
             CreatedAt = item.CreatedAt,
-            ParentFolderId = item.ParentFolderId
+            ParentFolderId = item.ParentFolderId,
+            FileUrl = string.IsNullOrWhiteSpace(item.FileReference) ? null : _fileStorage.GetPublicUrl(item.FileReference)
         };
     }
 }
@@ -288,4 +378,9 @@ public class StorageItemNotFoundException : Exception
 public class StorageValidationException : Exception
 {
     public StorageValidationException(string message) : base(message) { }
+}
+
+public class StorageQuotaExceededException : Exception
+{
+    public StorageQuotaExceededException(string message) : base(message) { }
 }

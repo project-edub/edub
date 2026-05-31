@@ -89,7 +89,26 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Register file storage
-builder.Services.AddScoped<IFileStorage, LocalFileStorage>();
+builder.Services.AddScoped<IFileStorage>(serviceProvider =>
+{
+    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+    var accountId = configuration["R2:AccountId"];
+    var accessKeyId = configuration["R2:AccessKeyId"];
+    var secretAccessKey = configuration["R2:SecretAccessKey"];
+    var bucketName = configuration["R2:BucketName"];
+    var publicBaseUrl = configuration["R2:PublicBaseUrl"];
+
+    if (!string.IsNullOrWhiteSpace(accountId)
+        && !string.IsNullOrWhiteSpace(accessKeyId)
+        && !string.IsNullOrWhiteSpace(secretAccessKey)
+        && !string.IsNullOrWhiteSpace(bucketName)
+        && !string.IsNullOrWhiteSpace(publicBaseUrl))
+    {
+        return new CloudflareR2FileStorage(configuration);
+    }
+
+    return new LocalFileStorage(configuration);
+});
 
 // Register auth service
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -158,6 +177,12 @@ builder.Services.AddScoped<IQuizMappingService, QuizMappingService>();
 builder.Services.AddScoped<IGoogleFormsService, GoogleFormsService>();
 
 var app = builder.Build();
+var r2PublicBaseUrl = builder.Configuration["R2:PublicBaseUrl"];
+var useR2Storage = !string.IsNullOrWhiteSpace(builder.Configuration["R2:AccountId"])
+    && !string.IsNullOrWhiteSpace(builder.Configuration["R2:AccessKeyId"])
+    && !string.IsNullOrWhiteSpace(builder.Configuration["R2:SecretAccessKey"])
+    && !string.IsNullOrWhiteSpace(builder.Configuration["R2:BucketName"])
+    && !string.IsNullOrWhiteSpace(r2PublicBaseUrl);
 
 // Backfill schema drift in local/dev DBs where migration history may be out of sync.
 try
@@ -200,6 +225,12 @@ BEGIN
     ALTER TABLE [Users]
     ADD [CoinBalance] int NOT NULL
         CONSTRAINT [DF_Users_CoinBalance] DEFAULT 0;
+END
+
+IF COL_LENGTH('Users', 'SubscriptionPackageId') IS NULL
+BEGIN
+    ALTER TABLE [Users]
+    ADD [SubscriptionPackageId] int NULL;
 END
 
 IF OBJECT_ID('CoinPackages', 'U') IS NULL
@@ -263,6 +294,33 @@ app.UseCors();
 // Serve uploaded files as static content
 var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
 Directory.CreateDirectory(uploadsPath);
+if (useR2Storage && !string.IsNullOrWhiteSpace(r2PublicBaseUrl))
+{
+    app.Use(async (context, next) =>
+    {
+        if (context.Request.Path.StartsWithSegments("/uploads"))
+        {
+            var targetPath = context.Request.Path.Value?.Substring("/uploads".Length) ?? string.Empty;
+            var localFilePath = Path.Combine(uploadsPath, targetPath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+
+            if (File.Exists(localFilePath))
+            {
+                await next();
+                return;
+            }
+
+            var targetUrl = $"{r2PublicBaseUrl.TrimEnd('/')}/{targetPath.TrimStart('/')}";
+            if (!string.IsNullOrWhiteSpace(context.Request.QueryString.Value))
+                targetUrl += context.Request.QueryString.Value;
+
+            context.Response.Redirect(targetUrl, permanent: false);
+            return;
+        }
+
+        await next();
+    });
+}
+
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(uploadsPath),
@@ -339,6 +397,30 @@ async Task SeedDefaultSubscriptionPackageAsync(ApplicationDbContext context)
     await context.SaveChangesAsync();
 }
 
+async Task AssignDefaultSubscriptionPackageToLecturersAsync(ApplicationDbContext context)
+{
+    var defaultPackage = await context.SubscriptionPackages.FirstOrDefaultAsync(sp => sp.IsDefault)
+        ?? await context.SubscriptionPackages.FirstOrDefaultAsync();
+
+    if (defaultPackage == null)
+        return;
+
+    var lecturersWithoutPackage = await context.Users
+        .Where(u => u.Role == "Lecturer" && u.SubscriptionPackageId == null)
+        .ToListAsync();
+
+    if (lecturersWithoutPackage.Count == 0)
+        return;
+
+    foreach (var lecturer in lecturersWithoutPackage)
+    {
+        lecturer.SubscriptionPackageId = defaultPackage.Id;
+        lecturer.UpdatedAt = DateTime.UtcNow;
+    }
+
+    await context.SaveChangesAsync();
+}
+
 async Task SeedDefaultCoinPackagesAsync(ApplicationDbContext context)
 {
     if (await context.CoinPackages.AnyAsync())
@@ -388,6 +470,7 @@ try
         await EnsureAdminAccountAsync(context);
         await SeedSampleDataAsync(context);
         await SeedDefaultSubscriptionPackageAsync(context);
+        await AssignDefaultSubscriptionPackageToLecturersAsync(context);
         await SeedDefaultCoinPackagesAsync(context);
     }
 }

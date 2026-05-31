@@ -79,10 +79,22 @@ public class StorageController : ControllerBase
         {
             return BadRequest(new { error = new { code = "VALIDATION_ERROR", message = ex.Message } });
         }
+        catch (StorageQuotaExceededException ex)
+        {
+            return StatusCode(StatusCodes.Status413PayloadTooLarge, new { error = new { code = "STORAGE_QUOTA_EXCEEDED", message = ex.Message } });
+        }
         catch (StorageItemNotFoundException ex)
         {
             return NotFound(new { error = new { code = "STORAGE_NOT_FOUND", message = ex.Message } });
         }
+    }
+
+    [HttpGet("quota")]
+    public async Task<IActionResult> GetQuota()
+    {
+        var userId = GetUserId();
+        var quota = await _storageService.GetQuotaAsync(userId);
+        return Ok(quota);
     }
 
     [HttpPut("{id:int}/rename")]
@@ -112,6 +124,40 @@ public class StorageController : ControllerBase
         {
             await _storageService.DeleteAsync(id, userId);
             return NoContent();
+        }
+        catch (StorageItemNotFoundException ex)
+        {
+            return NotFound(new { error = new { code = "STORAGE_NOT_FOUND", message = ex.Message } });
+        }
+    }
+
+    [HttpGet("{id:int}/open")]
+    public async Task<IActionResult> OpenFile(int id)
+    {
+        var userId = GetUserId();
+        try
+        {
+            var item = await _storageService.GetByIdAsync(id, userId);
+
+            if (string.IsNullOrWhiteSpace(item.FileUrl))
+                return NotFound(new { error = new { code = "STORAGE_NOT_FOUND", message = "Không tìm thấy tệp hợp lệ" } });
+
+            return Redirect(item.FileUrl);
+        }
+        catch (StorageItemNotFoundException ex)
+        {
+            return NotFound(new { error = new { code = "STORAGE_NOT_FOUND", message = ex.Message } });
+        }
+    }
+
+    [HttpGet("{id:int}/download")]
+    public async Task<IActionResult> DownloadFile(int id)
+    {
+        var userId = GetUserId();
+        try
+        {
+            var file = await _storageService.GetFileAsync(id, userId);
+            return File(file.Stream, file.ContentType, file.FileName, enableRangeProcessing: true);
         }
         catch (StorageItemNotFoundException ex)
         {

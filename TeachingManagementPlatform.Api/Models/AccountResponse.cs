@@ -8,6 +8,10 @@ public class AccountResponse
     public string Role { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public int CoinBalance { get; set; }
+    public int SubscriptionPackageId { get; set; }
+    public string SubscriptionPackageName { get; set; } = string.Empty;
+    public long StorageUsedBytes { get; set; }
+    public long StorageLimitBytes { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

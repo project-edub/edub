@@ -1,6 +1,7 @@
 import api from './api';
 import type {
   CoinPurchaseCheckoutResponse,
+  CoinPurchaseStatusResponse,
   CoinPackage,
   CoinWalletResponse,
   CreateCoinPackageRequest,
@@ -42,5 +43,15 @@ export async function purchaseLecturerCoinPackage(
   data: CreateCoinPurchaseRequest,
 ): Promise<CoinPurchaseCheckoutResponse> {
   const response = await api.post<CoinPurchaseCheckoutResponse>(`/lecturer/coin-packages/${id}/purchase`, data);
+  return response.data;
+}
+
+export async function syncLecturerCoinPurchase(orderCode: number): Promise<CoinPurchaseStatusResponse> {
+  const response = await api.post<CoinPurchaseStatusResponse>(`/lecturer/coin-purchases/${orderCode}/sync`);
+  return response.data;
+}
+
+export async function syncLatestLecturerCoinPurchase(): Promise<CoinPurchaseStatusResponse> {
+  const response = await api.post<CoinPurchaseStatusResponse>('/lecturer/coin-purchases/sync-latest');
   return response.data;
 }

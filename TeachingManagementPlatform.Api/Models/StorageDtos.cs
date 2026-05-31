@@ -33,4 +33,14 @@ public class StorageItemResponse
     public DateTime ModifiedAt { get; set; }
     public DateTime CreatedAt { get; set; }
     public int? ParentFolderId { get; set; }
+    public string? FileUrl { get; set; }
+}
+
+public class StorageQuotaResponse
+{
+    public long StorageUsedBytes { get; set; }
+    public long StorageLimitBytes { get; set; }
+    public string SubscriptionPackageName { get; set; } = string.Empty;
+    public double UsagePercent { get; set; }
+    public long RemainingBytes => Math.Max(0, StorageLimitBytes - StorageUsedBytes);
 }

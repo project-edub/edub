@@ -45,3 +45,10 @@ export interface CoinPurchaseCheckoutResponse {
   status: string;
   package: CoinPackage;
 }
+
+export interface CoinPurchaseStatusResponse {
+  orderCode: number;
+  status: string;
+  coinAmount: number;
+  coinBalance: number;
+}
