@@ -122,7 +122,7 @@ export default function ClassDetailPage() {
       )}
 
       {activeTab === 'students' && (
-        <StudentListTabs classId={classDetail.id} />
+        <StudentListTabs classId={classDetail.id} className={classDetail.name} />
       )}
 
       {activeTab === 'lessonPlan' && (

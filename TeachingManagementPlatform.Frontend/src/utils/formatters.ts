@@ -8,7 +8,13 @@
  * @returns Formatted date string (e.g., "15/06/2024")
  */
 export function formatDate(dateStr: string): string {
-  const d = new Date(dateStr);
+  const trimmed = dateStr.trim();
+  const parts = trimmed.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (parts) {
+    return `${parts[1]}/${parts[2]}/${parts[3]}`;
+  }
+
+  const d = new Date(trimmed);
   const day = String(d.getDate()).padStart(2, '0');
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const year = d.getFullYear();
