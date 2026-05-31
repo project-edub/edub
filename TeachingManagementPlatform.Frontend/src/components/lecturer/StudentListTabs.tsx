@@ -1,21 +1,31 @@
 import { useState, useEffect, useCallback } from 'react';
 import { AxiosError } from 'axios';
 import type { StudentList } from '../../types/studentList';
+import type { AttendanceStudentSource } from '../../types/attendance';
 import type { ApiError } from '../../types/common';
 import * as studentListService from '../../services/studentListService';
 import StudentListTable from './StudentListTable';
 import ExcelImportModal from './ExcelImportModal';
+import AttendanceTable from './AttendanceTable';
+import AddSlotModal from './AddSlotModal';
+import { useAttendanceStore } from '../../store/attendanceStore';
+import { createAttendanceSlot } from '../../utils/attendanceHelpers';
+import { exportAttendanceExcel } from '../../utils/exportAttendanceExcel';
 
 interface Props {
   classId: number;
+  className?: string;
 }
 
-export default function StudentListTabs({ classId }: Props) {
+type ViewMode = 'students' | 'attendance';
+
+export default function StudentListTabs({ classId, className = 'lop-hoc' }: Props) {
   const [lists, setLists] = useState<StudentList[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeListId, setActiveListId] = useState<number | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('students');
 
   // Create list state
   const [creatingList, setCreatingList] = useState(false);
@@ -27,6 +37,9 @@ export default function StudentListTabs({ classId }: Props) {
 
   // Import modal state
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showAddSlotModal, setShowAddSlotModal] = useState(false);
+  const [renamingAttendance, setRenamingAttendance] = useState(false);
+  const [attendanceRenameValue, setAttendanceRenameValue] = useState('');
 
   const loadLists = useCallback(async () => {
     setLoading(true);
@@ -54,6 +67,16 @@ export default function StudentListTabs({ classId }: Props) {
   }
 
   const activeList = lists.find((l) => l.id === activeListId) ?? null;
+  const attendanceStudents: AttendanceStudentSource[] = activeList
+    ? [...activeList.entries]
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((entry) => ({
+          studentId: String(entry.id),
+          name: resolveStudentName(activeList, entry),
+        }))
+    : [];
+  const { attendanceList, addSlot, updateSlotDate, removeSlot, renameAttendanceList, resetAttendanceList, toggleSlotStatus, replaceAttendanceList } = useAttendanceStore(classId, attendanceStudents);
+  const hasStudents = Boolean(activeList && activeList.entries.length > 0);
 
   // --- List CRUD ---
   async function handleCreateList() {
@@ -209,6 +232,21 @@ export default function StudentListTabs({ classId }: Props) {
     loadLists();
   }
 
+  // --- Attendance Excel import ---
+  async function handleImportAttendanceFile(file: File | null) {
+    if (!file) return;
+    setActionLoading(true);
+    try {
+      const { parseAttendanceFile } = await import('../../utils/importAttendanceExcel');
+      const parsed = await parseAttendanceFile(file, classId, attendanceStudents);
+      replaceAttendanceList(parsed);
+    } catch (err) {
+      setError(extractError(err));
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
   async function handleExportExcel() {
     if (!activeList) return;
     setActionLoading(true);
@@ -219,6 +257,30 @@ export default function StudentListTabs({ classId }: Props) {
     } finally {
       setActionLoading(false);
     }
+  }
+
+  function handleAddAttendanceSlot(data: { label: string; date: string }) {
+    addSlot(createAttendanceSlot(data.label, data.date));
+    setShowAddSlotModal(false);
+  }
+
+  function handleExportAttendance() {
+    if (!attendanceList) return;
+    exportAttendanceExcel(attendanceList, className);
+  }
+
+  function handleRenameAttendance() {
+    if (!attendanceRenameValue.trim()) return;
+    renameAttendanceList(attendanceRenameValue.trim());
+    setRenamingAttendance(false);
+  }
+
+  function handleDeleteAttendance() {
+    const confirmed = window.confirm('Xoá danh sách điểm danh hiện tại? Hành động này không thể hoàn tác.');
+    if (!confirmed) return;
+    resetAttendanceList();
+    setRenamingAttendance(false);
+    setAttendanceRenameValue('');
   }
 
   if (loading) {
@@ -280,6 +342,38 @@ export default function StudentListTabs({ classId }: Props) {
             + Thêm danh sách
           </button>
         )}
+
+        <button
+          type="button"
+          onClick={() => setViewMode('attendance')}
+          disabled={!hasStudents}
+          className="btn btn-add"
+          style={{ padding: '8px 16px' }}
+          title={!hasStudents ? 'Cần có học sinh trong danh sách để tạo điểm danh' : undefined}
+        >
+          Tạo Điểm Danh
+        </button>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          onClick={() => setViewMode('students')}
+          className={viewMode === 'students' ? 'btn btn-view' : 'btn btn-neutral'}
+          style={{ padding: '8px 16px' }}
+        >
+          Danh Sách Học Sinh
+        </button>
+        <button
+          type="button"
+          onClick={() => setViewMode('attendance')}
+          disabled={!hasStudents}
+          className={viewMode === 'attendance' ? 'btn btn-view' : 'btn btn-neutral'}
+          style={{ padding: '8px 16px' }}
+          title={!hasStudents ? 'Cần có học sinh trong danh sách để tạo điểm danh' : undefined}
+        >
+          Điểm Danh
+        </button>
       </div>
 
       {/* Active list actions & content */}
@@ -287,7 +381,7 @@ export default function StudentListTabs({ classId }: Props) {
         <div>
           {/* List action bar */}
           <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-            {renamingListId === activeList.id ? (
+            {viewMode === 'students' && renamingListId === activeList.id ? (
               <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                 <input
                   type="text"
@@ -303,7 +397,7 @@ export default function StudentListTabs({ classId }: Props) {
                   Hủy
                 </button>
               </div>
-            ) : (
+            ) : viewMode === 'students' ? (
               <button
                 type="button"
                 onClick={() => { setRenamingListId(activeList.id); setRenameValue(activeList.name); }}
@@ -312,9 +406,49 @@ export default function StudentListTabs({ classId }: Props) {
               >
                 Sửa tên
               </button>
+            ) : null}
+
+            {viewMode === 'attendance' && attendanceList && (
+              <>
+                {renamingAttendance ? (
+                  <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <input
+                      type="text"
+                      value={attendanceRenameValue}
+                      onChange={(e) => setAttendanceRenameValue(e.target.value)}
+                      style={{ padding: 4 }}
+                      aria-label="Đổi tên danh sách điểm danh"
+                    />
+                    <button type="button" onClick={handleRenameAttendance} disabled={actionLoading} className="btn btn-update" style={{ padding: '4px 8px' }}>
+                      Lưu
+                    </button>
+                    <button type="button" onClick={() => { setRenamingAttendance(false); setAttendanceRenameValue(''); }} className="btn btn-neutral" style={{ padding: '4px 8px' }}>
+                      Hủy
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => { setRenamingAttendance(true); setAttendanceRenameValue(attendanceList.name ?? `Điểm danh lớp ${classId}`); }}
+                    disabled={actionLoading}
+                    className="btn btn-update"
+                  >
+                    Sửa tên
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleDeleteAttendance}
+                  disabled={actionLoading}
+                  className="btn btn-delete"
+                >
+                  Xóa danh sách
+                </button>
+              </>
             )}
 
-            {!activeList.isMain && (
+            {viewMode === 'students' && !activeList.isMain && (
               <button
                 type="button"
                 onClick={() => handleSetMain(activeList.id)}
@@ -325,54 +459,86 @@ export default function StudentListTabs({ classId }: Props) {
               </button>
             )}
 
-            <button
-              type="button"
-              onClick={() => handleClone(activeList.id)}
-              disabled={actionLoading}
-              className="btn btn-update"
-            >
-              Nhân bản
-            </button>
+            {viewMode === 'students' && (
+              <button
+                type="button"
+                onClick={() => handleClone(activeList.id)}
+                disabled={actionLoading}
+                className="btn btn-update"
+              >
+                Nhân bản
+              </button>
+            )}
 
-            <button
-              type="button"
-              onClick={() => handleDeleteList(activeList.id)}
-              disabled={actionLoading}
-              className="btn btn-delete"
-            >
-              Xóa danh sách
-            </button>
+            {viewMode === 'students' && (
+              <button
+                type="button"
+                onClick={() => handleDeleteList(activeList.id)}
+                disabled={actionLoading}
+                className="btn btn-delete"
+              >
+                Xóa danh sách
+              </button>
+            )}
 
-            <button
-              type="button"
-              onClick={() => setShowImportModal(true)}
-              disabled={actionLoading}
-              className="btn btn-add"
-            >
-              Nhập Excel
-            </button>
+            {viewMode === 'students' && (
+              <button
+                type="button"
+                onClick={() => setShowImportModal(true)}
+                disabled={actionLoading}
+                className="btn btn-add"
+              >
+                Nhập Excel
+              </button>
+            )}
 
-            <button
-              type="button"
-              onClick={handleExportExcel}
-              disabled={actionLoading}
-              className="btn btn-view"
-            >
-              Xuất Excel
-            </button>
+            {viewMode === 'students' && (
+              <button
+                type="button"
+                onClick={handleExportExcel}
+                disabled={actionLoading}
+                className="btn btn-view"
+              >
+                Xuất Excel
+              </button>
+            )}
           </div>
 
-          {/* Student list table */}
-          <StudentListTable
-            list={activeList}
-            onAddColumn={handleAddColumn}
-            onUpdateColumn={handleUpdateColumn}
-            onDeleteColumn={handleDeleteColumn}
-            onAddEntry={handleAddEntry}
-            onUpdateEntry={handleUpdateEntry}
-            onDeleteEntry={handleDeleteEntry}
-            actionLoading={actionLoading}
-          />
+          {viewMode === 'students' ? (
+            <StudentListTable
+              list={activeList}
+              onAddColumn={handleAddColumn}
+              onUpdateColumn={handleUpdateColumn}
+              onDeleteColumn={handleDeleteColumn}
+              onAddEntry={handleAddEntry}
+              onUpdateEntry={handleUpdateEntry}
+              onDeleteEntry={handleDeleteEntry}
+              actionLoading={actionLoading}
+            />
+          ) : null}
+
+          {viewMode === 'attendance' && attendanceList ? (
+            <>
+              <div style={{ marginBottom: 12, color: 'var(--edub-text-secondary)', fontSize: 13 }}>
+                <strong style={{ color: 'var(--edub-text-primary)' }}>{attendanceList.name ?? `Điểm danh lớp ${classId}`}</strong>
+                <span style={{ marginLeft: 8 }}>• {attendanceList.slots.length} slot</span>
+                <span style={{ marginLeft: 8 }}>• {attendanceList.rows.length} học sinh</span>
+              </div>
+              <AttendanceTable
+                attendanceList={attendanceList}
+                actionLoading={actionLoading}
+                onToggleSlotStatus={toggleSlotStatus}
+                onAddSlot={() => setShowAddSlotModal(true)}
+                onUpdateSlotDate={updateSlotDate}
+                onRemoveSlot={removeSlot}
+                onImportExcel={handleImportAttendanceFile}
+                onExportExcel={handleExportAttendance}
+                exportDisabled={!hasStudents}
+              />
+            </>
+          ) : (
+            viewMode === 'attendance' ? <p style={{ color: 'var(--edub-text-secondary)' }}>Chưa có dữ liệu điểm danh.</p> : null
+          )}
 
           {/* Excel import modal */}
           {showImportModal && (
@@ -380,6 +546,16 @@ export default function StudentListTabs({ classId }: Props) {
               listId={activeList.id}
               onSuccess={handleImportSuccess}
               onClose={() => setShowImportModal(false)}
+            />
+          )}
+
+          {showAddSlotModal && (
+            <AddSlotModal
+              open={showAddSlotModal}
+              actionLoading={actionLoading}
+              existingSlots={attendanceList?.slots ?? []}
+              onClose={() => setShowAddSlotModal(false)}
+              onConfirm={handleAddAttendanceSlot}
             />
           )}
         </div>
@@ -390,4 +566,17 @@ export default function StudentListTabs({ classId }: Props) {
       )}
     </div>
   );
+}
+
+function resolveStudentName(list: StudentList, entry: StudentList['entries'][number]): string {
+  const preferredKeys = ['Họ tên', 'Họ và tên', 'Tên', 'Name', 'Full name'];
+  for (const key of preferredKeys) {
+    const value = entry.data[key];
+    if (value?.trim()) return value.trim();
+  }
+
+  const firstMeaningfulValue = Object.values(entry.data).find((value) => value.trim());
+  if (firstMeaningfulValue) return firstMeaningfulValue.trim();
+
+  return `${list.name} - Học sinh ${entry.id}`;
 }

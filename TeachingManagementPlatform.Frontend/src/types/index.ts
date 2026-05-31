@@ -78,6 +78,15 @@ export type {
   UpdateStudentEntryRequest,
 } from './studentList';
 
+// Attendance
+export type {
+  SlotStatus,
+  AttendanceSlot,
+  StudentAttendance,
+  AttendanceList,
+  AttendanceStudentSource,
+} from './attendance';
+
 // Lesson Plan
 export type {
   LessonDocument,
