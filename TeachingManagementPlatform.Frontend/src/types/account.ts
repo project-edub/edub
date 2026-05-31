@@ -8,6 +8,7 @@ export interface User {
   role: Role;
   googleId?: string | null;
   status: AccountStatus;
+  coinBalance: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -22,6 +23,7 @@ export interface UpdateAccountRequest {
   email?: string;
   password?: string;
   fullName?: string;
+  coinBalance?: number;
 }
 
 export interface UpdateAccountStatusRequest {
@@ -34,6 +36,7 @@ export interface AccountResponse {
   fullName: string;
   role: Role;
   status: AccountStatus;
+  coinBalance: number;
   createdAt: string;
   updatedAt: string;
 }

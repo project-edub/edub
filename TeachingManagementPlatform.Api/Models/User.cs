@@ -9,6 +9,7 @@ public class User
     public string Role { get; set; } = "Lecturer"; // "Admin" | "Lecturer"
     public string? GoogleId { get; set; }
     public string Status { get; set; } = "Active"; // "Active" | "Inactive"
+    public int CoinBalance { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 

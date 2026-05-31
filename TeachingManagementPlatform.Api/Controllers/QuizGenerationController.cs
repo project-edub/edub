@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
 using TeachingManagementPlatform.Api.Interfaces;
 using TeachingManagementPlatform.Api.Models;
 using TeachingManagementPlatform.Api.Services;
@@ -15,67 +17,110 @@ public class QuizGenerationController : ControllerBase
     private readonly IFileParsingService _fileParsingService;
     private readonly IAIService _aiService;
     private readonly IQuizMappingService _mappingService;
+    private readonly ICoinService _coinService;
     private readonly IConfiguration _configuration;
     private readonly ILogger<QuizGenerationController> _logger;
 
-    public QuizGenerationController(IFileParsingService fileParsingService, IAIService aiService, IQuizMappingService mappingService, IConfiguration configuration, ILogger<QuizGenerationController> logger)
+    public QuizGenerationController(
+        IFileParsingService fileParsingService,
+        IAIService aiService,
+        IQuizMappingService mappingService,
+        ICoinService coinService,
+        IConfiguration configuration,
+        ILogger<QuizGenerationController> logger)
     {
         _fileParsingService = fileParsingService;
         _aiService = aiService;
         _mappingService = mappingService;
+        _coinService = coinService;
         _configuration = configuration;
         _logger = logger;
     }
 
     [HttpPost("generate")]
-    public async Task<IActionResult> Generate([FromForm] QuizGenerationRequest request, IFormFile? file)
+    public async Task<IActionResult> Generate([FromForm] QuizGenerationRequest request)
     {
-        if (file == null || file.Length == 0)
+        var files = Request.Form.Files;
+        if (files == null || files.Count == 0)
             return BadRequest(new { error = new { code = "VALIDATION_ERROR", message = "Tệp nguồn bắt buộc" } });
+
+        var userId = GetUserId();
 
         // Load limits from configuration
         var limitsSection = _configuration.GetSection("QuizGeneration:Limits");
         var maxQuestions = limitsSection.GetValue<int?>("MaxQuestions") ?? 30;
         var maxFileSizeMb = limitsSection.GetValue<int?>("MaxFileSizeMb") ?? 20;
+        var maxFiles = limitsSection.GetValue<int?>("MaxFiles") ?? 5;
         var maxInputCharacters = limitsSection.GetValue<int?>("MaxInputCharacters") ?? 50000;
-        var allowedExtensions = limitsSection.GetSection("AllowedExtensions").Get<string[]>() ?? new[] { ".docx", ".xlsx", ".pdf" };
+        var allowedExtensions = limitsSection.GetSection("AllowedExtensions").Get<string[]>() ?? new[] { ".docx", ".xlsx", ".pdf", ".pptx" };
 
         if (request.QuestionCount > maxQuestions)
             return BadRequest(new { error = new { code = "TOO_MANY_QUESTIONS", message = $"Số câu hỏi yêu cầu vượt quá giới hạn ({maxQuestions})." } });
 
-        if (!allowedExtensions.Contains(Path.GetExtension(file.FileName).ToLowerInvariant()))
-            return BadRequest(new { error = new { code = "INVALID_EXTENSION", message = $"Định dạng tệp không hợp lệ. Hỗ trợ: {string.Join(',', allowedExtensions)}." } });
+        var coinCostPerQuestion = _configuration.GetValue<int?>("QuizGeneration:CoinCostPerQuestion") ?? 1;
+        var requiredCoin = Math.Max(1, request.QuestionCount) * Math.Max(1, coinCostPerQuestion);
+        var currentCoinBalance = await _coinService.GetBalanceAsync(userId);
+        if (currentCoinBalance < requiredCoin)
+        {
+            return StatusCode(402, new
+            {
+                error = new
+                {
+                    code = "INSUFFICIENT_ECOIN",
+                    message = $"Không đủ ECoin để tạo quiz. Cần {requiredCoin} ECoin, hiện có {currentCoinBalance} ECoin.",
+                    requiredCoin,
+                    currentCoinBalance
+                }
+            });
+        }
 
-        if (file.Length > (long)maxFileSizeMb * 1024 * 1024)
-            return BadRequest(new { error = new { code = "FILE_TOO_LARGE", message = $"Kích thước tệp vượt quá giới hạn {maxFileSizeMb} MB." } });
-        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (files.Count > maxFiles)
+            return BadRequest(new { error = new { code = "TOO_MANY_FILES", message = $"Chỉ cho phép tối đa {maxFiles} tệp." } });
+
+        var attachments = new List<AttachmentInfo>();
+        foreach (var file in files)
+        {
+            if (!allowedExtensions.Contains(Path.GetExtension(file.FileName).ToLowerInvariant()))
+                return BadRequest(new { error = new { code = "INVALID_EXTENSION", message = $"Định dạng tệp không hợp lệ: {file.FileName}. Hỗ trợ: {string.Join(',', allowedExtensions)}." } });
+
+            if (file.Length > (long)maxFileSizeMb * 1024 * 1024)
+                return BadRequest(new { error = new { code = "FILE_TOO_LARGE", message = $"Kích thước tệp vượt quá giới hạn {maxFileSizeMb} MB: {file.FileName}" } });
+        }
 
         try
         {
-            using var stream = file.OpenReadStream();
-            var content = await _fileParsingService.ExtractTextAsync(stream, ext);
-
-            if (content.Length > maxInputCharacters)
+            // Extract text from each file
+            foreach (var f in files)
             {
-                return BadRequest(new
+                using var stream = f.OpenReadStream();
+                var ext = Path.GetExtension(f.FileName).ToLowerInvariant();
+                var content = await _fileParsingService.ExtractTextAsync(stream, ext);
+
+                if (content.Length > maxInputCharacters)
                 {
-                    error = new
+                    return BadRequest(new
                     {
-                        code = "INPUT_TOO_LONG",
-                        message = $"Nội dung trích xuất ({content.Length} ký tự) vượt quá giới hạn {maxInputCharacters} ký tự. Vui lòng chọn phạm vi ngắn hơn hoặc tách tài liệu.",
-                        extractedCharacters = content.Length,
-                        maxAllowed = maxInputCharacters
-                    }
-                });
+                        error = new
+                        {
+                            code = "INPUT_TOO_LONG",
+                            message = $"Nội dung trích xuất từ {f.FileName} ({content.Length} ký tự) vượt quá giới hạn {maxInputCharacters} ký tự. Vui lòng chọn phạm vi ngắn hơn hoặc tách tài liệu.",
+                            extractedCharacters = content.Length,
+                            maxAllowed = maxInputCharacters
+                        }
+                    });
+                }
+
+                attachments.Add(new AttachmentInfo { FileName = f.FileName, Content = content });
             }
 
-            var attachment = new AttachmentInfo
-            {
-                FileName = file.FileName,
-                Content = content
-            };
-
-            var quizContent = await _aiService.GenerateQuizAsync(new List<DocumentInfo>(), new List<AttachmentInfo> { attachment });
+            var quizContent = await _aiService.GenerateQuizAsync(
+                new List<DocumentInfo>(),
+                attachments,
+                request.QuestionCount,
+                request.Prompt,
+                request.Topic,
+                request.Difficulty,
+                request.Language);
 
             var (questions, warnings) = _mappingService.ValidateAndMap(quizContent, request.QuestionCount);
 
@@ -86,6 +131,8 @@ public class QuizGenerationController : ControllerBase
                 Questions = questions,
                 Warnings = warnings
             };
+
+            await _coinService.DeductCoinsAsync(userId, requiredCoin);
 
             return Ok(response);
         }
@@ -101,6 +148,15 @@ public class QuizGenerationController : ControllerBase
         }
     }
 
+    private int GetUserId()
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+            ?? throw new UnauthorizedAccessException("User ID not found in token.");
+
+        return int.Parse(userIdClaim);
+    }
+
     [HttpPost("create-form")]
     public async Task<IActionResult> CreateForm([FromBody] CreateGoogleFormRequest request)
     {
@@ -110,7 +166,7 @@ public class QuizGenerationController : ControllerBase
                 return BadRequest(new { error = new { code = "VALIDATION_ERROR", message = "Questions are required" } });
 
             var service = (IGoogleFormsService)HttpContext.RequestServices.GetService(typeof(IGoogleFormsService))!;
-            var (formId, editUrl, driveWebView) = await service.CreateFormAsync(request.Title, request.Questions, request.TeacherGoogleEmail);
+            var (formId, editUrl, driveWebView) = await service.CreateFormAsync(request.Title, request.Questions, request.TeacherGoogleEmail, request.GoogleAccessToken);
 
             return Ok(new { formId, editUrl, driveWebView });
         }

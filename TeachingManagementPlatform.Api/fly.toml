@@ -1,9 +1,9 @@
-# fly.toml app configuration file generated for edub-api on 2026-05-23T12:31:50+07:00
+# fly.toml app configuration file generated for edub on 2026-05-29T04:17:16Z
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'edub-api'
+app = 'edub'
 primary_region = 'sin'
 
 [build]

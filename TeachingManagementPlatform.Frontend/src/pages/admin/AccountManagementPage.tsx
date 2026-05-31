@@ -21,6 +21,7 @@ export default function AccountManagementPage() {
   const [formEmail, setFormEmail] = useState('');
   const [formPassword, setFormPassword] = useState('');
   const [formFullName, setFormFullName] = useState('');
+  const [formCoinBalance, setFormCoinBalance] = useState('0');
   const [formError, setFormError] = useState('');
 
   const loadAccounts = useCallback(async () => {
@@ -49,6 +50,7 @@ export default function AccountManagementPage() {
     setFormEmail('');
     setFormPassword('');
     setFormFullName('');
+    setFormCoinBalance('0');
     setFormError('');
     setModal({ type: 'create' });
   }
@@ -57,6 +59,7 @@ export default function AccountManagementPage() {
     setFormEmail(account.email);
     setFormPassword('');
     setFormFullName(account.fullName);
+    setFormCoinBalance(String(account.coinBalance));
     setFormError('');
     setModal({ type: 'edit', account });
   }
@@ -110,6 +113,10 @@ export default function AccountManagementPage() {
       };
       if (formPassword.trim()) {
         data.password = formPassword;
+      }
+      const coinBalance = Number(formCoinBalance);
+      if (!Number.isNaN(coinBalance)) {
+        data.coinBalance = coinBalance;
       }
       await accountService.update(modal.account.id, data);
       closeModal();
@@ -178,6 +185,7 @@ export default function AccountManagementPage() {
             <tr>
               <th style={thStyle}>Email</th>
               <th style={thStyle}>Họ và tên</th>
+              <th style={thStyle}>ECoin</th>
               <th style={thStyle}>Trạng thái</th>
               <th style={thStyle}>Hành động</th>
             </tr>
@@ -185,7 +193,7 @@ export default function AccountManagementPage() {
           <tbody>
             {accounts.length === 0 ? (
               <tr>
-                <td colSpan={4} style={{ textAlign: 'center', padding: 16 }}>
+                <td colSpan={5} style={{ textAlign: 'center', padding: 16 }}>
                   Không có tài khoản nào
                 </td>
               </tr>
@@ -194,6 +202,7 @@ export default function AccountManagementPage() {
                 <tr key={account.id}>
                   <td style={tdStyle}>{account.email}</td>
                   <td style={tdStyle}>{account.fullName}</td>
+                  <td style={tdStyle}>{account.coinBalance.toLocaleString('vi-VN')}</td>
                   <td style={tdStyle}>
                     {account.status === AccountStatus.Active ? 'Hoạt động' : 'Vô hiệu hóa'}
                   </td>
@@ -284,6 +293,22 @@ export default function AccountManagementPage() {
                   style={inputStyle}
                 />
               </div>
+
+              {modal.type === 'edit' && (
+                <div style={{ marginBottom: 16 }}>
+                  <label htmlFor="modal-coin-balance" style={{ display: 'block', marginBottom: 4 }}>ECoin</label>
+                  <input
+                    id="modal-coin-balance"
+                    type="number"
+                    min="0"
+                    step="1"
+                    placeholder="0"
+                    value={formCoinBalance}
+                    onChange={(e) => setFormCoinBalance(e.target.value)}
+                    style={inputStyle}
+                  />
+                </div>
+              )}
 
               <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                 <button

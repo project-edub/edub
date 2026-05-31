@@ -33,6 +33,17 @@ export type {
   UpdateSubscriptionPackageRequest,
 } from './subscription';
 
+// Coin
+export type {
+  CoinPackage,
+  CreateCoinPackageRequest,
+  UpdateCoinPackageRequest,
+  CoinWalletResponse,
+  PurchaseCoinPackageResponse,
+  CreateCoinPurchaseRequest,
+  CoinPurchaseCheckoutResponse,
+} from './coin';
+
 // Profile
 export type {
   ProfileOccupation,

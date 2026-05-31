@@ -1,13 +1,18 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { generateQuiz, createGoogleForm } from '../../services/quizService';
 import type { QuizGenerationResponse } from '../../types/quiz';
+import type { CoinWalletResponse } from '../../types/coin';
+import * as coinService from '../../services/coinService';
 
-const acceptedExtensions = ['.docx', '.xlsx', '.pdf'];
+const acceptedExtensions = ['.docx', '.xlsx', '.pdf', '.pptx'];
+const MAX_FILES = 5;
+const MAX_FILE_SIZE_MB = 20; // per file
+const OPTION_LABELS = ['A', 'B', 'C', 'D'];
 
 export default function QuizGeneratorPage() {
   const navigate = useNavigate();
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [questionCount, setQuestionCount] = useState(10);
   const [topic, setTopic] = useState('');
   const [difficulty, setDifficulty] = useState('dễ');
@@ -18,6 +23,23 @@ export default function QuizGeneratorPage() {
   const [preview, setPreview] = useState<QuizGenerationResponse | null>(null);
   const [error, setError] = useState<{ code?: string; message: string; details?: unknown } | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [wallet, setWallet] = useState<CoinWalletResponse>({ coinBalance: 0 });
+  const [walletLoaded, setWalletLoaded] = useState(false);
+
+  const loadWallet = useCallback(async () => {
+    try {
+      const data = await coinService.getLecturerCoinWallet();
+      setWallet(data);
+    } catch {
+      setWallet({ coinBalance: 0 });
+    } finally {
+      setWalletLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadWallet();
+  }, [loadWallet]);
 
   function localizeErrorMessage(code?: string, fallback?: string) {
     if (!code) return fallback ?? 'Đã có lỗi xảy ra.';
@@ -34,7 +56,9 @@ export default function QuizGeneratorPage() {
     }
   }
 
-  const fileName = selectedFile?.name ?? 'Chưa chọn tệp nào';
+  const fileName = selectedFiles.length ? `${selectedFiles.length} tệp đã chọn` : 'Chưa chọn tệp nào';
+  const estimatedCoinCost = Math.max(1, questionCount);
+  const hasEnoughCoin = !walletLoaded || wallet.coinBalance >= estimatedCoinCost;
 
   return (
     <div style={pageStyle}>
@@ -46,9 +70,21 @@ export default function QuizGeneratorPage() {
             Chọn tài liệu, mô tả yêu cầu, rồi chuyển sang bước xử lý AI và xuất Google Form ở checklist tiếp theo.
           </p>
         </div>
-        <button type="button" className="btn btn-neutral" onClick={() => navigate('/lecturer/storage')}>
-          Quay lại kho tài liệu
-        </button>
+        <div style={heroActionsStyle}>
+          <div style={coinCardStyle}>
+            <span style={coinLabelStyle}>Số dư ECoin</span>
+            <strong style={coinValueStyle}>{wallet.coinBalance.toLocaleString('vi-VN')}</strong>
+            <span style={coinHintStyle}>Ước tính tạo quiz này: {estimatedCoinCost} ECoin</span>
+          </div>
+          <div style={heroButtonRowStyle}>
+            <button type="button" className="btn btn-neutral" onClick={() => navigate('/lecturer/coin-packages')}>
+              Mua ECoin
+            </button>
+            <button type="button" className="btn btn-neutral" onClick={() => navigate('/lecturer/storage')}>
+              Quay lại kho tài liệu
+            </button>
+          </div>
+        </div>
       </div>
 
       <div style={gridStyle}>
@@ -57,14 +93,45 @@ export default function QuizGeneratorPage() {
           <label style={dropZoneStyle}>
             <input
               type="file"
-              accept=".docx,.xlsx,.pdf"
-              onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
+              accept=".docx,.xlsx,.pdf,.pptx"
+              multiple
+              onChange={(e) => {
+                const files = Array.from(e.target.files ?? []);
+                // client-side validation: max count and max size per file and extension
+                if (files.length > MAX_FILES) {
+                  setError({ message: `Chỉ cho phép tối đa ${MAX_FILES} tệp` } as any);
+                  setSelectedFiles([]);
+                  return;
+                }
+                for (const f of files) {
+                  const ext = '.' + f.name.split('.').pop()?.toLowerCase();
+                  if (!acceptedExtensions.includes(ext)) {
+                    setError({ message: `Định dạng không hợp lệ: ${f.name}` } as any);
+                    setSelectedFiles([]);
+                    return;
+                  }
+                  if (f.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+                    setError({ message: `Tệp quá lớn: ${f.name}. Tối đa ${MAX_FILE_SIZE_MB} MB` } as any);
+                    setSelectedFiles([]);
+                    return;
+                  }
+                }
+                setError(null);
+                setSelectedFiles(files);
+              }}
               style={{ display: 'none' }}
             />
-            <strong style={{ display: 'block', marginBottom: 8 }}>Chọn tài liệu Word, Excel hoặc PDF</strong>
+            <strong style={{ display: 'block', marginBottom: 8 }}>Chọn tài liệu (tối đa {MAX_FILES} tệp, mỗi tệp &lt; {MAX_FILE_SIZE_MB}MB)</strong>
             <span style={{ color: 'var(--edub-text-secondary)' }}>{fileName}</span>
           </label>
           <p style={hintStyle}>Định dạng cho phép: {acceptedExtensions.join(', ')}</p>
+          {selectedFiles.length > 0 && (
+            <ul style={{ marginTop: 8 }}>
+              {selectedFiles.map((f, i) => (
+                <li key={i} style={{ fontSize: 13 }}>{f.name} · {(f.size / 1024 / 1024).toFixed(2)} MB</li>
+              ))}
+            </ul>
+          )}
         </section>
 
         <section style={cardStyle}>
@@ -100,22 +167,24 @@ export default function QuizGeneratorPage() {
           style={textareaStyle}
         />
         <div style={actionRowStyle}>
-          <button
+            <button
             type="button"
             className="btn btn-add"
-            disabled={!selectedFile || loading}
+              disabled={selectedFiles.length === 0 || loading || !hasEnoughCoin}
             onClick={async () => {
-              if (!selectedFile) return;
+              if (selectedFiles.length === 0) return;
               // inline validation
               const newFieldErrors: Record<string,string> = {};
               if (teacherGoogleEmail && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(teacherGoogleEmail)) newFieldErrors.teacherGoogleEmail = 'Email Google không hợp lệ';
               if (questionCount < 1 || questionCount > 30) newFieldErrors.questionCount = 'Số câu hỏi không hợp lệ';
+                if (walletLoaded && wallet.coinBalance < Math.max(1, questionCount)) newFieldErrors.coinBalance = 'Không đủ ECoin để tạo quiz';
               if (Object.keys(newFieldErrors).length) { setFieldErrors(newFieldErrors); return; }
+              setFieldErrors({});
               setLoading(true);
               setPreview(null);
               try {
                 const fd = new FormData();
-                fd.append('file', selectedFile);
+                for (const f of selectedFiles) fd.append('files', f);
                 fd.append('prompt', prompt);
                 fd.append('questionCount', String(questionCount));
                 fd.append('topic', topic);
@@ -125,6 +194,7 @@ export default function QuizGeneratorPage() {
                 const res = await generateQuiz(fd);
                 setPreview(res);
                 setError(null);
+                await loadWallet();
               } catch (err) {
                 console.error(err);
                 if (err && typeof err === 'object' && 'message' in err && typeof err.message === 'string') {
@@ -148,7 +218,13 @@ export default function QuizGeneratorPage() {
             onClick={async () => {
               if (!preview) return;
               try {
-                const payload = { title: topic || 'Quiz', questions: preview.questions, teacherGoogleEmail };
+                const googleAccessToken = localStorage.getItem('googleAccessToken') ?? undefined;
+                const payload = {
+                  title: topic || 'Quiz',
+                  questions: preview.questions,
+                  ...(googleAccessToken ? { googleAccessToken } : {}),
+                  ...(teacherGoogleEmail.trim() ? { teacherGoogleEmail: teacherGoogleEmail.trim() } : {}),
+                };
                 const res = await createGoogleForm(payload);
                 setError(null);
                 alert(`Form created: ${res.editUrl}`);
@@ -185,6 +261,13 @@ export default function QuizGeneratorPage() {
         </section>
       )}
 
+      {fieldErrors.coinBalance && (
+        <section style={{ ...cardStyle, marginTop: 20 }}>
+          <h2 style={sectionTitleStyle}>ECoin</h2>
+          <div style={{ color: '#b71c1c' }}>{fieldErrors.coinBalance}</div>
+        </section>
+      )}
+
       {preview && (
         <section style={{ ...cardStyle, marginTop: 20 }}>
           <h2 style={sectionTitleStyle}>Kết quả - Xem trước</h2>
@@ -192,11 +275,13 @@ export default function QuizGeneratorPage() {
             {preview.questions.map((q, idx) => (
               <div key={idx} style={{ padding: 12, border: '1px solid var(--edub-border)', borderRadius: 8, marginBottom: 8 }}>
                 <strong>{idx + 1}. {q.question}</strong>
-                <ol style={{ marginTop: 6 }}>
+                <ul style={{ marginTop: 6, paddingLeft: 0, listStyle: 'none' }}>
                   {q.options.map((o, i) => (
-                    <li key={i} style={{ color: i === q.correctAnswerIndex ? 'var(--edub-primary)' : undefined }}>{o.text}</li>
+                    <li key={i} style={{ color: i === q.correctAnswerIndex ? 'var(--edub-primary)' : undefined, marginBottom: 4 }}>
+                      <strong>{OPTION_LABELS[i] ?? String(i + 1)}.</strong> {o.text}
+                    </li>
                   ))}
-                </ol>
+                </ul>
               </div>
             ))}
           </div>
@@ -333,5 +418,48 @@ const actionRowStyle: React.CSSProperties = {
   display: 'flex',
   gap: 12,
   flexWrap: 'wrap',
+};
+
+const heroActionsStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 12,
+  alignItems: 'flex-end',
+};
+
+const heroButtonRowStyle: React.CSSProperties = {
+  display: 'flex',
+  gap: 12,
+  flexWrap: 'wrap',
+  justifyContent: 'flex-end',
+};
+
+const coinCardStyle: React.CSSProperties = {
+  minWidth: 220,
+  padding: 16,
+  borderRadius: 16,
+  backgroundColor: 'rgba(255,255,255,0.65)',
+  border: '1px solid var(--edub-border)',
+  boxShadow: '0 8px 24px rgba(15, 23, 42, 0.06)',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 4,
+};
+
+const coinLabelStyle: React.CSSProperties = {
+  fontSize: 12,
+  textTransform: 'uppercase',
+  letterSpacing: '0.08em',
+  color: 'var(--edub-text-secondary)',
+};
+
+const coinValueStyle: React.CSSProperties = {
+  fontSize: 28,
+  color: 'var(--edub-text-primary)',
+};
+
+const coinHintStyle: React.CSSProperties = {
+  fontSize: 13,
+  color: 'var(--edub-text-secondary)',
 };
 

@@ -11,4 +11,6 @@ public class UpdateAccountRequest
     public string? Password { get; set; }
 
     public string? FullName { get; set; }
+
+    public int? CoinBalance { get; set; }
 }

@@ -66,6 +66,7 @@ export default function LoginPage() {
   }
 
   async function handleGoogleLogin() {
+    localStorage.removeItem('googleAccessToken');
     window.location.assign(`${API_ROOT}/api/auth/google/start`);
   }
 
