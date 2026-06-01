@@ -1,4 +1,0 @@
-1. Class list page:
-    - Danh sách điểm có bảo mật, nhằm tránh public khi trình chiếu
-    - Trong danh sách điểm đánh dấu cảnh báo học sinh nào có điểm số thấp, nằm trong dạng liệt
-2. AI generate đề kiểm tra 15p, kiểm tra miệng dựa theo giáo án
