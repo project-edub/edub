@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { AxiosError } from 'axios';
-import type { LessonDetail, DocumentResponse, AddDocumentRequest, MiniGameSummaryResponse } from '../../types/lessonPlan';
+import type { LessonDetail, DocumentResponse, AddDocumentRequest } from '../../types/lessonPlan';
 import type { StorageItem } from '../../types/storage';
 import type { ApiError } from '../../types/common';
 import * as lessonService from '../../services/lessonService';
-import * as miniGameService from '../../services/miniGameService';
 import * as storageService from '../../services/storageService';
-import MiniGameCreateModal from './MiniGameCreateModal';
-import QuizPlayModal from './QuizPlayModal';
-import QuizViewModal from './QuizViewModal';
+import AttachMinigameModal from './AttachMinigameModal';
+import type { LegacyMiniGameSummary, Minigame } from '../../types/minigameLibrary';
+import { detachMinigameFromLesson, replaceLessonMinigameIds, useLessonMinigameIds } from '../../store/lessonStore';
+import { upsertMinigames, useMinigameStore } from '../../store/minigameStore';
 
 interface LessonDetailModalProps {
   lessonId: number;
@@ -42,15 +42,36 @@ export default function LessonDetailModal({ lessonId, onClose }: LessonDetailMod
   const [storageLoading, setStorageLoading] = useState(false);
   const [selectedStorageItemId, setSelectedStorageItemId] = useState<number | null>(null);
   const [folderTrail, setFolderTrail] = useState<Array<{ id: number | null; name: string }>>([{ id: null, name: 'Kho lưu trữ' }]);
-  const [showMiniGameCreate, setShowMiniGameCreate] = useState(false);
-  const [playGameId, setPlayGameId] = useState<number | null>(null);
-  const [viewGameId, setViewGameId] = useState<number | null>(null);
-  const [deleteGameTarget, setDeleteGameTarget] = useState<MiniGameSummaryResponse | null>(null);
+  const [showAttachMinigame, setShowAttachMinigame] = useState(false);
+  const { minigames } = useMinigameStore();
+  const lessonMinigameIds = useLessonMinigameIds(lessonId);
 
   useEffect(() => {
     loadLesson();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lessonId]);
+
+  useEffect(() => {
+    if (!lesson || lesson.miniGames.length === 0) {
+      return;
+    }
+
+    if (lessonMinigameIds.length > 0) {
+      return;
+    }
+
+    const legacyMinigames: Array<Minigame | LegacyMiniGameSummary> = lesson.miniGames.map((game) => ({
+      id: `legacy-${lessonId}-${game.id}`,
+      title: game.name,
+      description: game.description ?? undefined,
+      type: game.type,
+      createdAt: game.createdAt ?? new Date().toISOString(),
+      updatedAt: game.createdAt ?? new Date().toISOString(),
+    }));
+
+    upsertMinigames(legacyMinigames);
+    replaceLessonMinigameIds(lessonId, legacyMinigames.map((game) => String(game.id)));
+  }, [lesson, lessonId, lessonMinigameIds.length]);
 
   async function loadLesson() {
     setLoading(true);
@@ -184,21 +205,6 @@ export default function LessonDetailModal({ lessonId, onClose }: LessonDetailMod
     setError('');
     try {
       await lessonService.deleteAttachment(attachmentId);
-      await loadLesson();
-    } catch (err) {
-      setError(extractError(err));
-    } finally {
-      setActionLoading(false);
-    }
-  }
-
-  async function handleDeleteMiniGame() {
-    if (!deleteGameTarget) return;
-    setActionLoading(true);
-    setError('');
-    try {
-      await miniGameService.deleteMiniGame(deleteGameTarget.id);
-      setDeleteGameTarget(null);
       await loadLesson();
     } catch (err) {
       setError(extractError(err));
@@ -371,91 +377,63 @@ export default function LessonDetailModal({ lessonId, onClose }: LessonDetailMod
             {/* Mini Games Section */}
             <section>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <h4>Mini game</h4>
-                <button type="button" onClick={() => setShowMiniGameCreate(true)} disabled={actionLoading} className="btn btn-add" style={{ padding: '4px 12px' }}>
-                  Tạo mini game
+                <h4>Minigame</h4>
+                <button type="button" onClick={() => setShowAttachMinigame(true)} disabled={actionLoading} className="btn btn-add" style={{ padding: '4px 12px' }}>
+                  Gắn Minigame
                 </button>
               </div>
-              {lesson.miniGames.length === 0 ? (
-                <p style={{ color: '#888', fontSize: 14 }}>Chưa có mini game nào</p>
+
+              {lessonMinigameIds.length === 0 ? (
+                <p style={{ color: '#888', fontSize: 14 }}>Chưa có minigame nào được gắn</p>
               ) : (
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr>
-                      <th style={thStyle}>Tên</th>
-                      <th style={thStyle}>Loại</th>
-                      <th style={thStyle}>Hành động</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {lesson.miniGames.map((game) => (
-                      <tr key={game.id}>
-                        <td style={tdStyle}>{game.name}</td>
-                        <td style={tdStyle}>{game.type}</td>
-                        <td style={tdStyle}>
-                          <button type="button" onClick={() => setPlayGameId(game.id)} disabled={actionLoading} className="btn btn-view" style={{ marginRight: 4 }}>
-                            Chơi
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {lessonMinigameIds.map((minigameId) => {
+                    const minigame = minigames.find((item) => item.id === minigameId);
+                    if (!minigame) {
+                      return (
+                        <div key={minigameId} style={{ ...linkedMinigameStyle, opacity: 0.75 }}>
+                          <div>
+                            <strong>Minigame không còn tồn tại</strong>
+                            <div style={{ color: '#888', fontSize: 13 }}>Liên kết stale này sẽ được bỏ qua an toàn.</div>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div key={minigame.id} style={linkedMinigameStyle}>
+                        <div>
+                          <button
+                            type="button"
+                            onClick={() => window.location.assign('/minigames')}
+                            className="btn btn-view"
+                            style={{ padding: 0, border: 'none', background: 'none', textDecoration: 'underline', fontWeight: 600 }}
+                          >
+                            {minigame.title}
                           </button>
-                          <button type="button" onClick={() => setViewGameId(game.id)} disabled={actionLoading} className="btn btn-view" style={{ marginRight: 4 }}>
-                            Xem
-                          </button>
-                          <button type="button" onClick={() => setDeleteGameTarget(game)} disabled={actionLoading} className="btn btn-delete">
-                            Xóa
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                          <div style={{ color: 'var(--edub-text-secondary)', fontSize: 13, marginTop: 4 }}>
+                            Loại: {minigame.type}
+                          </div>
+                        </div>
+                        <button type="button" onClick={() => detachMinigameFromLesson(lessonId, minigame.id)} disabled={actionLoading} className="btn btn-delete">
+                          Gỡ
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </section>
           </>
         ) : null}
       </div>
 
-      {/* Mini Game Create Modal */}
-      {showMiniGameCreate && (
-        <MiniGameCreateModal
+      {showAttachMinigame && (
+        <AttachMinigameModal
+          open={showAttachMinigame}
           lessonId={lessonId}
-          onClose={() => setShowMiniGameCreate(false)}
-          onCreated={loadLesson}
+          onClose={() => setShowAttachMinigame(false)}
         />
-      )}
-
-      {/* Quiz Play Modal */}
-      {playGameId != null && (
-        <QuizPlayModal
-          miniGameId={playGameId}
-          onClose={() => setPlayGameId(null)}
-        />
-      )}
-
-      {/* Quiz View Modal */}
-      {viewGameId != null && (
-        <QuizViewModal
-          miniGameId={viewGameId}
-          onClose={() => setViewGameId(null)}
-        />
-      )}
-
-      {/* Delete Mini Game Confirmation */}
-      {deleteGameTarget && (
-        <div style={{ ...overlayStyle, zIndex: 1100 }}>
-          <div style={{ backgroundColor: 'var(--edub-surface)', color: 'var(--edub-text-primary)', border: '1px solid var(--edub-border)', padding: 24, borderRadius: 8, minWidth: 400, maxWidth: 500 }}>
-            <h2 style={{ marginBottom: 16 }}>Xác nhận xóa</h2>
-            <p style={{ marginBottom: 16 }}>
-              Bạn có chắc chắn muốn xóa mini game <strong>{deleteGameTarget.name}</strong>?
-            </p>
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-              <button type="button" onClick={() => setDeleteGameTarget(null)} disabled={actionLoading} className="btn btn-neutral">
-                Hủy
-              </button>
-              <button type="button" onClick={handleDeleteMiniGame} disabled={actionLoading} className="btn btn-delete">
-                {actionLoading ? 'Đang xử lý...' : 'Xóa'}
-              </button>
-            </div>
-          </div>
-        </div>
       )}
 
       {showStoragePicker && (
@@ -583,3 +561,14 @@ const labelStyle: React.CSSProperties = { display: 'block', marginBottom: 4 };
 const inputStyle: React.CSSProperties = { width: '100%', padding: 8, boxSizing: 'border-box' };
 const thStyle: React.CSSProperties = { textAlign: 'left', padding: '6px 8px', borderBottom: '2px solid var(--edub-border)' };
 const tdStyle: React.CSSProperties = { padding: '6px 8px', borderBottom: '1px solid var(--edub-border)' };
+const linkedMinigameStyle: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  gap: 12,
+  alignItems: 'center',
+  padding: 12,
+  borderRadius: 12,
+  border: '1px solid var(--edub-border)',
+  backgroundColor: 'rgba(255,255,255,0.55)',
+  flexWrap: 'wrap',
+};

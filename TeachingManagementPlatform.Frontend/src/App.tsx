@@ -10,6 +10,7 @@ import OverviewPage from './pages/lecturer/OverviewPage';
 import ClassListPage from './pages/lecturer/ClassListPage';
 import ClassDetailPage from './pages/lecturer/ClassDetailPage';
 import LessonPlanPage from './pages/lecturer/LessonPlanPage';
+import MinigamesPage from './pages/lecturer/MinigamesPage';
 import TeachingMaterialStoragePage from './pages/lecturer/TeachingMaterialStoragePage';
 import QuizGeneratorPage from './pages/lecturer/QuizGeneratorPage';
 import CoinPurchasePage from './pages/lecturer/CoinPurchasePage';
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="/lecturer/classes" element={<ClassListPage />} />
           <Route path="/lecturer/classes/:id" element={<ClassDetailPage />} />
           <Route path="/lecturer/lesson-plans" element={<LessonPlanPage />} />
+          <Route path="/minigames" element={<MinigamesPage />} />
           <Route path="/lecturer/storage" element={<TeachingMaterialStoragePage />} />
           <Route path="/lecturer/quiz-generator" element={<QuizGeneratorPage />} />
           <Route path="/lecturer/coin-packages" element={<CoinPurchasePage />} />

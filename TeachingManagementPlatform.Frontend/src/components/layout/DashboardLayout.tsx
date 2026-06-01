@@ -23,6 +23,7 @@ const lecturerMenuItems = [
   { to: '/lecturer/overview', label: 'Thông tin cá nhân' },
   { to: '/lecturer/classes', label: 'Danh sách lớp' },
   { to: '/lecturer/lesson-plans', label: 'Giáo án' },
+  { to: '/minigames', label: 'Minigame' },
   { to: '/lecturer/storage', label: 'Kho tài liệu' },
   { to: '/lecturer/quiz-generator', label: 'Tạo Quiz' },
   { to: '/lecturer/coin-packages', label: 'Mua ECoin' },
