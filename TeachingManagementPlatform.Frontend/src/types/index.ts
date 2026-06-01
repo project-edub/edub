@@ -117,6 +117,12 @@ export type {
   MiniGamePlayData,
 } from './miniGame';
 
+// Minigame library
+export type {
+  Minigame,
+  LegacyMiniGameSummary,
+} from './minigameLibrary';
+
 // Storage
 export type {
   StorageItem,
