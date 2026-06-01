@@ -16,8 +16,6 @@ function Wrapper({ initialList }: { initialList: AttendanceList }) {
       onAddSlot={vi.fn()}
       onUpdateSlotDate={vi.fn()}
       onRemoveSlot={vi.fn()}
-      onImportExcel={vi.fn()}
-      onExportExcel={vi.fn()}
       onToggleSlotStatus={(studentId, slotId) => {
         setList((current) => ({
           ...current,

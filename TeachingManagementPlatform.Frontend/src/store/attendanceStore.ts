@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { AttendanceList, AttendanceSlot, AttendanceStudentSource } from '../types/attendance';
-import { cycleSlotStatus, ensureAttendanceMatrix } from '../utils/attendanceHelpers';
+import { cycleSlotStatus, ensureAttendanceMatrix, sortSlotsByDate } from '../utils/attendanceHelpers';
 
 const STORAGE_PREFIX = 'edub.attendance';
 
@@ -95,9 +95,10 @@ export function useAttendanceStore(classId: number, students: AttendanceStudentS
   const addSlot = useCallback((slot: AttendanceSlot) => {
     setAttendanceList((current) => {
       if (!current) return null;
+      const nextSlots = sortSlotsByDate([...current.slots, slot]);
       return {
         ...current,
-        slots: [...current.slots, slot],
+        slots: nextSlots,
         rows: current.rows.map((row) => ({
           ...row,
           slots: {
@@ -112,9 +113,10 @@ export function useAttendanceStore(classId: number, students: AttendanceStudentS
   const updateSlotDate = useCallback((slotId: string, date: string) => {
     setAttendanceList((current) => {
       if (!current) return null;
+      const updated = current.slots.map((slot) => (slot.id === slotId ? { ...slot, date } : slot));
       return {
         ...current,
-        slots: current.slots.map((slot) => (slot.id === slotId ? { ...slot, date } : slot)),
+        slots: sortSlotsByDate(updated),
       };
     });
   }, []);
@@ -173,7 +175,12 @@ export function useAttendanceStore(classId: number, students: AttendanceStudentS
   }, []);
 
   const replaceAttendanceList = useCallback((nextList: AttendanceList | null) => {
-    setAttendanceList(nextList);
+    if (!nextList) {
+      setAttendanceList(null);
+      return;
+    }
+    const sorted = { ...nextList, slots: sortSlotsByDate(nextList.slots) };
+    setAttendanceList(sorted);
   }, []);
 
   return {

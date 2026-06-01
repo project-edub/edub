@@ -8,6 +8,7 @@ import StudentListTable from './StudentListTable';
 import ExcelImportModal from './ExcelImportModal';
 import AttendanceTable from './AttendanceTable';
 import AddSlotModal from './AddSlotModal';
+import ConfirmDialog from '../common/ConfirmDialog';
 import { useAttendanceStore } from '../../store/attendanceStore';
 import { createAttendanceSlot } from '../../utils/attendanceHelpers';
 import { exportAttendanceExcel } from '../../utils/exportAttendanceExcel';
@@ -40,6 +41,8 @@ export default function StudentListTabs({ classId, className = 'lop-hoc' }: Prop
   const [showAddSlotModal, setShowAddSlotModal] = useState(false);
   const [renamingAttendance, setRenamingAttendance] = useState(false);
   const [attendanceRenameValue, setAttendanceRenameValue] = useState('');
+  const [confirmDeleteAttendanceOpen, setConfirmDeleteAttendanceOpen] = useState(false);
+  const attendanceImportInputId = 'attendance-import-input';
 
   const loadLists = useCallback(async () => {
     setLoading(true);
@@ -276,11 +279,14 @@ export default function StudentListTabs({ classId, className = 'lop-hoc' }: Prop
   }
 
   function handleDeleteAttendance() {
-    const confirmed = window.confirm('Xoá danh sách điểm danh hiện tại? Hành động này không thể hoàn tác.');
-    if (!confirmed) return;
+    setConfirmDeleteAttendanceOpen(true);
+  }
+
+  function handleConfirmDeleteAttendance() {
     resetAttendanceList();
     setRenamingAttendance(false);
     setAttendanceRenameValue('');
+    setConfirmDeleteAttendanceOpen(false);
   }
 
   if (loading) {
@@ -410,6 +416,30 @@ export default function StudentListTabs({ classId, className = 'lop-hoc' }: Prop
 
             {viewMode === 'attendance' && attendanceList && (
               <>
+                <input
+                  id={attendanceImportInputId}
+                  type="file"
+                  accept=".xlsx,.xls"
+                  style={{ display: 'none' }}
+                  onChange={(e) => handleImportAttendanceFile(e.target.files ? e.target.files[0] : null)}
+                />
+                <label
+                  htmlFor={attendanceImportInputId}
+                  className="btn btn-add"
+                  style={{ cursor: 'pointer', ...(actionLoading ? { pointerEvents: 'none', opacity: 0.65 } : {}) }}
+                >
+                  Nhập Excel
+                </label>
+
+                <button
+                  type="button"
+                  onClick={handleExportAttendance}
+                  disabled={actionLoading || !hasStudents}
+                  className="btn btn-view"
+                >
+                  Xuất Excel
+                </button>
+
                 {renamingAttendance ? (
                   <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
                     <input
@@ -531,9 +561,6 @@ export default function StudentListTabs({ classId, className = 'lop-hoc' }: Prop
                 onAddSlot={() => setShowAddSlotModal(true)}
                 onUpdateSlotDate={updateSlotDate}
                 onRemoveSlot={removeSlot}
-                onImportExcel={handleImportAttendanceFile}
-                onExportExcel={handleExportAttendance}
-                exportDisabled={!hasStudents}
               />
             </>
           ) : (
@@ -564,6 +591,16 @@ export default function StudentListTabs({ classId, className = 'lop-hoc' }: Prop
       {lists.length === 0 && !creatingList && (
         <p style={{ color: 'var(--edub-text-secondary)' }}>Chưa có danh sách học sinh nào. Nhấn "+ Thêm danh sách" để tạo mới.</p>
       )}
+
+      <ConfirmDialog
+        open={confirmDeleteAttendanceOpen}
+        title="Xoá danh sách điểm danh"
+        message={`Xoá danh sách điểm danh ${attendanceList?.name ?? `Điểm danh lớp ${classId}`}? Hành động này không thể hoàn tác.`}
+        confirmLabel="Xoá"
+        cancelLabel="Huỷ"
+        onConfirm={handleConfirmDeleteAttendance}
+        onCancel={() => setConfirmDeleteAttendanceOpen(false)}
+      />
     </div>
   );
 }

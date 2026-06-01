@@ -11,9 +11,6 @@ interface Props {
   onAddSlot: () => void;
   onUpdateSlotDate: (slotId: string, date: string) => void;
   onRemoveSlot: (slotId: string) => void;
-  onImportExcel: (file: File | null) => void;
-  onExportExcel: () => void;
-  exportDisabled?: boolean;
 }
 
 export default function AttendanceTable({
@@ -23,12 +20,8 @@ export default function AttendanceTable({
   onAddSlot,
   onUpdateSlotDate,
   onRemoveSlot,
-  onImportExcel,
-  onExportExcel,
-  exportDisabled = false,
 }: Props) {
   const totalSlots = attendanceList.slots.length;
-  const importInputId = 'attendance-import-input';
   const [activeSlot, setActiveSlot] = useState<AttendanceSlot | null>(null);
   const warningCount = attendanceList.rows.reduce((count, row) => {
     const attendancePercent = getAttendancePercent(row);
@@ -43,7 +36,7 @@ export default function AttendanceTable({
         <span>✅ Có mặt</span>
         <span>❌ Vắng</span>
         <span>🟡 Vắng có phép</span>
-        <span>_(trống)_ Chưa điểm danh</span>
+        <span>Trống</span>
       </div>
 
       {warningCount > 0 && (
@@ -71,32 +64,10 @@ export default function AttendanceTable({
         <button
           type="button"
           onClick={onAddSlot}
-          disabled={actionLoading || exportDisabled}
+          disabled={actionLoading}
           className="btn btn-add"
         >
           + Thêm Slot
-        </button>
-        <input
-          id={importInputId}
-          type="file"
-          accept=".xlsx,.xls"
-          style={{ display: 'none' }}
-          onChange={(e) => onImportExcel(e.target.files ? e.target.files[0] : null)}
-        />
-        <label
-          htmlFor={importInputId}
-          className="btn btn-add"
-          style={{ cursor: 'pointer', ...(actionLoading || exportDisabled ? { pointerEvents: 'none', opacity: 0.65 } : {}) }}
-        >
-          Nhập Excel
-        </label>
-        <button
-          type="button"
-          onClick={onExportExcel}
-          disabled={actionLoading || exportDisabled || totalSlots === 0}
-          className="btn btn-view"
-        >
-          Xuất Excel
         </button>
       </div>
 

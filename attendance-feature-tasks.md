@@ -250,6 +250,113 @@ Danh sách điểm danh hiển thị chung layout với danh sách học sinh, c
 
 ---
 
+## 🔄 UPDATE v4 — Các thay đổi bổ sung (sau khi UPDATE v3 đã hoàn thành)
+
+> Đây là 2 thay đổi UI nhỏ, độc lập nhau. Làm W1 trước W2.
+
+---
+
+### W1 — UI: Di chuyển nút Nhập Excel & Xuất Excel lên cùng hàng với nút Sửa tên / Xoá
+
+- [x] **W1.1** Xác định vị trí hiện tại của nút "Nhập Excel" và "Xuất Excel" trong `AttendanceTable.tsx` (hoặc toolbar của bảng).
+
+- [x] **W1.2** Xác định vị trí hàng chứa nút **Sửa tên** và **Xoá danh sách** (thường nằm ở header của attendance list item, trong `pages/Classes.tsx` hoặc component list).
+
+- [x] **W1.3** Di chuyển 2 nút Nhập/Xuất Excel vào cùng hàng với Sửa tên & Xoá:
+  - Thứ tự gợi ý: `[Tên danh sách] ··· [Nhập Excel] [Xuất Excel] [Sửa tên] [Xoá]`
+  - Giữ nguyên style (variant, size) của các nút, chỉ thay đổi vị trí DOM.
+
+- [x] **W1.4** Xoá vị trí cũ của 2 nút Nhập/Xuất Excel trong toolbar bảng — đảm bảo không còn bản sao nào.
+
+- [x] **W1.5** Kiểm tra layout responsive: các nút không bị tràn hoặc chồng lên nhau trên màn hình nhỏ hơn.
+
+---
+
+### W2 — UI: Sửa chú thích trạng thái trống trong Legend
+
+- [x] **W2.1** Tìm block Legend / Chú thích trong `AttendanceTable.tsx` (được tạo ở V2.2).
+
+- [x] **W2.2** Sửa label của trạng thái `empty`:
+  ```
+  // Cũ
+  _(trống)_ Chưa điểm danh
+  // Mới
+  Trống
+  ```
+  > Chỉ sửa text hiển thị trong legend, không thay đổi giá trị `SlotStatus` hay logic nào khác.
+
+---
+
+## File cần sửa trong UPDATE v4
+
+| File | Thay đổi | Task |
+|---|---|---|
+| `pages/Classes.tsx` hoặc component list item | Thêm nút Nhập/Xuất Excel vào hàng action | W1.3, W1.4 |
+| `components/AttendanceTable.tsx` | Xoá nút khỏi toolbar cũ; sửa text legend | W1.4, W2.2 |
+
+---
+
+## 🔄 UPDATE v5 — Các thay đổi bổ sung (sau khi UPDATE v4 đã hoàn thành)
+
+> Làm X1 trước X2 vì sort slot ảnh hưởng đến thứ tự render — confirm dialog không phụ thuộc thứ tự nhưng nên có data ổn định trước khi test xoá.
+
+---
+
+### X1 — Functional: Tự động sắp xếp slot theo thứ tự ngày tăng dần ⚠️ LÀM TRƯỚC
+
+- [x] **X1.1** Thêm hàm sort trong `utils/attendanceHelpers.ts`:
+  ```ts
+  // Sort slots tăng dần theo date (dùng helper parseSlotDate đã có từ V3.2)
+  function sortSlotsByDate(slots: AttendanceSlot[]): AttendanceSlot[] {
+    return [...slots].sort((a, b) => {
+      const da = parseSlotDate(a.date)
+      const db = parseSlotDate(b.date)
+      if (!da || !db) return 0
+      return da.getTime() - db.getTime()
+    })
+  }
+  ```
+
+- [x] **X1.2** Áp dụng `sortSlotsByDate` tại **3 thời điểm**:
+  1. Khi **thêm slot mới** (Phase 4 / T4.3) — sort lại toàn bộ `slots[]` sau khi append
+  2. Khi **sửa ngày slot** (V4.2) — sort lại sau khi cập nhật date
+  3. Khi **import file Excel** (V3) — sort lại sau khi parse xong toàn bộ slots
+
+- [x] **X1.3** Đảm bảo thứ tự cột trong bảng render theo thứ tự `slots[]` đã được sort — không hardcode index.
+
+- [x] **X1.4** Kiểm tra edge case: 2 slot cùng ngày → giữ nguyên thứ tự tương đối (stable sort), không bị đảo lộn.
+
+---
+
+### X2 — UI: Thay confirm dialog xoá slot từ `window.confirm` → Custom Modal
+
+- [x] **X2.1** Tạo (hoặc tái sử dụng nếu đã có) component `ConfirmDialog` dạng modal với:
+  - Title: `"Xoá slot điểm danh"`
+  - Body: `"Xoá slot [label] ngày [date]? Dữ liệu điểm danh của slot này sẽ bị mất."`
+  - 2 nút: `[Huỷ]` (secondary) và `[Xoá]` (destructive/danger)
+  - Đóng modal khi click Huỷ hoặc click backdrop
+
+- [x] **X2.2** Trong `components/SlotHeaderPopover.tsx` (V4.1), thay thế `window.confirm(...)` bằng việc mở `ConfirmDialog`:
+  - Xoá toàn bộ dòng `window.confirm`
+  - Thêm state `isConfirmOpen` và truyền vào `ConfirmDialog`
+  - Chỉ gọi action xoá slot sau khi user bấm nút `[Xoá]` trong modal
+
+- [x] **X2.3** Nếu dự án đã có sẵn component confirm/modal chung (ví dụ từ shadcn `AlertDialog`) → dùng lại, không tạo mới.
+
+---
+
+## File cần sửa trong UPDATE v5
+
+| File | Thay đổi | Task |
+|---|---|---|
+| `utils/attendanceHelpers.ts` | Thêm `sortSlotsByDate` | X1.1 |
+| `store/attendanceStore.ts` | Gọi sort tại 3 thời điểm thêm/sửa/import | X1.2 |
+| `components/AttendanceTable.tsx` | Render cột theo thứ tự slots đã sort | X1.3 |
+| `components/SlotHeaderPopover.tsx` | Thay `window.confirm` bằng ConfirmDialog | X2.2 |
+| `components/ConfirmDialog.tsx` | Tạo mới (hoặc dùng lại nếu đã có) | X2.1 |
+
+---
+
 ## Task Checklist (Thứ tự ưu tiên)
 
 ### 🗂️ PHASE 1 — Data Model & State
@@ -333,7 +440,7 @@ Danh sách điểm danh hiển thị chung layout với danh sách học sinh, c
 - [x] **T6.2** Xử lý trường hợp class chưa có học sinh → disable nút "Tạo Điểm Danh" hoặc hiển thị thông báo.
 - [x] **T6.3** Đảm bảo 2 cột cuối (Tổng & %) không thể click/chỉnh tay (read-only styling rõ ràng).
 - [x] **T6.4** Responsive: bảng scroll ngang trên màn hình nhỏ, không vỡ layout.
-- [x] **T6.5** Requiremnet: không cho phép người dùng đặt tên slot trùng hoặc chọn ngày học trùng với slot đã tồn tại
+
 ---
 
 ## File/Component Dự Kiến Cần Tạo/Sửa

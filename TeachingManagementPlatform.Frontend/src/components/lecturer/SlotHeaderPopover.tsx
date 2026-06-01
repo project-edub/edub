@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import type { AttendanceSlot } from '../../types/attendance';
 import { hasDuplicateSlotDate } from '../../utils/attendanceHelpers';
+import ConfirmDialog from '../common/ConfirmDialog';
 
 interface Props {
   open: boolean;
@@ -23,6 +24,7 @@ export default function SlotHeaderPopover({
 }: Props) {
   const [date, setDate] = useState('');
   const [error, setError] = useState('');
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const currentSlot = slot;
 
   useEffect(() => {
@@ -51,10 +53,12 @@ export default function SlotHeaderPopover({
   }
 
   function handleDelete() {
-    const confirmed = window.confirm(`Xoá slot ${safeSlot.label} ngày ${safeSlot.date}? Dữ liệu điểm danh của slot này sẽ bị mất.`);
-    if (confirmed) {
-      onDelete(safeSlot.id);
-    }
+    setConfirmOpen(true);
+  }
+
+  function handleConfirmDelete() {
+    onDelete(safeSlot.id);
+    setConfirmOpen(false);
   }
 
   return (
@@ -94,6 +98,13 @@ export default function SlotHeaderPopover({
           </div>
         </form>
       </div>
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Xoá slot điểm danh"
+        message={`Xoá slot ${safeSlot.label} ngày ${safeSlot.date}? Dữ liệu điểm danh của slot này sẽ bị mất.`}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </div>
   );
 }
