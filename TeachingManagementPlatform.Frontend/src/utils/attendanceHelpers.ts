@@ -1,6 +1,26 @@
 import type { AttendanceList, AttendanceSlot, SlotStatus, StudentAttendance } from '../types/attendance';
 import { formatDate } from './formatters';
 
+/**
+ * Parse a slot date string (dd/MM/yyyy or ISO) into a Date object or null.
+ */
+export function parseSlotDateToDate(raw: string): Date | null {
+  if (!raw) return null;
+  const parts = raw.split('/');
+  if (parts.length === 3) {
+    const [dayPart, monthPart, yearPart] = parts.map((p) => p.trim());
+    const day = Number(dayPart);
+    const month = Number(monthPart);
+    const year = Number(yearPart);
+    if (Number.isInteger(day) && Number.isInteger(month) && Number.isInteger(year)) {
+      const d = new Date(year, month - 1, day);
+      if (d.getFullYear() === year && d.getMonth() === month - 1 && d.getDate() === day) return d;
+    }
+  }
+  const fallback = new Date(raw);
+  return Number.isNaN(fallback.getTime()) ? null : fallback;
+}
+
 export function getPresentCount(row: StudentAttendance): number {
   return Object.values(row.slots).filter((status) => status === 'present' || status === 'excused').length;
 }
@@ -62,4 +82,13 @@ export function ensureAttendanceMatrix(list: AttendanceList): AttendanceList {
       }, {}),
     })),
   };
+}
+
+export function sortSlotsByDate(slots: AttendanceSlot[]): AttendanceSlot[] {
+  return [...slots].sort((a, b) => {
+    const da = parseSlotDateToDate(a.date);
+    const db = parseSlotDateToDate(b.date);
+    if (!da || !db) return 0;
+    return da.getTime() - db.getTime();
+  });
 }
