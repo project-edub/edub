@@ -48,13 +48,13 @@ export async function parseAttendanceFile(file: File, classId: number, students:
   const wb = XLSX.read(buffer, { type: 'array' });
   const sheetName = wb.SheetNames[0];
   const sheet = wb.Sheets[sheetName];
-  const rows = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1, defval: '' });
+  const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' }) as unknown[][];
 
   if (!rows || rows.length < 2) {
     throw new Error('File không có dữ liệu điểm danh');
   }
 
-  const headers = rows[0].map((h: any) => String(h ?? '').trim());
+  const headers = (rows[0] ?? []).map((h: unknown) => String(h ?? '').trim());
   // first column is student name, last two are total and percent (if present)
   let totalIndex = headers.findIndex((h) => /Tổng/i.test(h));
   if (totalIndex === -1) totalIndex = headers.length - 2;
@@ -62,7 +62,7 @@ export async function parseAttendanceFile(file: File, classId: number, students:
 
   const slotHeaders = headers.slice(1, totalIndex);
 
-  const slots: AttendanceSlot[] = slotHeaders.map((h, idx) => {
+  const slots: AttendanceSlot[] = slotHeaders.map((h: string, idx: number) => {
     const text = String(h ?? '');
     const m = text.match(/^\s*(.*?)\s*\((.*?)\)\s*$/);
     const label = m ? m[1].trim() : text || `Buổi ${idx + 1}`;
@@ -76,7 +76,7 @@ export async function parseAttendanceFile(file: File, classId: number, students:
   for (const r of dataRows) {
     const name = String(r[0] ?? '').trim();
     if (!name) continue;
-    const statuses: SlotStatus[] = slotHeaders.map((_, i) => parseStatusCell(r[1 + i]));
+    const statuses: SlotStatus[] = slotHeaders.map((_: string, i: number) => parseStatusCell(r[1 + i]));
     fileByName.set(name, statuses);
   }
 

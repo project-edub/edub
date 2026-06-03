@@ -8,4 +8,5 @@ public interface ICoinService
     Task<CoinWalletResponse> GetWalletAsync(int userId);
     Task<int> AddCoinsAsync(int userId, int amount);
     Task<int> DeductCoinsAsync(int userId, int amount);
+    Task<List<SubscriptionPackageResponse>> GetActiveSubscriptionPackagesAsync();
 }

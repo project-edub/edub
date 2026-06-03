@@ -310,13 +310,13 @@ export default function StudentListTabs({ classId, className = 'lop-hoc' }: Prop
             style={{
               padding: '8px 16px',
               border: '1px solid transparent',
-              borderBottom: activeListId === list.id ? '3px solid #1565c0' : '3px solid transparent',
+              borderBottom: activeListId === list.id ? '3px solid #d49a00' : '3px solid transparent',
               fontWeight: activeListId === list.id ? 700 : 600,
               marginBottom: -2,
             }}
           >
             {list.name}
-            {list.isMain && <span style={{ marginLeft: 6, fontSize: 11, color: activeListId === list.id ? 'rgba(255,255,255,0.85)' : 'var(--edub-text-secondary)' }}>(Danh sách chính)</span>}
+            {list.isMain && <span style={{ marginLeft: 6, fontSize: 11, color: activeListId === list.id ? 'rgba(32,26,17,0.85)' : 'var(--edub-text-secondary)' }}>(Danh sách chính)</span>}
           </button>
         ))}
 

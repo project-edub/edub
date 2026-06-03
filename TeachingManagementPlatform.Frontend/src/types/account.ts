@@ -9,10 +9,6 @@ export interface User {
   googleId?: string | null;
   status: AccountStatus;
   coinBalance: number;
-  subscriptionPackageId?: number | null;
-  subscriptionPackageName?: string | null;
-  storageUsedBytes?: number;
-  storageLimitBytes?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -21,7 +17,6 @@ export interface CreateAccountRequest {
   email: string;
   password: string;
   fullName: string;
-  subscriptionPackageId?: number | null;
 }
 
 export interface UpdateAccountRequest {
@@ -43,10 +38,7 @@ export interface AccountResponse {
   role: Role;
   status: AccountStatus;
   coinBalance: number;
-  subscriptionPackageId: number;
-  subscriptionPackageName: string;
-  storageUsedBytes: number;
-  storageLimitBytes: number;
+  subscriptionPackageId: number | null;
   createdAt: string;
   updatedAt: string;
 }

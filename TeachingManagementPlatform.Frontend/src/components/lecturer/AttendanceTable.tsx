@@ -254,7 +254,7 @@ const cellStyle: React.CSSProperties = {
 const summaryCellStyle: React.CSSProperties = {
   ...cellStyle,
   fontWeight: 700,
-  background: '#f8fbff',
+  background: '#fff6dc',
   whiteSpace: 'nowrap',
 };
 
@@ -272,8 +272,8 @@ function slotButtonStyle(status: SlotStatus): React.CSSProperties {
     borderRadius: 8,
     padding: '6px 8px',
     cursor: 'pointer',
-    backgroundColor: status === 'present' ? '#e8f5e9' : status === 'absent' ? '#ffebee' : status === 'excused' ? '#fff8e1' : '#f5f7fa',
-    color: status === 'present' ? '#2e7d32' : status === 'absent' ? '#c62828' : status === 'excused' ? '#b26a00' : 'var(--edub-text-secondary)',
+    backgroundColor: status === 'present' ? '#fff3bf' : status === 'absent' ? '#ffe4d6' : status === 'excused' ? '#fff1cc' : '#f5f7fa',
+    color: status === 'present' ? '#8f6600' : status === 'absent' ? '#b3261e' : status === 'excused' ? '#a66b00' : 'var(--edub-text-secondary)',
     fontWeight: 600,
   };
 }

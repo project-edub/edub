@@ -1,18 +1,11 @@
-export interface GeneratedQuizOption {
-  text: string;
-}
-
-export interface GeneratedQuizQuestion {
-  question: string;
-  options: GeneratedQuizOption[];
-  correctAnswerIndex: number;
-}
-
-export interface QuizGenerationResponse {
-  requestedQuestionCount: number;
-  generatedQuestionCount: number;
-  questions: GeneratedQuizQuestion[];
-  warnings?: string[];
-  googleFormId?: string;
-  googleFormUrl?: string;
-}
+// Re-export from service for backward compatibility
+export type {
+  QuizListItem,
+  QuizGameDetail,
+  QuizQuestionDetail,
+  QuizPlayerData,
+  QuizPlayerQuestion,
+  QuizSubmitResponse,
+  QuizQuestionResult,
+  QuizSubmission,
+} from '../services/quizService';

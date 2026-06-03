@@ -194,14 +194,6 @@ export default function CoinPurchasePage() {
         <div style={walletCardStyle}>
           <span style={walletLabelStyle}>Số dư hiện tại</span>
           <span style={walletValueStyle}>{wallet.coinBalance.toLocaleString('vi-VN')} ECoin</span>
-          <button
-            type="button"
-            className="btn btn-neutral"
-            onClick={() => void syncLatestPurchase()}
-            disabled={syncingPayment}
-          >
-            {syncingPayment ? 'Đang đồng bộ...' : 'Đồng bộ giao dịch gần nhất'}
-          </button>
           <button type="button" className="btn btn-neutral" onClick={() => navigate('/lecturer/quiz-generator')}>
             Quay lại tạo quiz
           </button>

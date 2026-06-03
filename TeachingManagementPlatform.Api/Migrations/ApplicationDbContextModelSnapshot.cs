@@ -17,7 +17,7 @@ namespace TeachingManagementPlatform.Api.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.14")
+                .HasAnnotation("ProductVersion", "9.0.16")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -75,6 +75,7 @@ namespace TeachingManagementPlatform.Api.Migrations
 
                     b.Property<string>("LessonStatus")
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)")
                         .HasDefaultValue("pending");
@@ -90,6 +91,263 @@ namespace TeachingManagementPlatform.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("ClassLessonSchedules");
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.CoinPackage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CoinAmount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CoinPackages");
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.CoinPurchaseTransaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("CheckoutUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("CoinAmount")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CoinPackageId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("OrderCode")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PaymentLinkId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<int?>("SubscriptionPackageId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CoinPackageId");
+
+                    b.HasIndex("OrderCode")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("CoinPurchaseTransactions", (string)null);
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.CrosswordEcoinTransaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EcoinsSpent")
+                        .HasColumnType("int");
+
+                    b.Property<int>("GameId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GameId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("CrosswordEcoinTransactions");
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.CrosswordGame", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ConfigJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("Deadline")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EcoinsSpent")
+                        .HasColumnType("int");
+
+                    b.Property<string>("GridJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("MaxAttempts")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("PublishedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("ShowAnswerAfterExpiry")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("SourceDocumentContent")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("SourceDocumentExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("CrosswordGames");
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.CrosswordWord", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Clue")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Difficulty")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Direction")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("DisplayWord")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("GameId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SourceContext")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("StartCol")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StartRow")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Word")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GameId");
+
+                    b.ToTable("CrosswordWords");
                 });
 
             modelBuilder.Entity("TeachingManagementPlatform.Api.Models.LecturerProfile", b =>
@@ -470,6 +728,155 @@ namespace TeachingManagementPlatform.Api.Migrations
                     b.ToTable("ProfileTuitionFees");
                 });
 
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.QuizGame", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ConfigJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EcoinsSpent")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("PublishedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("RequireStudentName")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ShowAnswersAfterSubmit")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("SourceDocumentContent")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("SourceDocumentExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("QuizGames", (string)null);
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.QuizGameQuestion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CorrectAnswerIndex")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CorrectAnswerText")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Difficulty")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Explanation")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OptionsJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("QuestionText")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("QuestionType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<int>("QuizGameId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuizGameId");
+
+                    b.ToTable("QuizGameQuestions", (string)null);
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.QuizSubmission", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AnswersJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("CorrectCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QuizGameId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("ScorePercent")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<string>("StudentName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("TotalQuestions")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuizGameId");
+
+                    b.ToTable("QuizSubmissions", (string)null);
+                });
+
             modelBuilder.Entity("TeachingManagementPlatform.Api.Models.StorageItem", b =>
                 {
                     b.Property<int>("Id")
@@ -606,9 +1013,28 @@ namespace TeachingManagementPlatform.Api.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsDefault")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
+
+                    b.Property<int>("MaxCrosswordFilesPerGeneration")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxCrosswordGenerationsPerDay")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxCrosswordWordsPerGeneration")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxFilesPerQuizGeneration")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxQuestionsPerQuiz")
+                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -616,12 +1042,6 @@ namespace TeachingManagementPlatform.Api.Migrations
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("MaxFilesPerQuizGeneration")
-                        .HasColumnType("int");
-
-                    b.Property<int>("MaxQuestionsPerQuiz")
-                        .HasColumnType("int");
 
                     b.Property<long>("StorageLimitBytes")
                         .HasColumnType("bigint");
@@ -645,6 +1065,9 @@ namespace TeachingManagementPlatform.Api.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CoinBalance")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -673,6 +1096,9 @@ namespace TeachingManagementPlatform.Api.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<int?>("SubscriptionPackageId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -684,6 +1110,8 @@ namespace TeachingManagementPlatform.Api.Migrations
                     b.HasIndex("GoogleId")
                         .IsUnique()
                         .HasFilter("[GoogleId] IS NOT NULL");
+
+                    b.HasIndex("SubscriptionPackageId");
 
                     b.ToTable("Users");
                 });
@@ -723,6 +1151,65 @@ namespace TeachingManagementPlatform.Api.Migrations
                     b.Navigation("Class");
 
                     b.Navigation("Lesson");
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.CoinPurchaseTransaction", b =>
+                {
+                    b.HasOne("TeachingManagementPlatform.Api.Models.CoinPackage", "CoinPackage")
+                        .WithMany()
+                        .HasForeignKey("CoinPackageId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TeachingManagementPlatform.Api.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CoinPackage");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.CrosswordEcoinTransaction", b =>
+                {
+                    b.HasOne("TeachingManagementPlatform.Api.Models.CrosswordGame", "Game")
+                        .WithMany()
+                        .HasForeignKey("GameId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TeachingManagementPlatform.Api.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Game");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.CrosswordGame", b =>
+                {
+                    b.HasOne("TeachingManagementPlatform.Api.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.CrosswordWord", b =>
+                {
+                    b.HasOne("TeachingManagementPlatform.Api.Models.CrosswordGame", "Game")
+                        .WithMany("Words")
+                        .HasForeignKey("GameId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Game");
                 });
 
             modelBuilder.Entity("TeachingManagementPlatform.Api.Models.LecturerProfile", b =>
@@ -868,6 +1355,39 @@ namespace TeachingManagementPlatform.Api.Migrations
                     b.Navigation("Profile");
                 });
 
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.QuizGame", b =>
+                {
+                    b.HasOne("TeachingManagementPlatform.Api.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.QuizGameQuestion", b =>
+                {
+                    b.HasOne("TeachingManagementPlatform.Api.Models.QuizGame", "QuizGame")
+                        .WithMany("Questions")
+                        .HasForeignKey("QuizGameId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("QuizGame");
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.QuizSubmission", b =>
+                {
+                    b.HasOne("TeachingManagementPlatform.Api.Models.QuizGame", "QuizGame")
+                        .WithMany("Submissions")
+                        .HasForeignKey("QuizGameId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("QuizGame");
+                });
+
             modelBuilder.Entity("TeachingManagementPlatform.Api.Models.StorageItem", b =>
                 {
                     b.HasOne("TeachingManagementPlatform.Api.Models.User", "Lecturer")
@@ -919,11 +1439,26 @@ namespace TeachingManagementPlatform.Api.Migrations
                     b.Navigation("StudentList");
                 });
 
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.User", b =>
+                {
+                    b.HasOne("TeachingManagementPlatform.Api.Models.SubscriptionPackage", "SubscriptionPackage")
+                        .WithMany()
+                        .HasForeignKey("SubscriptionPackageId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("SubscriptionPackage");
+                });
+
             modelBuilder.Entity("TeachingManagementPlatform.Api.Models.Class", b =>
                 {
                     b.Navigation("LessonSchedules");
 
                     b.Navigation("StudentLists");
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.CrosswordGame", b =>
+                {
+                    b.Navigation("Words");
                 });
 
             modelBuilder.Entity("TeachingManagementPlatform.Api.Models.LecturerProfile", b =>
@@ -959,6 +1494,13 @@ namespace TeachingManagementPlatform.Api.Migrations
                     b.Navigation("AssignedClasses");
 
                     b.Navigation("Lessons");
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.QuizGame", b =>
+                {
+                    b.Navigation("Questions");
+
+                    b.Navigation("Submissions");
                 });
 
             modelBuilder.Entity("TeachingManagementPlatform.Api.Models.StorageItem", b =>

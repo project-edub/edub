@@ -10,10 +10,18 @@ import OverviewPage from './pages/lecturer/OverviewPage';
 import ClassListPage from './pages/lecturer/ClassListPage';
 import ClassDetailPage from './pages/lecturer/ClassDetailPage';
 import LessonPlanPage from './pages/lecturer/LessonPlanPage';
-import MinigamesPage from './pages/lecturer/MinigamesPage';
 import TeachingMaterialStoragePage from './pages/lecturer/TeachingMaterialStoragePage';
 import QuizGeneratorPage from './pages/lecturer/QuizGeneratorPage';
+import QuizListPage from './pages/lecturer/QuizListPage';
+import QuizEditorPage from './pages/lecturer/QuizEditorPage';
 import CoinPurchasePage from './pages/lecturer/CoinPurchasePage';
+import SubscriptionPage from './pages/lecturer/SubscriptionPage';
+import TransactionHistoryPage from './pages/lecturer/TransactionHistoryPage';
+import CrosswordListPage from './pages/lecturer/CrosswordListPage';
+import CrosswordCreatorPage from './pages/lecturer/CrosswordCreatorPage';
+import CrosswordEditorPage from './pages/lecturer/CrosswordEditorPage';
+import CrosswordPlayerPage from './pages/CrosswordPlayerPage';
+import QuizPlayerPage from './pages/QuizPlayerPage';
 import AdminRoute from './components/common/AdminRoute';
 import LecturerRoute from './components/common/LecturerRoute';
 
@@ -29,6 +37,10 @@ export default function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
 
+        {/* Public crossword player route */}
+        <Route path="/play/:slug" element={<CrosswordPlayerPage />} />
+        <Route path="/quiz/:slug" element={<QuizPlayerPage />} />
+
         {/* Admin routes */}
         <Route element={<AdminRoute />}>
           <Route path="/admin/accounts" element={<AccountManagementPage />} />
@@ -42,10 +54,16 @@ export default function App() {
           <Route path="/lecturer/classes" element={<ClassListPage />} />
           <Route path="/lecturer/classes/:id" element={<ClassDetailPage />} />
           <Route path="/lecturer/lesson-plans" element={<LessonPlanPage />} />
-          <Route path="/minigames" element={<MinigamesPage />} />
           <Route path="/lecturer/storage" element={<TeachingMaterialStoragePage />} />
-          <Route path="/lecturer/quiz-generator" element={<QuizGeneratorPage />} />
+          <Route path="/lecturer/quiz-generator" element={<QuizListPage />} />
+          <Route path="/lecturer/quiz/new" element={<QuizGeneratorPage />} />
+          <Route path="/lecturer/quiz/:id/edit" element={<QuizEditorPage />} />
           <Route path="/lecturer/coin-packages" element={<CoinPurchasePage />} />
+          <Route path="/lecturer/subscription" element={<SubscriptionPage />} />
+          <Route path="/lecturer/transactions" element={<TransactionHistoryPage />} />
+          <Route path="/lecturer/crossword" element={<CrosswordListPage />} />
+          <Route path="/lecturer/crossword/new" element={<CrosswordCreatorPage />} />
+          <Route path="/lecturer/crossword/:id/edit" element={<CrosswordEditorPage />} />
         </Route>
 
         {/* Default redirect */}
