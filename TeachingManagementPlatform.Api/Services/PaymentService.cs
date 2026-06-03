@@ -218,6 +218,155 @@ public class PaymentService : IPaymentService
         return await SyncCoinPurchaseStatusAsync(userId, candidate.OrderCode);
     }
 
+    public async Task<List<CoinPurchaseHistoryItem>> GetPurchaseHistoryAsync(int userId)
+    {
+        return await _context.CoinPurchaseTransactions
+            .Where(t => t.UserId == userId)
+            .OrderByDescending(t => t.CreatedAt)
+            .Select(t => new CoinPurchaseHistoryItem
+            {
+                Id = t.Id,
+                OrderCode = t.OrderCode,
+                Amount = t.Amount,
+                CoinAmount = t.CoinAmount,
+                Status = t.Status,
+                CreatedAt = t.CreatedAt,
+                PaidAt = t.PaidAt
+            })
+            .ToListAsync();
+    }
+
+    public async Task<CoinPurchaseCheckoutResponse> CreateSubscriptionPurchaseCheckoutAsync(
+        int userId,
+        int subscriptionPackageId,
+        CreateCoinPurchaseRequest request)
+    {
+        var subPkg = await _context.SubscriptionPackages.FindAsync(subscriptionPackageId);
+        if (subPkg == null || !subPkg.IsActive)
+            throw new CoinPurchasePaymentException("Gói đăng ký này hiện không khả dụng.");
+
+        var amount = decimal.ToInt32(decimal.Round(subPkg.Price, 0, MidpointRounding.AwayFromZero));
+        if (amount <= 0)
+            throw new CoinPurchasePaymentException("Gói miễn phí không cần thanh toán.");
+
+        var orderCode = await GenerateUniqueOrderCodeAsync();
+
+        // Use CoinPackageId = null to indicate this is NOT a coin purchase
+        var transaction = new CoinPurchaseTransaction
+        {
+            OrderCode = orderCode,
+            UserId = userId,
+            CoinPackageId = null,
+            Amount = subPkg.Price,
+            CoinAmount = 0,
+            Status = "pending",
+            SubscriptionPackageId = subscriptionPackageId,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        _context.CoinPurchaseTransactions.Add(transaction);
+        await _context.SaveChangesAsync();
+
+        try
+        {
+            var description = $"Sub {subPkg.Id}-{orderCode}";
+            if (description.Length > 25) description = description[..25];
+
+            var paymentRequest = new CreatePaymentLinkRequest
+            {
+                OrderCode = orderCode,
+                Amount = amount,
+                Description = description,
+                ReturnUrl = EnsureRedirectUrl(request.ReturnUrl, orderCode, "success"),
+                CancelUrl = EnsureRedirectUrl(request.CancelUrl, orderCode, "cancel")
+            };
+
+            var paymentLink = await _payOSClient.PaymentRequests.CreateAsync(paymentRequest);
+
+            transaction.CheckoutUrl = paymentLink.CheckoutUrl;
+            transaction.PaymentLinkId = paymentLink.PaymentLinkId;
+            transaction.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return new CoinPurchaseCheckoutResponse
+            {
+                OrderCode = orderCode,
+                CheckoutUrl = paymentLink.CheckoutUrl,
+                Status = transaction.Status,
+                Package = new CoinPackageResponse
+                {
+                    Id = subPkg.Id,
+                    Name = subPkg.Name,
+                    Price = subPkg.Price,
+                    CoinAmount = 0,
+                    IsActive = subPkg.IsActive
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            transaction.Status = "failed";
+            transaction.ErrorMessage = ex.Message;
+            transaction.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            throw new CoinPurchasePaymentException("Không thể tạo liên kết thanh toán.", ex);
+        }
+    }
+
+    public async Task<CoinPurchaseWebhookResult> SyncSubscriptionPurchaseAsync(int userId, long orderCode)
+    {
+        var transaction = await _context.CoinPurchaseTransactions
+            .FirstOrDefaultAsync(t => t.OrderCode == orderCode && t.UserId == userId);
+
+        if (transaction == null)
+            throw new CoinPurchasePaymentException("Không tìm thấy giao dịch.");
+
+        if (transaction.Status == "paid")
+        {
+            var user2 = await _context.Users.FindAsync(userId);
+            return BuildResult(transaction, user2?.CoinBalance ?? 0);
+        }
+
+        // Try to get payment status from PayOS
+        try
+        {
+            var paymentLink = await _payOSClient.PaymentRequests.GetAsync(orderCode);
+
+            if (IsPaymentLinkPaid(paymentLink))
+            {
+                transaction.Status = "paid";
+                transaction.PaidAt = DateTime.UtcNow;
+                transaction.UpdatedAt = DateTime.UtcNow;
+
+                // Update user's subscription package
+                var user = await _context.Users.FindAsync(userId);
+                if (user != null && transaction.SubscriptionPackageId.HasValue)
+                {
+                    user.SubscriptionPackageId = transaction.SubscriptionPackageId.Value;
+                    user.UpdatedAt = DateTime.UtcNow;
+                }
+
+                await _context.SaveChangesAsync();
+                return BuildResult(transaction, user?.CoinBalance ?? 0);
+            }
+
+            if (IsPaymentLinkFailed(paymentLink))
+            {
+                transaction.Status = "failed";
+                transaction.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+            }
+        }
+        catch
+        {
+            // Ignore sync errors
+        }
+
+        var currentUser = await _context.Users.FindAsync(userId);
+        return BuildResult(transaction, currentUser?.CoinBalance ?? 0);
+    }
+
     private async Task<long> GenerateUniqueOrderCodeAsync()
     {
         while (true)

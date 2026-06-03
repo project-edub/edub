@@ -34,6 +34,12 @@ public class ApplicationDbContext : DbContext
     public DbSet<MiniGame> MiniGames => Set<MiniGame>();
     public DbSet<StorageItem> StorageItems => Set<StorageItem>();
     public DbSet<ClassLessonSchedule> ClassLessonSchedules => Set<ClassLessonSchedule>();
+    public DbSet<CrosswordGame> CrosswordGames => Set<CrosswordGame>();
+    public DbSet<CrosswordWord> CrosswordWords => Set<CrosswordWord>();
+    public DbSet<CrosswordEcoinTransaction> CrosswordEcoinTransactions => Set<CrosswordEcoinTransaction>();
+    public DbSet<QuizGame> QuizGames => Set<QuizGame>();
+    public DbSet<QuizGameQuestion> QuizGameQuestions => Set<QuizGameQuestion>();
+    public DbSet<QuizSubmission> QuizSubmissions => Set<QuizSubmission>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -162,6 +168,7 @@ public class ApplicationDbContext : DbContext
             entity.HasOne(item => item.CoinPackage)
                 .WithMany()
                 .HasForeignKey(item => item.CoinPackageId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
@@ -297,6 +304,91 @@ public class ApplicationDbContext : DbContext
                 .OnDelete(DeleteBehavior.NoAction);
 
             entity.HasIndex(cls => new { cls.ClassId, cls.LessonId }).IsUnique();
+        });
+
+        // ── CrosswordGame ──
+        modelBuilder.Entity<CrosswordGame>(entity =>
+        {
+            entity.HasIndex(cg => cg.Slug).IsUnique();
+            entity.Property(cg => cg.Status).HasMaxLength(20);
+            entity.Property(cg => cg.ConfigJson).HasColumnType("nvarchar(max)");
+            entity.Property(cg => cg.GridJson).HasColumnType("nvarchar(max)");
+
+            entity.HasOne(cg => cg.User)
+                .WithMany()
+                .HasForeignKey(cg => cg.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ── CrosswordWord ──
+        modelBuilder.Entity<CrosswordWord>(entity =>
+        {
+            entity.Property(cw => cw.Word).HasMaxLength(50);
+            entity.Property(cw => cw.DisplayWord).HasMaxLength(100);
+            entity.Property(cw => cw.Clue).HasMaxLength(500);
+            entity.Property(cw => cw.Direction).HasMaxLength(10);
+            entity.Property(cw => cw.Difficulty).HasMaxLength(20);
+            entity.Property(cw => cw.SourceContext).HasMaxLength(200);
+
+            entity.HasOne(cw => cw.Game)
+                .WithMany(cg => cg.Words)
+                .HasForeignKey(cw => cw.GameId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ── CrosswordEcoinTransaction ──
+        modelBuilder.Entity<CrosswordEcoinTransaction>(entity =>
+        {
+            entity.Property(ct => ct.Action).HasMaxLength(20);
+
+            entity.HasOne(ct => ct.User)
+                .WithMany()
+                .HasForeignKey(ct => ct.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(ct => ct.Game)
+                .WithMany()
+                .HasForeignKey(ct => ct.GameId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ── QuizGame ──
+        modelBuilder.Entity<QuizGame>(entity =>
+        {
+            entity.ToTable("QuizGames");
+            entity.HasIndex(q => q.Slug).IsUnique();
+            entity.Property(q => q.Status).HasMaxLength(20);
+            entity.Property(q => q.Slug).HasMaxLength(450);
+
+            entity.HasOne(q => q.User)
+                .WithMany()
+                .HasForeignKey(q => q.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(q => q.Questions)
+                .WithOne(qq => qq.QuizGame)
+                .HasForeignKey(qq => qq.QuizGameId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(q => q.Submissions)
+                .WithOne(s => s.QuizGame)
+                .HasForeignKey(s => s.QuizGameId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ── QuizGameQuestion ──
+        modelBuilder.Entity<QuizGameQuestion>(entity =>
+        {
+            entity.ToTable("QuizGameQuestions");
+            entity.Property(q => q.QuestionType).HasMaxLength(30);
+            entity.Property(q => q.Difficulty).HasMaxLength(20);
+        });
+
+        // ── QuizSubmission ──
+        modelBuilder.Entity<QuizSubmission>(entity =>
+        {
+            entity.ToTable("QuizSubmissions");
+            entity.Property(s => s.ScorePercent).HasColumnType("decimal(5,2)");
         });
     }
 }

@@ -23,10 +23,12 @@ const lecturerMenuItems = [
   { to: '/lecturer/overview', label: 'Thông tin cá nhân' },
   { to: '/lecturer/classes', label: 'Danh sách lớp' },
   { to: '/lecturer/lesson-plans', label: 'Giáo án' },
-  { to: '/minigames', label: 'Minigame' },
   { to: '/lecturer/storage', label: 'Kho tài liệu' },
-  { to: '/lecturer/quiz-generator', label: 'Tạo Quiz' },
+  { to: '/lecturer/quiz-generator', label: 'Quiz' },
+  { to: '/lecturer/crossword', label: 'Tạo Crossword' },
+  { to: '/lecturer/subscription', label: 'Gói đăng ký' },
   { to: '/lecturer/coin-packages', label: 'Mua ECoin' },
+  { to: '/lecturer/transactions', label: 'Lịch sử giao dịch' },
 ];
 
 const adminMenuItems = [

@@ -15,4 +15,13 @@ public interface IPaymentService
     Task<CoinPurchaseWebhookResult> SyncCoinPurchaseStatusAsync(int userId, long orderCode);
 
     Task<CoinPurchaseWebhookResult?> SyncLatestCoinPurchaseAsync(int userId);
+
+    Task<List<CoinPurchaseHistoryItem>> GetPurchaseHistoryAsync(int userId);
+
+    Task<CoinPurchaseCheckoutResponse> CreateSubscriptionPurchaseCheckoutAsync(
+        int userId,
+        int subscriptionPackageId,
+        CreateCoinPurchaseRequest request);
+
+    Task<CoinPurchaseWebhookResult> SyncSubscriptionPurchaseAsync(int userId, long orderCode);
 }

@@ -131,3 +131,31 @@ export type {
   RenameItemRequest,
   StorageFilter,
 } from './storage';
+
+// Crossword
+export { GameStatus, Direction, CellState } from './crossword';
+export type {
+  GameStatus as GameStatusType,
+  Direction as DirectionType,
+  CellState as CellStateType,
+  GridCell,
+  CrosswordGrid,
+  GameConfig,
+  CrosswordWord,
+  CrosswordGame,
+  CrosswordEcoinTransaction,
+  CrosswordFileExtractResult,
+  CrosswordUploadResponse,
+  CrosswordEstimateBreakdown,
+  CrosswordEstimateResponse,
+  CrosswordWordDto,
+  CrosswordGenerateResponse,
+  CrosswordWordDetailDto,
+  CrosswordGameDto,
+  CrosswordPlayerWordDto,
+  CrosswordPlayerDto,
+  CrosswordListItemDto,
+  CrosswordSubmitRequest,
+  CrosswordWordResult,
+  CrosswordSubmitResponse,
+} from './crossword';

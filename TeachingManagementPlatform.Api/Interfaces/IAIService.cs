@@ -12,6 +12,10 @@ public interface IAIService
         string? topic = null,
         string? difficulty = null,
         string language = "vi");
+
+    Task<CrosswordAIResult> GenerateCrosswordAsync(
+        List<AttachmentInfo> attachments,
+        CrosswordGenerationConfig config);
 }
 
 public class DocumentInfo

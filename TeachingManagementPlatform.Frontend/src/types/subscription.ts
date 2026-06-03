@@ -5,7 +5,11 @@ export interface SubscriptionPackage {
   storageLimitBytes: number;
   maxFilesPerQuizGeneration: number;
   maxQuestionsPerQuiz: number;
+  maxCrosswordFilesPerGeneration: number;
+  maxCrosswordWordsPerGeneration: number;
+  maxCrosswordGenerationsPerDay: number;
   isDefault: boolean;
+  isActive: boolean;
   unlockedFeatures: string[];
   createdAt: string;
   updatedAt: string;
@@ -17,7 +21,11 @@ export interface CreateSubscriptionPackageRequest {
   storageLimitBytes: number;
   maxFilesPerQuizGeneration: number;
   maxQuestionsPerQuiz: number;
+  maxCrosswordFilesPerGeneration: number;
+  maxCrosswordWordsPerGeneration: number;
+  maxCrosswordGenerationsPerDay: number;
   isDefault: boolean;
+  isActive: boolean;
   unlockedFeatures: string[];
 }
 
@@ -27,6 +35,10 @@ export interface UpdateSubscriptionPackageRequest {
   storageLimitBytes?: number;
   maxFilesPerQuizGeneration?: number;
   maxQuestionsPerQuiz?: number;
+  maxCrosswordFilesPerGeneration?: number;
+  maxCrosswordWordsPerGeneration?: number;
+  maxCrosswordGenerationsPerDay?: number;
   isDefault?: boolean;
+  isActive?: boolean;
   unlockedFeatures?: string[];
 }

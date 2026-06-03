@@ -50,7 +50,11 @@ public class SubscriptionService : ISubscriptionService
             StorageLimitBytes = request.StorageLimitBytes,
             MaxFilesPerQuizGeneration = request.MaxFilesPerQuizGeneration,
             MaxQuestionsPerQuiz = request.MaxQuestionsPerQuiz,
+            MaxCrosswordFilesPerGeneration = request.MaxCrosswordFilesPerGeneration,
+            MaxCrosswordWordsPerGeneration = request.MaxCrosswordWordsPerGeneration,
+            MaxCrosswordGenerationsPerDay = request.MaxCrosswordGenerationsPerDay,
             IsDefault = request.IsDefault,
+            IsActive = request.IsActive,
             UnlockedFeatures = request.UnlockedFeatures ?? new List<string>(),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
@@ -88,6 +92,18 @@ public class SubscriptionService : ISubscriptionService
 
         if (request.MaxQuestionsPerQuiz.HasValue)
             package.MaxQuestionsPerQuiz = request.MaxQuestionsPerQuiz.Value;
+
+        if (request.MaxCrosswordFilesPerGeneration.HasValue)
+            package.MaxCrosswordFilesPerGeneration = request.MaxCrosswordFilesPerGeneration.Value;
+
+        if (request.MaxCrosswordWordsPerGeneration.HasValue)
+            package.MaxCrosswordWordsPerGeneration = request.MaxCrosswordWordsPerGeneration.Value;
+
+        if (request.MaxCrosswordGenerationsPerDay.HasValue)
+            package.MaxCrosswordGenerationsPerDay = request.MaxCrosswordGenerationsPerDay.Value;
+
+        if (request.IsActive.HasValue)
+            package.IsActive = request.IsActive.Value;
 
         if (request.IsDefault.HasValue)
         {
@@ -164,7 +180,11 @@ public class SubscriptionService : ISubscriptionService
             StorageLimitBytes = package.StorageLimitBytes,
             MaxFilesPerQuizGeneration = package.MaxFilesPerQuizGeneration,
             MaxQuestionsPerQuiz = package.MaxQuestionsPerQuiz,
+            MaxCrosswordFilesPerGeneration = package.MaxCrosswordFilesPerGeneration,
+            MaxCrosswordWordsPerGeneration = package.MaxCrosswordWordsPerGeneration,
+            MaxCrosswordGenerationsPerDay = package.MaxCrosswordGenerationsPerDay,
             IsDefault = package.IsDefault,
+            IsActive = package.IsActive,
             UnlockedFeatures = package.UnlockedFeatures,
             CreatedAt = package.CreatedAt,
             UpdatedAt = package.UpdatedAt

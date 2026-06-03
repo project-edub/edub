@@ -55,6 +55,30 @@ public class CoinService : ICoinService
         return user.CoinBalance;
     }
 
+    public async Task<List<SubscriptionPackageResponse>> GetActiveSubscriptionPackagesAsync()
+    {
+        return await _context.SubscriptionPackages
+            .Where(sp => sp.IsActive)
+            .Select(sp => new SubscriptionPackageResponse
+            {
+                Id = sp.Id,
+                Name = sp.Name,
+                Price = sp.Price,
+                StorageLimitBytes = sp.StorageLimitBytes,
+                MaxFilesPerQuizGeneration = sp.MaxFilesPerQuizGeneration,
+                MaxQuestionsPerQuiz = sp.MaxQuestionsPerQuiz,
+                MaxCrosswordFilesPerGeneration = sp.MaxCrosswordFilesPerGeneration,
+                MaxCrosswordWordsPerGeneration = sp.MaxCrosswordWordsPerGeneration,
+                MaxCrosswordGenerationsPerDay = sp.MaxCrosswordGenerationsPerDay,
+                IsDefault = sp.IsDefault,
+                IsActive = sp.IsActive,
+                UnlockedFeatures = sp.UnlockedFeatures,
+                CreatedAt = sp.CreatedAt,
+                UpdatedAt = sp.UpdatedAt
+            })
+            .ToListAsync();
+    }
+
     private async Task<User> GetUserAsync(int userId)
     {
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);

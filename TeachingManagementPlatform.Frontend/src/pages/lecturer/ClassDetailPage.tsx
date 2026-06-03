@@ -89,7 +89,7 @@ export default function ClassDetailPage() {
             style={{
               padding: '10px 20px',
               border: '1px solid transparent',
-              borderBottom: activeTab === tab.key ? '3px solid #1565c0' : '3px solid transparent',
+              borderBottom: activeTab === tab.key ? '3px solid #d49a00' : '3px solid transparent',
               fontWeight: activeTab === tab.key ? 700 : 600,
               marginBottom: -2,
             }}

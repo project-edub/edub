@@ -23,3 +23,26 @@ export async function update(id: number, data: UpdateSubscriptionPackageRequest)
 export async function remove(id: number): Promise<void> {
   await api.delete(`/admin/subscriptions/${id}`);
 }
+
+export async function getActiveForLecturer(): Promise<SubscriptionPackage[]> {
+  const response = await api.get<SubscriptionPackage[]>('/lecturer/subscriptions');
+  return response.data;
+}
+
+export async function purchaseSubscription(
+  packageId: number,
+  data: { returnUrl: string; cancelUrl: string },
+): Promise<{ orderCode: number; checkoutUrl: string; status: string }> {
+  const response = await api.post<{ orderCode: number; checkoutUrl: string; status: string }>(
+    `/lecturer/subscriptions/${packageId}/purchase`,
+    data,
+  );
+  return response.data;
+}
+
+export async function syncSubscriptionPurchase(orderCode: number): Promise<{ orderCode: number; status: string }> {
+  const response = await api.post<{ orderCode: number; status: string }>(
+    `/lecturer/subscriptions/sync/${orderCode}`,
+  );
+  return response.data;
+}

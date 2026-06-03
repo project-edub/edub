@@ -409,5 +409,5 @@ const tdStyle: React.CSSProperties = { padding: '8px 12px', borderBottom: '1px s
 const addBtn: React.CSSProperties = { padding: '4px 12px', cursor: 'pointer', marginTop: 4, backgroundColor: '#2e7d32', color: '#fff', border: '1px solid #2e7d32', borderRadius: 8 };
 const delBtn: React.CSSProperties = { padding: '4px 10px', cursor: 'pointer', backgroundColor: '#dc2626', color: '#fff', border: 'none', borderRadius: 8 };
 const delBtnDisabled: React.CSSProperties = { ...delBtn, backgroundColor: '#9ca3af', cursor: 'not-allowed' };
-const fileLabelStyle: React.CSSProperties = { padding: '4px 12px', cursor: 'pointer', backgroundColor: '#1565c0', color: '#fff', border: '1px solid #1565c0', borderRadius: 8, fontSize: 14, display: 'inline-block' };
+const fileLabelStyle: React.CSSProperties = { padding: '4px 12px', cursor: 'pointer', backgroundColor: '#d49a00', color: '#201a11', border: '1px solid #d49a00', borderRadius: 8, fontSize: 14, display: 'inline-block' };
 const thumbStyle: React.CSSProperties = { maxWidth: 80, maxHeight: 60, borderRadius: 4, objectFit: 'cover' };

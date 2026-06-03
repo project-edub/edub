@@ -173,8 +173,12 @@ builder.Services.AddHttpClient<IAIService, AIService>(client =>
 
 // Register quiz mapping/validation service
 builder.Services.AddScoped<IQuizMappingService, QuizMappingService>();
-// Register Google Forms service
-builder.Services.AddScoped<IGoogleFormsService, GoogleFormsService>();
+
+// Register crossword service
+builder.Services.AddScoped<ICrosswordService, CrosswordService>();
+
+// Register crossword background cleanup service (clears SourceDocumentContent after 24h)
+builder.Services.AddHostedService<CrosswordCleanupService>();
 
 var app = builder.Build();
 var r2PublicBaseUrl = builder.Configuration["R2:PublicBaseUrl"];

@@ -182,6 +182,68 @@ public class LecturerController : ControllerBase
         }
     }
 
+    [HttpGet("coin-purchases")]
+    public async Task<IActionResult> GetCoinPurchases()
+    {
+        var userId = GetUserId();
+
+        try
+        {
+            var result = await _paymentService.GetPurchaseHistoryAsync(userId);
+            return Ok(result);
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { error = new { code = "INTERNAL_ERROR", message = "Không thể tải lịch sử giao dịch." } });
+        }
+    }
+
+    [HttpGet("subscriptions")]
+    public async Task<IActionResult> GetActiveSubscriptions()
+    {
+        try
+        {
+            var packages = await _coinService.GetActiveSubscriptionPackagesAsync();
+            return Ok(packages);
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { error = new { code = "INTERNAL_ERROR", message = "Không thể tải danh sách gói đăng ký." } });
+        }
+    }
+
+    [HttpPost("subscriptions/{packageId:int}/purchase")]
+    public async Task<IActionResult> PurchaseSubscription(int packageId, [FromBody] CreateCoinPurchaseRequest request)
+    {
+        var userId = GetUserId();
+
+        try
+        {
+            var result = await _paymentService.CreateSubscriptionPurchaseCheckoutAsync(userId, packageId, request);
+            return Ok(result);
+        }
+        catch (CoinPurchasePaymentException ex)
+        {
+            return BadRequest(new { error = new { code = "PAYMENT_ERROR", message = ex.Message } });
+        }
+    }
+
+    [HttpPost("subscriptions/sync/{orderCode:long}")]
+    public async Task<IActionResult> SyncSubscriptionPurchase(long orderCode)
+    {
+        var userId = GetUserId();
+
+        try
+        {
+            var result = await _paymentService.SyncSubscriptionPurchaseAsync(userId, orderCode);
+            return Ok(result);
+        }
+        catch (CoinPurchasePaymentException ex)
+        {
+            return BadRequest(new { error = new { code = "PAYMENT_SYNC_ERROR", message = ex.Message } });
+        }
+    }
+
     private int GetUserId()
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier)

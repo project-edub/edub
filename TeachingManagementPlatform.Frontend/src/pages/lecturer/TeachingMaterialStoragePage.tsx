@@ -402,7 +402,7 @@ export default function TeachingMaterialStoragePage() {
                       <button
                         type="button"
                         onClick={() => openFolder(item)}
-                        style={{ background: 'none', border: 'none', color: '#1976d2', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                        style={{ background: 'none', border: 'none', color: '#1976d2', cursor: 'pointer', padding: 0}}
                       >
                         📁 {item.name}
                       </button>
