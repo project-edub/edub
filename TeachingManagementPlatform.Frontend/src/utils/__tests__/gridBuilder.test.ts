@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { buildGrid } from '../gridBuilder';
-import type { PlacedWordInput, GridResult } from '../gridBuilder';
+import type { PlacedWordInput } from '../gridBuilder';
 import { Direction } from '../../types/crossword';
 
 describe('buildGrid', () => {
