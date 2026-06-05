@@ -24,6 +24,35 @@ public class QuizGameController : ControllerBase
         _logger = logger;
     }
 
+    // POST /api/quiz-game/create
+    [HttpPost("create")]
+    public async Task<IActionResult> CreateEmpty([FromBody] CreateEmptyQuizRequest request)
+    {
+        var userId = GetUserId();
+
+        var slug = await GenerateUniqueSlugAsync();
+        var now = DateTime.UtcNow;
+
+        var game = new QuizGame
+        {
+            UserId = userId,
+            Title = request.Title,
+            Status = "draft",
+            Slug = slug,
+            ConfigJson = "{}",
+            EcoinsSpent = 0,
+            ShowAnswersAfterSubmit = false,
+            RequireStudentName = false,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        _context.QuizGames.Add(game);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { gameId = game.Id, slug = game.Slug });
+    }
+
     // GET /api/quiz-game
     [HttpGet]
     public async Task<IActionResult> GetList()
@@ -140,6 +169,49 @@ public class QuizGameController : ControllerBase
         return NoContent();
     }
 
+    // POST /api/quiz-game/{id}/questions
+    [HttpPost("{id:int}/questions")]
+    public async Task<IActionResult> AddQuestion(int id)
+    {
+        var userId = GetUserId();
+        var game = await _context.QuizGames
+            .Include(q => q.Questions)
+            .FirstOrDefaultAsync(q => q.Id == id && q.UserId == userId);
+
+        if (game == null)
+            return NotFound(new { error = new { code = "NOT_FOUND", message = "Không tìm thấy bài quiz." } });
+
+        var nextNumber = game.Questions.Count > 0 ? game.Questions.Max(q => q.Number) + 1 : 1;
+
+        var question = new QuizGameQuestion
+        {
+            QuizGameId = id,
+            Number = nextNumber,
+            QuestionType = "multiple_choice",
+            QuestionText = "",
+            OptionsJson = "[\"Đáp án A\",\"Đáp án B\",\"Đáp án C\",\"Đáp án D\"]",
+            CorrectAnswerIndex = 0,
+            Difficulty = "medium",
+        };
+
+        _context.QuizGameQuestions.Add(question);
+        game.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        return Ok(new QuizQuestionDetailDto
+        {
+            Id = question.Id,
+            Number = question.Number,
+            QuestionType = question.QuestionType,
+            QuestionText = question.QuestionText,
+            OptionsJson = question.OptionsJson,
+            CorrectAnswerIndex = question.CorrectAnswerIndex,
+            CorrectAnswerText = question.CorrectAnswerText,
+            Explanation = question.Explanation,
+            Difficulty = question.Difficulty,
+        });
+    }
+
     // GET /api/quiz-game/{id}/submissions
     [HttpGet("{id:int}/submissions")]
     public async Task<IActionResult> GetSubmissions(int id)
@@ -166,6 +238,23 @@ public class QuizGameController : ControllerBase
             .ToListAsync();
 
         return Ok(submissions);
+    }
+
+    private async Task<string> GenerateUniqueSlugAsync()
+    {
+        const string chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+        const int slugLength = 8;
+        var random = new Random();
+
+        for (int attempt = 0; attempt < 10; attempt++)
+        {
+            var slug = new string(Enumerable.Range(0, slugLength)
+                .Select(_ => chars[random.Next(chars.Length)])
+                .ToArray());
+            var exists = await _context.QuizGames.AnyAsync(g => g.Slug == slug);
+            if (!exists) return slug;
+        }
+        return $"{DateTime.UtcNow.Ticks:x}"[..8];
     }
 
     private int GetUserId()

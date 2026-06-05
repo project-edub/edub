@@ -13,26 +13,19 @@ export default function ExcelImportModal({ listId, onSuccess, onClose }: Props) 
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [mismatchedHeaders, setMismatchedHeaders] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function handleSubmit() {
     if (!file) return;
     setLoading(true);
     setError('');
-    setMismatchedHeaders([]);
     try {
       await studentListService.importExcel(listId, file);
       onSuccess();
     } catch (err) {
-      const axiosErr = err as AxiosError<ApiError & { mismatchedHeaders?: string[] }>;
+      const axiosErr = err as AxiosError<ApiError>;
       const data = axiosErr.response?.data;
-      if (data?.mismatchedHeaders && data.mismatchedHeaders.length > 0) {
-        setMismatchedHeaders(data.mismatchedHeaders);
-        setError('Tiêu đề cột không khớp');
-      } else {
-        setError(data?.error?.message || 'Đã xảy ra lỗi khi nhập Excel. Vui lòng thử lại.');
-      }
+      setError(data?.error?.message || 'Đã xảy ra lỗi khi nhập Excel. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
@@ -50,6 +43,10 @@ export default function ExcelImportModal({ listId, onSuccess, onClose }: Props) 
       <div style={{ background: '#fff', borderRadius: 8, padding: 24, minWidth: 400, maxWidth: 500 }}>
         <h3 style={{ marginTop: 0 }}>Nhập Excel</h3>
 
+        <p style={{ color: 'var(--edub-text-secondary)', fontSize: 13, marginBottom: 16 }}>
+          Chọn bất kỳ file Excel (.xlsx) nào. Các cột trong file sẽ được tự động thêm vào danh sách nếu chưa tồn tại.
+        </p>
+
         <div style={{ marginBottom: 16 }}>
           <label htmlFor="excel-file-input" style={{ display: 'block', marginBottom: 8 }}>
             Chọn tệp Excel (.xlsx)
@@ -62,7 +59,6 @@ export default function ExcelImportModal({ listId, onSuccess, onClose }: Props) 
             onChange={(e) => {
               setFile(e.target.files?.[0] ?? null);
               setError('');
-              setMismatchedHeaders([]);
             }}
           />
         </div>
@@ -70,17 +66,6 @@ export default function ExcelImportModal({ listId, onSuccess, onClose }: Props) 
         {error && (
           <div role="alert" style={{ color: '#d32f2f', marginBottom: 12 }}>
             {error}
-          </div>
-        )}
-
-        {mismatchedHeaders.length > 0 && (
-          <div style={{ marginBottom: 12, padding: 12, background: '#fff3e0', borderRadius: 4 }}>
-            <p style={{ margin: '0 0 8px', fontWeight: 600 }}>Các tiêu đề không khớp:</p>
-            <ul style={{ margin: 0, paddingLeft: 20 }}>
-              {mismatchedHeaders.map((header) => (
-                <li key={header}>{header}</li>
-              ))}
-            </ul>
           </div>
         )}
 

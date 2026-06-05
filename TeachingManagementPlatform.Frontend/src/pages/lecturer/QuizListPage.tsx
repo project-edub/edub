@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import {
   Box, Button, Chip, CircularProgress, Dialog, DialogActions, DialogContent,
   DialogContentText, DialogTitle, Paper, Table, TableBody, TableCell,
-  TableContainer, TableHead, TableRow, Typography,
+  TableContainer, TableHead, TableRow, TextField, Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import CreateIcon from '@mui/icons-material/Create';
 import * as quizService from '../../services/quizService';
 import type { QuizListItem } from '../../services/quizService';
 
@@ -19,6 +21,12 @@ export default function QuizListPage() {
   const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<QuizListItem | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Create quiz dialog state
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [manualDialogOpen, setManualDialogOpen] = useState(false);
+  const [manualTitle, setManualTitle] = useState('');
+  const [creating, setCreating] = useState(false);
 
   const loadList = useCallback(async () => {
     setLoading(true);
@@ -50,6 +58,22 @@ export default function QuizListPage() {
     }
   }, [deleteTarget, loadList]);
 
+  const handleCreateManual = useCallback(async () => {
+    if (!manualTitle.trim()) return;
+    setCreating(true);
+    try {
+      const result = await quizService.createEmptyQuiz(manualTitle.trim());
+      setManualDialogOpen(false);
+      setManualTitle('');
+      navigate(`/lecturer/quiz/${result.gameId}/edit`);
+    } catch (err: any) {
+      setError(err?.message || 'Tạo quiz thất bại.');
+      setManualDialogOpen(false);
+    } finally {
+      setCreating(false);
+    }
+  }, [manualTitle, navigate]);
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
@@ -57,7 +81,7 @@ export default function QuizListPage() {
           <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>Quiz</Typography>
           <Typography variant="body2" color="text.secondary">Quản lý bài quiz trắc nghiệm của bạn.</Typography>
         </Box>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/lecturer/quiz/new')}>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreateDialogOpen(true)}>
           Tạo quiz mới
         </Button>
       </Box>
@@ -69,7 +93,7 @@ export default function QuizListPage() {
       {!loading && items.length === 0 && (
         <Box sx={{ border: '1px dashed', borderColor: 'divider', borderRadius: 3, p: 4, textAlign: 'center', bgcolor: 'action.hover' }}>
           <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>Chưa có quiz nào</Typography>
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/lecturer/quiz/new')}>Tạo quiz mới</Button>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreateDialogOpen(true)}>Tạo quiz mới</Button>
         </Box>
       )}
 
@@ -122,6 +146,58 @@ export default function QuizListPage() {
         <DialogActions>
           <Button onClick={() => setDeleteTarget(null)} disabled={deleting}>Hủy</Button>
           <Button onClick={() => void handleDelete()} color="error" variant="contained" disabled={deleting}>{deleting ? 'Đang xóa...' : 'Xóa'}</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Create quiz choice dialog */}
+      <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)}>
+        <DialogTitle>Tạo quiz mới</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>Chọn cách tạo quiz:</DialogContentText>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Button
+              variant="outlined"
+              startIcon={<AutoAwesomeIcon />}
+              onClick={() => { setCreateDialogOpen(false); navigate('/lecturer/quiz/new'); }}
+              sx={{ justifyContent: 'flex-start', py: 1.5 }}
+            >
+              Tạo với AI — Tải tài liệu lên để tạo quiz tự động
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<CreateIcon />}
+              onClick={() => { setCreateDialogOpen(false); setManualDialogOpen(true); }}
+              sx={{ justifyContent: 'flex-start', py: 1.5 }}
+            >
+              Tạo thủ công — Tự thêm câu hỏi
+            </Button>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCreateDialogOpen(false)}>Hủy</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Manual quiz title dialog */}
+      <Dialog open={manualDialogOpen} onClose={() => setManualDialogOpen(false)}>
+        <DialogTitle>Tạo quiz thủ công</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>Nhập tiêu đề cho bài quiz:</DialogContentText>
+          <TextField
+            autoFocus
+            fullWidth
+            label="Tiêu đề"
+            value={manualTitle}
+            onChange={(e) => setManualTitle(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter' && manualTitle.trim()) void handleCreateManual(); }}
+            disabled={creating}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => { setManualDialogOpen(false); setManualTitle(''); }} disabled={creating}>Hủy</Button>
+          <Button onClick={() => void handleCreateManual()} variant="contained" disabled={creating || !manualTitle.trim()}>
+            {creating ? 'Đang tạo...' : 'Tạo'}
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import {
   Box,
@@ -5,24 +6,30 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogContentText,
   DialogTitle,
   TextField,
   Tooltip,
+  Typography,
 } from '@mui/material';
+import type { GameConfig } from '../../../types/crossword';
+import GameConfigForm from './GameConfigForm';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface EditorToolbarProps {
   title: string;
   onTitleChange: (newTitle: string) => void;
-  onRegenerate: () => void;
+  onRegenerate: (config: GameConfig) => void;
   onPublish: () => void;
   regenerateCost: number;
   ecoinBalance: number;
   maxAttempts: number | null;
   onMaxAttemptsChange: (value: number | null) => void;
   isPublished: boolean;
+  /** Current game config (used as initial values for regenerate form). */
+  currentConfig: GameConfig;
+  /** Whether regeneration is in progress. */
+  isRegenerating?: boolean;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -37,18 +44,22 @@ export default function EditorToolbar({
   maxAttempts,
   onMaxAttemptsChange,
   isPublished,
+  currentConfig,
+  isRegenerating,
 }: EditorToolbarProps) {
   const [showRegenerateDialog, setShowRegenerateDialog] = useState(false);
+  const [regenConfig, setRegenConfig] = useState<GameConfig>(currentConfig);
 
   const canAffordRegenerate = ecoinBalance >= regenerateCost;
 
   const handleRegenerateClick = () => {
+    setRegenConfig(currentConfig);
     setShowRegenerateDialog(true);
   };
 
   const handleRegenerateConfirm = () => {
     setShowRegenerateDialog(false);
-    onRegenerate();
+    onRegenerate(regenConfig);
   };
 
   const handleRegenerateCancel = () => {
@@ -108,9 +119,11 @@ export default function EditorToolbar({
         {/* Regenerate button */}
         <Tooltip
           title={
-            !canAffordRegenerate
-              ? `Không đủ ECoin (cần ${regenerateCost}, hiện có ${ecoinBalance})`
-              : `Tạo lại ô chữ (${regenerateCost} ECoin)`
+            isRegenerating
+              ? 'Đang tạo lại...'
+              : !canAffordRegenerate
+                ? `Không đủ ECoin (cần ${regenerateCost}, hiện có ${ecoinBalance})`
+                : `Tạo lại ô chữ (${regenerateCost} ECoin)`
           }
         >
           <span>
@@ -118,9 +131,9 @@ export default function EditorToolbar({
               variant="outlined"
               size="small"
               onClick={handleRegenerateClick}
-              disabled={!canAffordRegenerate}
+              disabled={!canAffordRegenerate || isRegenerating}
             >
-              Tạo lại · {regenerateCost}🪙
+              {isRegenerating ? 'Đang tạo lại...' : `Tạo lại · ${regenerateCost}🪙`}
             </Button>
           </span>
         </Tooltip>
@@ -136,48 +149,40 @@ export default function EditorToolbar({
         </Button>
       </Box>
 
-      {/* Regenerate Confirm Dialog */}
-      <RegenerateConfirmDialog
+      {/* Regenerate Config Dialog */}
+      <Dialog
         open={showRegenerateDialog}
-        cost={regenerateCost}
-        onConfirm={handleRegenerateConfirm}
-        onCancel={handleRegenerateCancel}
-      />
+        onClose={handleRegenerateCancel}
+        maxWidth="sm"
+        fullWidth
+        aria-labelledby="regenerate-dialog-title"
+      >
+        <DialogTitle id="regenerate-dialog-title">Tạo lại ô chữ</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Chỉnh sửa cấu hình bên dưới rồi nhấn xác nhận để tạo lại. Chi phí: {regenerateCost}🪙
+          </Typography>
+          <GameConfigForm
+            config={regenConfig}
+            onChange={setRegenConfig}
+            maxWordCount={30}
+            isPro={false}
+          />
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={handleRegenerateCancel} color="inherit">
+            Hủy
+          </Button>
+          <Button
+            onClick={handleRegenerateConfirm}
+            variant="contained"
+            color="primary"
+            disabled={!canAffordRegenerate}
+          >
+            Xác nhận · {regenerateCost}🪙
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
-  );
-}
-
-// ── RegenerateConfirmDialog ───────────────────────────────────────────────────
-
-interface RegenerateConfirmDialogProps {
-  open: boolean;
-  cost: number;
-  onConfirm: () => void;
-  onCancel: () => void;
-}
-
-function RegenerateConfirmDialog({
-  open,
-  cost,
-  onConfirm,
-  onCancel,
-}: RegenerateConfirmDialogProps) {
-  return (
-    <Dialog open={open} onClose={onCancel} aria-labelledby="regenerate-dialog-title">
-      <DialogTitle id="regenerate-dialog-title">Xác nhận tạo lại</DialogTitle>
-      <DialogContent>
-        <DialogContentText>
-          Tạo lại sẽ tốn {cost}🪙. Tiếp tục?
-        </DialogContentText>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onCancel} color="inherit">
-          Hủy
-        </Button>
-        <Button onClick={onConfirm} variant="contained" color="primary" autoFocus>
-          Xác nhận
-        </Button>
-      </DialogActions>
-    </Dialog>
   );
 }

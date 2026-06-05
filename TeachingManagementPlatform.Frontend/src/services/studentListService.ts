@@ -41,6 +41,51 @@ export async function clone(id: number): Promise<StudentList> {
   return response.data;
 }
 
+/**
+ * Clone a student list with only selected columns.
+ * Creates a new list, adds selected columns, then copies entries with filtered data.
+ */
+export async function cloneWithSelectedColumns(
+  sourceListId: number,
+  classId: number,
+  selectedColumnIds: number[],
+  newListName: string
+): Promise<StudentList> {
+  // Get the source list data (use getAll since we already have it loaded, but
+  // we can also fetch via the class endpoint and filter)
+  const allLists = await getAll(classId);
+  const source = allLists.find((l) => l.id === sourceListId);
+  if (!source) {
+    throw new Error('Source list not found');
+  }
+
+  // Create the new list
+  const newList = await create(classId, { name: newListName });
+
+  // Filter and add only selected columns
+  const selectedColumns = source.columns.filter((c) => selectedColumnIds.includes(c.id));
+  for (const col of selectedColumns) {
+    await addColumn(newList.id, { name: col.name, sortOrder: col.sortOrder });
+  }
+
+  // Copy entries but only keep data for selected columns
+  const selectedColumnNames = new Set(selectedColumns.map((c) => c.name));
+  for (const entry of source.entries) {
+    const filteredData: Record<string, string> = {};
+    for (const [key, value] of Object.entries(entry.data)) {
+      if (selectedColumnNames.has(key)) {
+        filteredData[key] = value;
+      }
+    }
+    await addEntry(newList.id, { data: filteredData, sortOrder: entry.sortOrder });
+  }
+
+  // Return the fully populated new list
+  const updatedLists = await getAll(classId);
+  const result = updatedLists.find((l) => l.id === newList.id);
+  return result ?? newList;
+}
+
 // --- Column CRUD ---
 
 export async function addColumn(listId: number, data: AddColumnRequest): Promise<StudentListColumn> {

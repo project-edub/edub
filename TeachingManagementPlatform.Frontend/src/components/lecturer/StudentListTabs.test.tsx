@@ -11,6 +11,7 @@ vi.mock('../../services/studentListService', () => ({
   remove: vi.fn(),
   setMain: vi.fn(),
   clone: vi.fn(),
+  cloneWithSelectedColumns: vi.fn(),
   addColumn: vi.fn(),
   updateColumn: vi.fn(),
   deleteColumn: vi.fn(),
@@ -135,24 +136,45 @@ describe('StudentListTabs', () => {
     });
   });
 
-  it('clones a student list', async () => {
+  it('clones a student list via selective clone dialog', async () => {
     const user = userEvent.setup();
     vi.mocked(studentListService.getAll).mockResolvedValue([sampleList]);
-    vi.mocked(studentListService.clone).mockResolvedValue({ ...sampleList, id: 5, name: 'Danh sách 1 (bản sao)', isMain: false });
+    vi.mocked(studentListService.cloneWithSelectedColumns).mockResolvedValue({ ...sampleList, id: 5, name: 'Danh sách 1 (bản sao)', isMain: false });
     render(<StudentListTabs classId={10} />);
 
     await waitFor(() => {
       expect(screen.getByText('Nhân bản')).toBeInTheDocument();
     });
 
+    // Click clone button opens the SelectiveCloneDialog
+    await user.click(screen.getByText('Nhân bản'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Nhân bản chọn lọc cột')).toBeInTheDocument();
+    });
+
+    // Dialog should have the default name pre-filled
+    const nameInput = screen.getByLabelText('Tên bảng mới');
+    expect(nameInput).toHaveValue('Danh sách 1 (bản sao)');
+
+    // All columns should be selected by default
+    const checkboxes = screen.getAllByRole('checkbox');
+    checkboxes.forEach((cb) => expect(cb).toBeChecked());
+
+    // Confirm clone
     vi.mocked(studentListService.getAll).mockResolvedValue([
       sampleList,
       { ...sampleList, id: 5, name: 'Danh sách 1 (bản sao)', isMain: false },
     ]);
-    await user.click(screen.getByText('Nhân bản'));
+    await user.click(screen.getByRole('button', { name: 'Nhân bản' }));
 
     await waitFor(() => {
-      expect(studentListService.clone).toHaveBeenCalledWith(1);
+      expect(studentListService.cloneWithSelectedColumns).toHaveBeenCalledWith(
+        1,
+        10,
+        [100, 101],
+        'Danh sách 1 (bản sao)'
+      );
     });
   });
 

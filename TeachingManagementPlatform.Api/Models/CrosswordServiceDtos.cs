@@ -113,6 +113,7 @@ public class CrosswordPublishRequest
 {
     public int? MaxAttempts { get; set; }
     public string GridJson { get; set; } = string.Empty;
+    public string? Deadline { get; set; }
 }
 
 // ── Player DTO (public, answers hidden) ──────────────────────────────────────

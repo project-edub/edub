@@ -463,18 +463,33 @@ public class CrosswordService : ICrosswordService
         if (game == null)
             throw new CrosswordNotFoundException("Không tìm thấy trò chơi ô chữ.");
 
-        if (game.Status != "draft")
-            throw new CrosswordValidationException("INVALID_STATUS",
-                "Chỉ có thể chỉnh sửa trò chơi ở trạng thái nháp.");
+        // Only update fields that were actually provided (non-empty)
+        if (!string.IsNullOrEmpty(dto.Title))
+            game.Title = dto.Title;
 
-        game.Title = dto.Title;
-        game.ConfigJson = dto.ConfigJson;
-        game.GridJson = dto.GridJson;
+        if (!string.IsNullOrEmpty(dto.ConfigJson))
+            game.ConfigJson = dto.ConfigJson;
+
+        if (!string.IsNullOrEmpty(dto.GridJson))
+            game.GridJson = dto.GridJson;
+
         game.UpdatedAt = DateTime.UtcNow;
 
-        // Update word positions if provided
+        // Update deadline if provided in the DTO
+        game.Deadline = dto.Deadline?.ToUniversalTime();
+
+        // Update word positions if provided, and remove words not in the list
         if (dto.Words != null && dto.Words.Count > 0)
         {
+            var wordIdsInPayload = dto.Words.Select(w => w.Id).ToHashSet();
+
+            // Remove words not in the payload (unplaced words)
+            var wordsToRemove = game.Words.Where(w => !wordIdsInPayload.Contains(w.Id)).ToList();
+            if (wordsToRemove.Count > 0)
+            {
+                _context.CrosswordWords.RemoveRange(wordsToRemove);
+            }
+
             foreach (var wordDto in dto.Words)
             {
                 var word = game.Words.FirstOrDefault(w => w.Id == wordDto.Id);
@@ -544,6 +559,17 @@ public class CrosswordService : ICrosswordService
         game.MaxAttempts = request.MaxAttempts;
         game.GridJson = request.GridJson;
         game.UpdatedAt = now;
+
+        // Handle deadline: null = permanent (no expiry)
+        if (!string.IsNullOrWhiteSpace(request.Deadline))
+        {
+            if (DateTime.TryParse(request.Deadline, out var deadline))
+                game.Deadline = deadline.ToUniversalTime();
+        }
+        else
+        {
+            game.Deadline = null; // Permanent / no expiry
+        }
 
         await _context.SaveChangesAsync();
     }
@@ -636,6 +662,13 @@ public class CrosswordService : ICrosswordService
 
         if (game == null)
             throw new CrosswordNotFoundException("Không tìm thấy trò chơi ô chữ.");
+
+        // Delete related ECoin transactions first (FK constraint)
+        var transactions = await _context.CrosswordEcoinTransactions
+            .Where(t => t.GameId == gameId)
+            .ToListAsync();
+        if (transactions.Count > 0)
+            _context.CrosswordEcoinTransactions.RemoveRange(transactions);
 
         _context.CrosswordGames.Remove(game);
         await _context.SaveChangesAsync();

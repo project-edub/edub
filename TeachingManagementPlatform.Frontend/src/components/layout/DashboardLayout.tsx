@@ -35,6 +35,7 @@ const adminMenuItems = [
   { to: '/admin/accounts', label: 'Quản lý tài khoản' },
   { to: '/admin/subscriptions', label: 'Gói đăng ký' },
   { to: '/admin/coin-packages', label: 'Gói ECoin' },
+  { to: '/admin/game-ecoin-config', label: 'Cấu hình ECoin trò chơi' },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

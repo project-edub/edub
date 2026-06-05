@@ -6,6 +6,8 @@ import GoogleCallbackPage from './pages/auth/GoogleCallbackPage';
 import AccountManagementPage from './pages/admin/AccountManagementPage';
 import SubscriptionPackagePage from './pages/admin/SubscriptionPackagePage';
 import CoinPackagePage from './pages/admin/CoinPackagePage';
+import ScoreTemplateManager from './pages/admin/ScoreTemplateManager';
+import GameEcoinConfigPage from './pages/admin/GameEcoinConfigPage';
 import OverviewPage from './pages/lecturer/OverviewPage';
 import ClassListPage from './pages/lecturer/ClassListPage';
 import ClassDetailPage from './pages/lecturer/ClassDetailPage';
@@ -46,6 +48,8 @@ export default function App() {
           <Route path="/admin/accounts" element={<AccountManagementPage />} />
           <Route path="/admin/subscriptions" element={<SubscriptionPackagePage />} />
           <Route path="/admin/coin-packages" element={<CoinPackagePage />} />
+          <Route path="/admin/score-templates" element={<ScoreTemplateManager />} />
+          <Route path="/admin/game-ecoin-config" element={<GameEcoinConfigPage />} />
         </Route>
 
         {/* Lecturer routes */}

@@ -102,6 +102,16 @@ export default function QuizEditorPage() {
     setQuestions(prev => prev.filter(q => q.id !== qId).map((q, idx) => ({ ...q, number: idx + 1 })));
   }, []);
 
+  const handleAddQuestion = useCallback(async () => {
+    if (!game) return;
+    try {
+      const newQuestion = await quizService.addQuestion(game.id);
+      setQuestions(prev => [...prev, newQuestion]);
+    } catch (err: any) {
+      setError(err?.message || 'Thêm câu hỏi thất bại.');
+    }
+  }, [game]);
+
   const shareUrl = game ? `${window.location.origin}/quiz/${game.slug}` : '';
 
   const handleCopy = useCallback(async () => {
@@ -191,9 +201,12 @@ export default function QuizEditorPage() {
           })}
           {questions.length === 0 && (
             <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-              Chưa có câu hỏi nào. Hãy tạo quiz mới từ trang tạo quiz.
+              Chưa có câu hỏi nào. Nhấn nút bên dưới để thêm câu hỏi.
             </Typography>
           )}
+          <Button variant="outlined" onClick={() => void handleAddQuestion()} sx={{ alignSelf: 'center' }}>
+            + Thêm câu hỏi
+          </Button>
         </Box>
       )}
 

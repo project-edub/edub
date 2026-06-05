@@ -13,9 +13,9 @@ import {
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import * as crosswordService from '../../services/crosswordService';
 import * as coinService from '../../services/coinService';
-import { buildGrid } from '../../utils/gridBuilder';
+import { buildGrid, rebuildGridFromPositions, hasSavedPositions } from '../../utils/gridBuilder';
 import { calculateRegenerateEcoin } from '../../utils/ecoinCalculator';
-import type { PlacedWordInput, GridResult } from '../../utils/gridBuilder';
+import type { PlacedWordInput, GridResult, SavedWordPosition } from '../../utils/gridBuilder';
 import type {
   CrosswordGameDto,
   CrosswordWordDetailDto,
@@ -70,6 +70,9 @@ export default function CrosswordEditorPage() {
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
 
+  // ── Regeneration loading ────────────────────────────────────────────────
+  const [isRegenerating, setIsRegenerating] = useState(false);
+
   // ── ECoin balance ───────────────────────────────────────────────────────
   const [ecoinBalance, setEcoinBalance] = useState(0);
 
@@ -82,6 +85,22 @@ export default function CrosswordEditorPage() {
       return { grid: [], placedWords: [], unplacedWords: [] };
     }
 
+    // Check if words already have valid saved positions from the database.
+    // If so, reconstruct the grid from those positions instead of re-randomizing.
+    const savedPositions: SavedWordPosition[] = words.map((w) => ({
+      word: w.word,
+      id: w.id,
+      direction: w.direction,
+      startRow: w.startRow,
+      startCol: w.startCol,
+      number: w.number,
+    }));
+
+    if (hasSavedPositions(savedPositions)) {
+      return rebuildGridFromPositions(savedPositions);
+    }
+
+    // No saved positions — generate a new layout (first-time or after regeneration)
     const wordInputs: PlacedWordInput[] = words.map((w) => ({
       word: w.word,
       id: w.id,
@@ -104,6 +123,62 @@ export default function CrosswordEditorPage() {
   }, [words, game?.configJson]);
 
   const unplacedWords = gridResult.unplacedWords;
+
+  // ── Auto-save word positions when grid is freshly generated ──────────────
+  // This ensures that after regeneration or first-time placement, the positions
+  // are persisted so they remain stable across page refreshes.
+  useEffect(() => {
+    if (!game || gridResult.placedWords.length === 0) return;
+
+    // Check if this is a freshly generated layout (words don't have saved positions)
+    const wordsFromState = words;
+    const needsSave = wordsFromState.length > 0 && !hasSavedPositions(
+      wordsFromState.map((w) => ({
+        word: w.word,
+        id: w.id,
+        direction: w.direction,
+        startRow: w.startRow,
+        startCol: w.startCol,
+        number: w.number,
+      })),
+    );
+
+    if (!needsSave) return;
+
+    // Save the generated positions to the backend
+    const savePositions = async () => {
+      try {
+        await crosswordService.updateCrossword(game.id, {
+          title,
+          gridJson: JSON.stringify(gridResult.grid),
+          words: gridResult.placedWords
+            .filter((pw) => pw.id != null)
+            .map((pw) => ({
+              id: pw.id!,
+              direction: pw.direction,
+              startRow: pw.startRow,
+              startCol: pw.startCol,
+              number: pw.number,
+            })),
+        });
+
+        // Update local words state with the new positions so subsequent renders use saved positions
+        setWords((prev) =>
+          prev.map((w) => {
+            const placed = gridResult.placedWords.find((pw) => pw.id === w.id);
+            if (placed) {
+              return { ...w, direction: placed.direction, startRow: placed.startRow, startCol: placed.startCol, number: placed.number };
+            }
+            return w;
+          }),
+        );
+      } catch {
+        // Silent failure — positions will be regenerated next time
+      }
+    };
+
+    void savePositions();
+  }, [game, gridResult, words, title]);
 
   // ── Fetch game data ─────────────────────────────────────────────────────
   useEffect(() => {
@@ -159,32 +234,49 @@ export default function CrosswordEditorPage() {
     setTitle(newTitle);
   }, []);
 
+  // ── Default config fallback ──────────────────────────────────────────────
+
+  const DEFAULT_GAME_CONFIG: GameConfig = useMemo(() => ({
+    wordCount: 15,
+    difficulty: 'medium',
+    language: 'vi',
+    clueStyle: 'definition',
+    topic: '',
+    excludeWords: [],
+    gridSize: 15,
+  }), []);
+
   // ── Regenerate cost calculation ─────────────────────────────────────────
 
-  const regenerateCost = useMemo(() => {
-    if (!game?.configJson) return 0;
-    try {
-      const config: GameConfig = JSON.parse(game.configJson);
-      return calculateRegenerateEcoin(config);
-    } catch {
-      return 0;
+  const currentConfig: GameConfig = useMemo(() => {
+    if (game?.configJson) {
+      try {
+        const parsed = JSON.parse(game.configJson);
+        if (parsed.wordCount && parsed.difficulty && parsed.language) {
+          return parsed;
+        }
+      } catch {
+        // use default
+      }
     }
-  }, [game?.configJson]);
+    return DEFAULT_GAME_CONFIG;
+  }, [game?.configJson, DEFAULT_GAME_CONFIG]);
+
+  const regenerateCost = useMemo(() => {
+    return calculateRegenerateEcoin(currentConfig);
+  }, [currentConfig]);
 
   // ── Regenerate handler ──────────────────────────────────────────────────
 
-  const handleRegenerate = useCallback(async () => {
+  const handleRegenerate = useCallback(async (config: GameConfig) => {
     if (!game) return;
 
-    try {
-      let config: GameConfig;
-      try {
-        config = JSON.parse(game.configJson);
-      } catch {
-        return;
-      }
+    setIsRegenerating(true);
+    setSaveError(null);
 
-      await crosswordService.regenerateCrossword(game.id, { gameId: game.id, config });
+    try {
+      // Send config directly — backend expects CrosswordGenerationConfig as body
+      await crosswordService.regenerateCrossword(game.id, config);
 
       // Refresh the game data after regeneration
       const updatedGame = await crosswordService.getCrossword(game.id);
@@ -201,6 +293,8 @@ export default function CrosswordEditorPage() {
           ? String((err as { message: unknown }).message)
           : 'Tạo lại thất bại.';
       setSaveError(message);
+    } finally {
+      setIsRegenerating(false);
     }
   }, [game]);
 
@@ -212,26 +306,37 @@ export default function CrosswordEditorPage() {
     setIsPublishing(true);
 
     try {
-      // Save word positions before publishing
+      // Filter out unplaced words — only publish words that fit on the grid
+      const placedWordIds = new Set(gridResult.placedWords.map((pw) => pw.id));
+      const publishableWords = gridResult.placedWords
+        .filter((pw) => pw.id != null)
+        .map((pw) => ({
+          id: pw.id!,
+          direction: pw.direction,
+          startRow: pw.startRow,
+          startCol: pw.startCol,
+          number: pw.number,
+        }));
+
+      // Save word positions before publishing (only placed words)
       await crosswordService.updateCrossword(game.id, {
         title,
         gridJson: JSON.stringify(gridResult.grid),
-        words: gridResult.placedWords
-          .filter((pw) => pw.id != null)
-          .map((pw) => ({
-            id: pw.id!,
-            direction: pw.direction,
-            startRow: pw.startRow,
-            startCol: pw.startCol,
-            number: pw.number,
-          })),
+        deadline: config.deadline,
+        words: publishableWords,
       });
 
       const updatedGame = await crosswordService.publishCrossword(game.id, {
         maxAttempts: config.maxAttempts,
         gridJson: JSON.stringify(gridResult.grid),
+        deadline: config.deadline,
       });
       setGame(updatedGame);
+
+      // Remove unplaced words from local state so they don't appear after publish
+      if (unplacedWords.length > 0) {
+        setWords((prev) => prev.filter((w) => placedWordIds.has(w.id)));
+      }
     } catch (err: unknown) {
       const message =
         err && typeof err === 'object' && 'message' in err
@@ -242,7 +347,7 @@ export default function CrosswordEditorPage() {
     } finally {
       setIsPublishing(false);
     }
-  }, [game, title, gridResult]);
+  }, [game, title, gridResult, unplacedWords]);
 
   // ── Word selection ──────────────────────────────────────────────────────
 
@@ -419,13 +524,15 @@ export default function CrosswordEditorPage() {
     <EditorToolbar
       title={title}
       onTitleChange={updateTitle}
-      onRegenerate={() => void handleRegenerate()}
+      onRegenerate={(config) => void handleRegenerate(config)}
       onPublish={() => setShowPublishModal(true)}
       regenerateCost={regenerateCost}
       ecoinBalance={ecoinBalance}
       maxAttempts={maxAttempts}
       onMaxAttemptsChange={setMaxAttempts}
       isPublished={game?.status === 'published'}
+      currentConfig={currentConfig}
+      isRegenerating={isRegenerating}
     />
   );
 
@@ -447,7 +554,7 @@ export default function CrosswordEditorPage() {
 
   const unplacedBanner = unplacedWords.length > 0 && (
     <Alert severity="warning" sx={{ mb: 2 }}>
-      ⚠️ {unplacedWords.length} từ không xếp được vào lưới: {unplacedWords.join(', ')}
+      ⚠️ {unplacedWords.length} từ không xếp được vào lưới và sẽ bị loại khỏi trò chơi khi xuất bản: {unplacedWords.join(', ')}
     </Alert>
   );
 
@@ -459,6 +566,33 @@ export default function CrosswordEditorPage() {
     </Alert>
   );
 
+  // ── Regeneration loading overlay ────────────────────────────────────────
+
+  const regeneratingOverlay = isRegenerating && (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        py: 6,
+        gap: 2,
+        mb: 2,
+        backgroundColor: '#fffbeb',
+        borderRadius: 2,
+        border: '1px solid #fcd34d',
+      }}
+    >
+      <CircularProgress size={40} sx={{ color: '#c48a10' }} />
+      <Typography variant="h6" sx={{ fontWeight: 600, color: '#1e293b' }}>
+        Đang tạo lại ô chữ...
+      </Typography>
+      <Typography variant="body2" color="text.secondary">
+        AI đang tạo từ mới từ tài liệu nguồn, vui lòng chờ.
+      </Typography>
+    </Box>
+  );
+
   // ── Layout ──────────────────────────────────────────────────────────────
 
   // Desktop: 2 columns (grid left, clues right)
@@ -467,6 +601,7 @@ export default function CrosswordEditorPage() {
       <Box sx={{ p: 3, maxWidth: 1400, mx: 'auto' }}>
         {toolbar}
         {saveErrorBanner}
+        {regeneratingOverlay}
         {unplacedBanner}
         <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 3, alignItems: 'start' }}>
           {/* Grid column */}
@@ -526,6 +661,7 @@ export default function CrosswordEditorPage() {
       <Box sx={{ p: 2, maxWidth: 900, mx: 'auto' }}>
         {toolbar}
         {saveErrorBanner}
+        {regeneratingOverlay}
         {unplacedBanner}
 
         {/* Grid */}
@@ -582,6 +718,7 @@ export default function CrosswordEditorPage() {
     <Box sx={{ p: 1.5, pb: 10 }}>
       {toolbar}
       {saveErrorBanner}
+      {regeneratingOverlay}
       {unplacedBanner}
 
       {/* Grid */}

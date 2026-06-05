@@ -52,6 +52,13 @@ public class QuizPublishRequest
     public bool ShowAnswersAfterSubmit { get; set; } = true;
 }
 
+// ── Create empty quiz ─────────────────────────────────────────────────────────
+
+public class CreateEmptyQuizRequest
+{
+    public string Title { get; set; } = string.Empty;
+}
+
 // ── Player (student view) ─────────────────────────────────────────────────────
 
 public class QuizPlayerDto

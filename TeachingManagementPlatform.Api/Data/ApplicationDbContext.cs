@@ -40,6 +40,11 @@ public class ApplicationDbContext : DbContext
     public DbSet<QuizGame> QuizGames => Set<QuizGame>();
     public DbSet<QuizGameQuestion> QuizGameQuestions => Set<QuizGameQuestion>();
     public DbSet<QuizSubmission> QuizSubmissions => Set<QuizSubmission>();
+    public DbSet<ScoreColumnMetadata> ScoreColumnMetadatas => Set<ScoreColumnMetadata>();
+    public DbSet<ClassificationRange> ClassificationRanges => Set<ClassificationRange>();
+    public DbSet<ScoreEditHistory> ScoreEditHistories => Set<ScoreEditHistory>();
+    public DbSet<ScoreTemplate> ScoreTemplates => Set<ScoreTemplate>();
+    public DbSet<ScoreTemplateColumn> ScoreTemplateColumns => Set<ScoreTemplateColumn>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -389,6 +394,53 @@ public class ApplicationDbContext : DbContext
         {
             entity.ToTable("QuizSubmissions");
             entity.Property(s => s.ScorePercent).HasColumnType("decimal(5,2)");
+        });
+
+        // ── ScoreColumnMetadata (one-to-one with StudentListColumn, JSON column) ──
+        modelBuilder.Entity<ScoreColumnMetadata>(entity =>
+        {
+            entity.HasOne(scm => scm.Column)
+                .WithOne()
+                .HasForeignKey<ScoreColumnMetadata>(scm => scm.StudentListColumnId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(scm => scm.StudentListColumnId).IsUnique();
+
+            entity.Property(scm => scm.SourceColumnIds)
+                .HasConversion(
+                    v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                    v => JsonSerializer.Deserialize<List<int>>(v, (JsonSerializerOptions?)null) ?? new List<int>())
+                .HasColumnType("nvarchar(max)");
+        });
+
+        // ── ClassificationRange (many-to-one with StudentListColumn) ──
+        modelBuilder.Entity<ClassificationRange>(entity =>
+        {
+            entity.HasOne(cr => cr.StudentListColumn)
+                .WithMany()
+                .HasForeignKey(cr => cr.StudentListColumnId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(cr => cr.MinScore).HasColumnType("decimal(5,2)");
+            entity.Property(cr => cr.MaxScore).HasColumnType("decimal(5,2)");
+        });
+
+        // ── ScoreEditHistory (many-to-one with StudentEntry) ──
+        modelBuilder.Entity<ScoreEditHistory>(entity =>
+        {
+            entity.HasOne(seh => seh.StudentEntry)
+                .WithMany()
+                .HasForeignKey(seh => seh.StudentEntryId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ── ScoreTemplate / ScoreTemplateColumn (one-to-many) ──
+        modelBuilder.Entity<ScoreTemplate>(entity =>
+        {
+            entity.HasMany(st => st.Columns)
+                .WithOne(stc => stc.ScoreTemplate)
+                .HasForeignKey(stc => stc.ScoreTemplateId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

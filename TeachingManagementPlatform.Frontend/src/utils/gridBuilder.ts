@@ -537,3 +537,72 @@ function assignNumbers(
     };
   });
 }
+
+
+// ── Rebuild grid from saved positions ─────────────────────────────────────────
+
+/** Input for rebuilding from saved word positions. */
+export interface SavedWordPosition {
+  word: string;
+  id?: number;
+  direction: Direction;
+  startRow: number;
+  startCol: number;
+  number: number;
+}
+
+/**
+ * Rebuilds a crossword grid from previously saved word positions.
+ * Use this instead of {@link buildGrid} when words already have valid positions
+ * stored in the database, to avoid re-randomizing the layout on every page load.
+ *
+ * @param savedWords - Words with their saved positions (from the backend).
+ * @returns `{ grid, placedWords, unplacedWords: [] }`
+ */
+export function rebuildGridFromPositions(savedWords: SavedWordPosition[]): GridResult {
+  if (savedWords.length === 0) {
+    return { grid: [], placedWords: [], unplacedWords: [] };
+  }
+
+  // Convert to internal placements
+  const placements: InternalPlacement[] = savedWords.map((w) => ({
+    word: w.word,
+    id: w.id,
+    direction: w.direction,
+    startRow: w.startRow,
+    startCol: w.startCol,
+  }));
+
+  // Determine grid dimensions
+  const { rows, cols } = getGridDimensions(placements);
+
+  // Build the grid cells
+  const grid = buildEmptyGrid(rows, cols);
+  for (const p of placements) {
+    writePlacementToGrid(grid, p);
+  }
+
+  // Map to PlacedWord using saved numbers
+  const placedWords: PlacedWord[] = savedWords.map((w) => ({
+    word: w.word,
+    id: w.id,
+    direction: w.direction,
+    startRow: w.startRow,
+    startCol: w.startCol,
+    number: w.number,
+  }));
+
+  return { grid, placedWords, unplacedWords: [] };
+}
+
+/**
+ * Checks whether the words have valid saved positions (not all at 0,0 with number 0).
+ * If any word has a non-zero startRow, startCol, or number, we consider positions as saved.
+ */
+export function hasSavedPositions(words: SavedWordPosition[]): boolean {
+  if (words.length === 0) return false;
+  // If ALL words are at (0,0) with number 0, they haven't been positioned yet
+  return words.some(
+    (w) => w.startRow !== 0 || w.startCol !== 0 || w.number !== 0,
+  );
+}
