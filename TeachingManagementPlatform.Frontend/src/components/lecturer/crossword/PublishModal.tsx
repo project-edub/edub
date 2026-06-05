@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import {
   Box,
@@ -6,6 +7,8 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
+  FormControlLabel,
+  Checkbox,
   IconButton,
   TextField,
   Tooltip,
@@ -18,6 +21,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 export interface PublishConfig {
   maxAttempts: number | null;
+  deadline: string | null;
 }
 
 export interface PublishModalProps {
@@ -42,12 +46,15 @@ export default function PublishModal({
   maxAttempts,
 }: PublishModalProps) {
   const [copied, setCopied] = useState(false);
+  const [isPermanent, setIsPermanent] = useState(false);
+  const [deadlineValue, setDeadlineValue] = useState('');
 
   const shareUrl = `${window.location.origin}/play/${slug}`;
 
   const handleSubmit = () => {
     const config: PublishConfig = {
       maxAttempts,
+      deadline: isPermanent ? null : deadlineValue || null,
     };
     onPublish(config);
   };
@@ -179,14 +186,49 @@ export default function PublishModal({
       aria-labelledby="publish-dialog-title"
     >
       <DialogContent>
-        <Box sx={{ py: 2, textAlign: 'center' }}>
-          <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+        <Box sx={{ py: 2 }}>
+          <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, textAlign: 'center' }}>
             Xuất bản ô chữ
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Số lần thử tối đa: {maxAttempts ?? 'Không giới hạn'}
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+
+          {/* Deadline section */}
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+              Thời hạn trò chơi
+            </Typography>
+
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={isPermanent}
+                  onChange={(e) => setIsPermanent(e.target.checked)}
+                  size="small"
+                />
+              }
+              label="Mở vĩnh viễn (không có thời hạn)"
+            />
+
+            {!isPermanent && (
+              <TextField
+                type="datetime-local"
+                label="Thời hạn"
+                value={deadlineValue}
+                onChange={(e) => setDeadlineValue(e.target.value)}
+                fullWidth
+                size="small"
+                sx={{ mt: 1 }}
+                slotProps={{
+                  inputLabel: { shrink: true },
+                }}
+              />
+            )}
+          </Box>
+
+          <Typography variant="body2" color="text.secondary">
             Đáp án sẽ hiện ngay sau khi hết lượt kiểm tra.
           </Typography>
         </Box>

@@ -93,6 +93,41 @@ namespace TeachingManagementPlatform.Api.Migrations
                     b.ToTable("ClassLessonSchedules");
                 });
 
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.ClassificationRange", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("MaxScore")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<decimal>("MinScore")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StudentListColumnId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentListColumnId");
+
+                    b.ToTable("ClassificationRanges");
+                });
+
             modelBuilder.Entity("TeachingManagementPlatform.Api.Models.CoinPackage", b =>
                 {
                     b.Property<int>("Id")
@@ -877,6 +912,122 @@ namespace TeachingManagementPlatform.Api.Migrations
                     b.ToTable("QuizSubmissions", (string)null);
                 });
 
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.ScoreColumnMetadata", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("Coefficient")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsAverageColumn")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SourceColumnIds")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("StudentListColumnId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentListColumnId")
+                        .IsUnique();
+
+                    b.ToTable("ScoreColumnMetadatas");
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.ScoreEditHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ColumnName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("EditedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EditedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("NewValue")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OldValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("StudentEntryId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentEntryId");
+
+                    b.ToTable("ScoreEditHistories");
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.ScoreTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ScoreTemplates");
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.ScoreTemplateColumn", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("Coefficient")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsAverageColumn")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ScoreTemplateId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ScoreTemplateId");
+
+                    b.ToTable("ScoreTemplateColumns");
+                });
+
             modelBuilder.Entity("TeachingManagementPlatform.Api.Models.StorageItem", b =>
                 {
                     b.Property<int>("Id")
@@ -1153,6 +1304,17 @@ namespace TeachingManagementPlatform.Api.Migrations
                     b.Navigation("Lesson");
                 });
 
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.ClassificationRange", b =>
+                {
+                    b.HasOne("TeachingManagementPlatform.Api.Models.StudentListColumn", "StudentListColumn")
+                        .WithMany()
+                        .HasForeignKey("StudentListColumnId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("StudentListColumn");
+                });
+
             modelBuilder.Entity("TeachingManagementPlatform.Api.Models.CoinPurchaseTransaction", b =>
                 {
                     b.HasOne("TeachingManagementPlatform.Api.Models.CoinPackage", "CoinPackage")
@@ -1388,6 +1550,39 @@ namespace TeachingManagementPlatform.Api.Migrations
                     b.Navigation("QuizGame");
                 });
 
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.ScoreColumnMetadata", b =>
+                {
+                    b.HasOne("TeachingManagementPlatform.Api.Models.StudentListColumn", "Column")
+                        .WithOne()
+                        .HasForeignKey("TeachingManagementPlatform.Api.Models.ScoreColumnMetadata", "StudentListColumnId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Column");
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.ScoreEditHistory", b =>
+                {
+                    b.HasOne("TeachingManagementPlatform.Api.Models.StudentEntry", "StudentEntry")
+                        .WithMany()
+                        .HasForeignKey("StudentEntryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("StudentEntry");
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.ScoreTemplateColumn", b =>
+                {
+                    b.HasOne("TeachingManagementPlatform.Api.Models.ScoreTemplate", "ScoreTemplate")
+                        .WithMany("Columns")
+                        .HasForeignKey("ScoreTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ScoreTemplate");
+                });
+
             modelBuilder.Entity("TeachingManagementPlatform.Api.Models.StorageItem", b =>
                 {
                     b.HasOne("TeachingManagementPlatform.Api.Models.User", "Lecturer")
@@ -1501,6 +1696,11 @@ namespace TeachingManagementPlatform.Api.Migrations
                     b.Navigation("Questions");
 
                     b.Navigation("Submissions");
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.ScoreTemplate", b =>
+                {
+                    b.Navigation("Columns");
                 });
 
             modelBuilder.Entity("TeachingManagementPlatform.Api.Models.StorageItem", b =>

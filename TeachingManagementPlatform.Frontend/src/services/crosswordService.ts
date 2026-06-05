@@ -49,6 +49,7 @@ export interface CrosswordWordUpdateRequest {
 export interface CrosswordPublishRequest {
   maxAttempts?: number | null;
   gridJson: string;
+  deadline?: string | null;
 }
 
 // ── Error normalization helper ─────────────────────────────────────────────────
@@ -133,15 +134,16 @@ export async function generateCrossword(payload: CrosswordGenerateRequest): Prom
 /**
  * POST /api/crossword/regenerate/{gameId}
  * Regenerate a crossword game reusing the previously uploaded document.
+ * Backend expects CrosswordGenerationConfig directly as the request body.
  */
 export async function regenerateCrossword(
   gameId: number,
-  payload: CrosswordGenerateRequest,
+  config: GameConfig,
 ): Promise<CrosswordGenerateResponse> {
   try {
     const response = await api.post<CrosswordGenerateResponse>(
       `/crossword/regenerate/${gameId}`,
-      payload,
+      config,
     );
     return response.data;
   } catch (err: any) {

@@ -132,6 +132,12 @@ builder.Services.AddScoped<IClassService, ClassService>();
 // Register student list service
 builder.Services.AddScoped<IStudentListService, StudentListService>();
 
+// Register score list service
+builder.Services.AddScoped<IScoreListService, ScoreListService>();
+
+// Register score template service
+builder.Services.AddScoped<IScoreTemplateService, ScoreTemplateService>();
+
 // Register Excel service
 builder.Services.AddScoped<IExcelService, ExcelService>();
 

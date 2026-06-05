@@ -248,6 +248,27 @@ export default function CrosswordCreatorPage() {
       {/* Step indicator */}
       <StepIndicator currentStep={currentStep} />
 
+      {/* AI disclaimer warning */}
+      <div
+        style={{
+          margin: '0 0 16px 0',
+          padding: '12px 16px',
+          backgroundColor: '#fffbeb',
+          border: '1px solid #fcd34d',
+          borderRadius: 8,
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 8,
+        }}
+        role="alert"
+      >
+        <span style={{ fontSize: 18, lineHeight: 1.4 }}>⚠️</span>
+        <p style={{ margin: 0, fontSize: 14, color: '#92400e', lineHeight: 1.5 }}>
+          <strong>Lưu ý:</strong> Ô chữ được tạo bởi AI có thể bị sai hoặc thiếu từ.
+          Vui lòng kiểm tra lại nội dung sau khi tạo và chỉnh sửa nếu cần.
+        </p>
+      </div>
+
       {/* Step content */}
       <div style={contentStyle}>
         {/* ── Step 1: Upload ── */}

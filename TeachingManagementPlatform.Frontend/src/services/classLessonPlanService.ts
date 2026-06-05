@@ -6,6 +6,10 @@ export async function assignLessonPlan(classId: number, lessonPlanId: number): P
   return response.data;
 }
 
+export async function unassignLessonPlan(classId: number): Promise<void> {
+  await api.delete(`/classes/${classId}/lesson-plan`);
+}
+
 export async function getAssignedPlan(classId: number): Promise<ClassLessonPlanResponse | null> {
   const response = await api.get<ClassLessonPlanResponse>(`/classes/${classId}/lesson-plan`);
   // Backend returns empty object {} when no plan assigned

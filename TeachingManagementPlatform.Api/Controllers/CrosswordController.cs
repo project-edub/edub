@@ -244,7 +244,9 @@ public class CrosswordController : ControllerBase
         try
         {
             await _crosswordService.PublishAsync(userId, gameId, request);
-            return NoContent();
+            // Return updated game data so frontend can update its state
+            var updatedGame = await _crosswordService.GetByIdAsync(userId, gameId);
+            return Ok(updatedGame);
         }
         catch (CrosswordValidationException ex)
         {

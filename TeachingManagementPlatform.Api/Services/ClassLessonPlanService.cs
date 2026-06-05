@@ -85,6 +85,26 @@ public class ClassLessonPlanService : IClassLessonPlanService
         return MapToResponse(plan, classId);
     }
 
+    public async Task UnassignLessonPlanAsync(int classId, int lecturerId)
+    {
+        var cls = await _context.Classes
+            .Include(c => c.LessonSchedules)
+            .FirstOrDefaultAsync(c => c.Id == classId && c.LecturerId == lecturerId)
+            ?? throw new ClassLessonPlanNotFoundException("Không tìm thấy lớp học");
+
+        if (cls.AssignedLessonPlanId == null)
+            throw new ClassLessonPlanNotFoundException("Lớp học chưa được gán giáo án");
+
+        // Remove all lesson schedules for this class
+        if (cls.LessonSchedules.Any())
+        {
+            _context.ClassLessonSchedules.RemoveRange(cls.LessonSchedules);
+        }
+
+        cls.AssignedLessonPlanId = null;
+        await _context.SaveChangesAsync();
+    }
+
     public async Task<ClassLessonResponse> UpdateLessonScheduleAsync(int classId, int lessonId, int lecturerId, UpdateLessonScheduleRequest request)
     {
         var cls = await _context.Classes

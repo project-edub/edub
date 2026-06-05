@@ -101,6 +101,15 @@ export async function generateQuiz(formData: FormData): Promise<{ gameId: number
   }
 }
 
+export async function createEmptyQuiz(title: string): Promise<{ gameId: number; slug: string }> {
+  try {
+    const response = await api.post<{ gameId: number; slug: string }>('/quiz-game/create', { title });
+    return response.data;
+  } catch (err: any) {
+    normalizeError(err);
+  }
+}
+
 export async function getQuizList(): Promise<QuizListItem[]> {
   try {
     const response = await api.get<QuizListItem[]>('/quiz-game');
@@ -140,6 +149,15 @@ export async function publishQuiz(id: number, data: { showAnswersAfterSubmit: bo
 export async function deleteQuiz(id: number): Promise<void> {
   try {
     await api.delete(`/quiz-game/${id}`);
+  } catch (err: any) {
+    normalizeError(err);
+  }
+}
+
+export async function addQuestion(gameId: number): Promise<QuizQuestionDetail> {
+  try {
+    const response = await api.post<QuizQuestionDetail>(`/quiz-game/${gameId}/questions`);
+    return response.data;
   } catch (err: any) {
     normalizeError(err);
   }
