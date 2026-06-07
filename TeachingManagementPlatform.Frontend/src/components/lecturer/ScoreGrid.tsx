@@ -76,6 +76,12 @@ interface Props {
   onClassificationRangesSaved?: () => void;
   /** Called when columns are reordered via drag-and-drop */
   onReorderColumns?: (reorderedColumns: { id: number; sortOrder: number }[]) => Promise<void>;
+  /** Called when a student entry is deleted */
+  onDeleteEntry?: (entryId: number) => void;
+  /** Called when a column is deleted */
+  onDeleteColumn?: (columnId: number) => void;
+  /** Called when a column is renamed */
+  onRenameColumn?: (columnId: number, newName: string) => Promise<void>;
 }
 
 // ── Helper: get editable score columns (non-average columns) ──────────────────
@@ -122,6 +128,9 @@ export default function ScoreGrid({
   onConfigSaved,
   onClassificationRangesSaved,
   onReorderColumns,
+  onDeleteEntry,
+  onDeleteColumn,
+  onRenameColumn,
 }: Props) {
   const columns = [...list.columns].sort((a, b) => a.sortOrder - b.sortOrder);
   const entries = [...list.entries].sort((a, b) => a.sortOrder - b.sortOrder);
@@ -198,15 +207,14 @@ export default function ScoreGrid({
     e.stopPropagation();
     const th = (e.target as HTMLElement).closest('th');
     const startWidth = th?.offsetWidth ?? 150;
-    resizingRef.current = { columnId, startX: e.clientX, startWidth };
+    const startX = e.clientX;
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
-      if (!resizingRef.current) return;
-      const diff = moveEvent.clientX - resizingRef.current.startX;
-      const newWidth = Math.max(80, resizingRef.current.startWidth + diff);
+      const diff = moveEvent.clientX - startX;
+      const newWidth = Math.max(80, startWidth + diff);
       setColumnWidths((prev) => {
         const next = new Map(prev);
-        next.set(resizingRef.current!.columnId, newWidth);
+        next.set(columnId, newWidth);
         return next;
       });
     };
@@ -430,6 +438,15 @@ export default function ScoreGrid({
     const value = event.target.value;
     setSearchColumns(typeof value === 'string' ? value.split(',') : value);
   }, []);
+
+  // Paging
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const totalPages = Math.max(1, Math.ceil(sortedEntries.length / pageSize));
+  const pagedEntries = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return sortedEntries.slice(start, start + pageSize);
+  }, [sortedEntries, currentPage, pageSize]);
 
   const [cellErrors, setCellErrors] = useState<CellError[]>([]);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>({ state: 'idle' });
@@ -823,10 +840,11 @@ export default function ScoreGrid({
                 </th>
               );
             })}
+            {onDeleteEntry && <th style={{ ...thStyle, width: 50, minWidth: 50 }}>Xóa</th>}
           </tr>
         </thead>
         <tbody>
-          {sortedEntries.map((entry, idx) => {
+          {pagedEntries.map((entry, idx) => {
             const entryData = localData.get(entry.id) ?? entry.data;
             return (
               <tr key={entry.id}>
@@ -921,6 +939,19 @@ export default function ScoreGrid({
                     </td>
                   );
                 })}
+                {onDeleteEntry && (
+                  <td style={{ ...tdStyle, width: 50, textAlign: 'center' }}>
+                    <button
+                      type="button"
+                      onClick={() => onDeleteEntry(entry.id)}
+                      style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#d32f2f', fontSize: 16 }}
+                      title="Xóa học sinh"
+                      aria-label={`Xóa học sinh ${idx + 1}`}
+                    >
+                      ✕
+                    </button>
+                  </td>
+                )}
               </tr>
             );
           })}
@@ -937,6 +968,20 @@ export default function ScoreGrid({
         <p style={{ color: 'var(--edub-text-secondary)', textAlign: 'center', padding: 24 }}>
           Chưa có học sinh nào trong danh sách.
         </p>
+      )}
+
+      {/* Paging controls */}
+      {sortedEntries.length > pageSize && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 12, padding: '8px 12px', borderRadius: 8, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+          <button type="button" onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage <= 1} style={pagingBtnStyle}>‹ Trước</button>
+          <span style={{ fontSize: 13 }}>Trang {currentPage} / {totalPages}</span>
+          <button type="button" onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage >= totalPages} style={pagingBtnStyle}>Sau ›</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 12 }}>
+            <label style={{ fontSize: 12, whiteSpace: 'nowrap' }}>Hiện:</label>
+            <input type="number" min={10} max={50} value={pageSize} onChange={(e) => { setPageSize(Math.max(10, Math.min(50, Number(e.target.value) || 10))); setCurrentPage(1); }} style={{ width: 48, padding: '2px 4px', fontSize: 12, textAlign: 'center', borderRadius: 4, border: '1px solid #e2e8f0' }} />
+            <span style={{ fontSize: 12 }}>/trang</span>
+          </div>
+        </div>
       )}
 
       {/* Summary stats bar – auto-recalculates when entries/config change (Req 9.2) */}
@@ -960,6 +1005,8 @@ export default function ScoreGrid({
           columnConfigs={columnConfigs}
           onConfigSaved={handleConfigSaved}
           onOpenClassificationConfig={handleOpenClassificationPanel}
+          onDeleteColumn={onDeleteColumn}
+          onRenameColumn={onRenameColumn}
         />
       )}
 
@@ -1052,6 +1099,15 @@ const tdStyle: React.CSSProperties = {
   padding: '8px 12px',
   borderBottom: '1px solid #eee',
   borderRight: '1px solid var(--edub-border)',
+};
+
+const pagingBtnStyle: React.CSSProperties = {
+  padding: '4px 10px',
+  fontSize: 13,
+  borderRadius: 6,
+  border: '1px solid #e2e8f0',
+  background: '#fff',
+  cursor: 'pointer',
 };
 
 export type { SaveStatus, SortConfig, SortDirection, Props as ScoreGridProps };

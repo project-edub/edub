@@ -78,19 +78,27 @@ export function useAttendanceStore(classId: number, students: AttendanceStudentS
     [students],
   );
 
-  const [attendanceList, setAttendanceList] = useState<AttendanceList | null>(() => {
+  const [attendanceList, setAttendanceListRaw] = useState<AttendanceList | null>(() => {
     const stored = loadAttendanceList(classId);
     return stored ? normalizeAttendanceList(stored, students) : createEmptyAttendanceList(classId, students);
   });
 
-  useEffect(() => {
-    const stored = loadAttendanceList(classId);
-    setAttendanceList(stored ? normalizeAttendanceList(stored, students) : createEmptyAttendanceList(classId, students));
-  }, [classId, rosterKey]);
+  // Wrapper that saves to localStorage synchronously on every update
+  const setAttendanceList = useCallback((updater: AttendanceList | null | ((prev: AttendanceList | null) => AttendanceList | null)) => {
+    setAttendanceListRaw((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      if (next) {
+        saveAttendanceList(next);
+      }
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
-    saveAttendanceList(attendanceList);
-  }, [attendanceList]);
+    const stored = loadAttendanceList(classId);
+    const normalized = stored ? normalizeAttendanceList(stored, students) : createEmptyAttendanceList(classId, students);
+    setAttendanceListRaw(normalized);
+  }, [classId, rosterKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const addSlot = useCallback((slot: AttendanceSlot) => {
     setAttendanceList((current) => {

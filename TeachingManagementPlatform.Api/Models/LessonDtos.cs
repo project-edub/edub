@@ -54,6 +54,7 @@ public class AttachmentResponse
     public int Id { get; set; }
     public string FileName { get; set; } = string.Empty;
     public string FileReference { get; set; } = string.Empty;
+    public string? FileUrl { get; set; }
     public long FileSize { get; set; }
 }
 

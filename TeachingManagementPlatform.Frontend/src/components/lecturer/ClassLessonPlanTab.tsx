@@ -5,6 +5,7 @@ import type { ClassLessonPlanResponse, ClassLessonResponse } from '../../types/c
 import type { ApiError } from '../../types/common';
 import * as lessonPlanService from '../../services/lessonPlanService';
 import * as classLessonPlanService from '../../services/classLessonPlanService';
+import { openAttachmentInViewer } from '../../services/lessonService';
 import QuizPlayModal from './QuizPlayModal';
 
 interface ClassLessonPlanTabProps {
@@ -367,7 +368,18 @@ function LessonRow({ lesson, expanded, onToggle, onDateChange, onStatusChange, o
                 <tbody>
                   {lesson.attachments.map((att) => (
                     <tr key={att.id}>
-                      <td style={tdStyle}>{att.fileName}</td>
+                      <td style={tdStyle}>
+                        <a
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            openAttachmentInViewer(att.id, att.fileName, att.fileUrl);
+                          }}
+                          style={{ color: '#1565c0', textDecoration: 'underline', cursor: 'pointer' }}
+                        >
+                          {att.fileName}
+                        </a>
+                      </td>
                       <td style={tdStyle}>{formatFileSize(att.fileSize)}</td>
                     </tr>
                   ))}

@@ -12,6 +12,8 @@ import OverviewPage from './pages/lecturer/OverviewPage';
 import ClassListPage from './pages/lecturer/ClassListPage';
 import ClassDetailPage from './pages/lecturer/ClassDetailPage';
 import LessonPlanPage from './pages/lecturer/LessonPlanPage';
+import LessonListPage from './pages/lecturer/LessonListPage';
+import LessonEditPage from './pages/lecturer/LessonEditPage';
 import TeachingMaterialStoragePage from './pages/lecturer/TeachingMaterialStoragePage';
 import QuizGeneratorPage from './pages/lecturer/QuizGeneratorPage';
 import QuizListPage from './pages/lecturer/QuizListPage';
@@ -58,6 +60,8 @@ export default function App() {
           <Route path="/lecturer/classes" element={<ClassListPage />} />
           <Route path="/lecturer/classes/:id" element={<ClassDetailPage />} />
           <Route path="/lecturer/lesson-plans" element={<LessonPlanPage />} />
+          <Route path="/lecturer/lesson-plans/:id/lessons" element={<LessonListPage />} />
+          <Route path="/lecturer/lessons/:id/edit" element={<LessonEditPage />} />
           <Route path="/lecturer/storage" element={<TeachingMaterialStoragePage />} />
           <Route path="/lecturer/quiz-generator" element={<QuizListPage />} />
           <Route path="/lecturer/quiz/new" element={<QuizGeneratorPage />} />

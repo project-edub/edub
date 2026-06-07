@@ -28,6 +28,10 @@ export interface ScoreColumnConfigMenuProps {
   onConfigSaved: () => void;
   /** Called when user wants to open classification ranges configuration for an average column */
   onOpenClassificationConfig?: (columnId: number) => void;
+  /** Called when user wants to delete this column */
+  onDeleteColumn?: (columnId: number) => void;
+  /** Called when user renames this column */
+  onRenameColumn?: (columnId: number, newName: string) => void;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -41,8 +45,11 @@ export default function ScoreColumnConfigMenu({
   columnConfigs,
   onConfigSaved,
   onOpenClassificationConfig,
+  onDeleteColumn,
+  onRenameColumn,
 }: ScoreColumnConfigMenuProps) {
   // Local form state
+  const [columnName, setColumnName] = useState('');
   const [coefficient, setCoefficient] = useState<string>('');
   const [isAverageColumn, setIsAverageColumn] = useState(false);
   const [sourceColumnIds, setSourceColumnIds] = useState<number[]>([]);
@@ -53,6 +60,7 @@ export default function ScoreColumnConfigMenu({
   useEffect(() => {
     if (!open || !column) return;
     const config = columnConfigs.get(column.id);
+    setColumnName(column.name);
     setCoefficient(config?.coefficient != null ? String(config.coefficient) : '');
     setIsAverageColumn(config?.isAverageColumn ?? false);
     setSourceColumnIds(config?.sourceColumnIds ?? []);
@@ -114,6 +122,11 @@ export default function ScoreColumnConfigMenu({
     setSaving(true);
 
     try {
+      // Rename column if name changed
+      if (onRenameColumn && columnName.trim() && columnName.trim() !== column.name) {
+        await onRenameColumn(column.id, columnName.trim());
+      }
+
       await updateScoreColumnMetadata(column.id, {
         coefficient: coefficient !== '' ? parseInt(coefficient, 10) : null,
         isAverageColumn,
@@ -132,7 +145,7 @@ export default function ScoreColumnConfigMenu({
     } finally {
       setSaving(false);
     }
-  }, [column, coefficient, isAverageColumn, sourceColumnIds, onConfigSaved, onClose]);
+  }, [column, columnName, coefficient, isAverageColumn, sourceColumnIds, onConfigSaved, onClose, onRenameColumn]);
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -148,8 +161,23 @@ export default function ScoreColumnConfigMenu({
     >
       <Box sx={{ p: 2, minWidth: 280, maxWidth: 360 }}>
         <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 600 }}>
-          Cấu hình cột: {column.name}
+          Cấu hình cột
         </Typography>
+
+        {/* Column name input */}
+        {onRenameColumn && (
+          <TextField
+            label="Tên cột"
+            size="small"
+            fullWidth
+            value={columnName}
+            onChange={(e) => setColumnName(e.target.value)}
+            sx={{ mb: 2 }}
+            slotProps={{
+              htmlInput: { 'aria-label': 'Tên cột' },
+            }}
+          />
+        )}
 
         {/* Coefficient input (Requirement 2.1) */}
         {!isAverageColumn && (
@@ -279,6 +307,17 @@ export default function ScoreColumnConfigMenu({
 
         {/* Actions */}
         <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+          {onDeleteColumn && column && (
+            <Button
+              size="small"
+              color="error"
+              onClick={() => { onDeleteColumn(column.id); onClose(); }}
+              disabled={saving}
+              sx={{ mr: 'auto' }}
+            >
+              Xóa cột
+            </Button>
+          )}
           <Button size="small" onClick={onClose} disabled={saving}>
             Hủy
           </Button>
