@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import * as lessonService from '../../services/lessonService';
 import * as storageService from '../../services/storageService';

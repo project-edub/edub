@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AxiosError } from 'axios';
-import type { LessonPlanSummary, CreateLessonPlanRequest } from '../../types/lessonPlan';
+import type { LessonPlanSummary, LessonPlan, CreateLessonPlanRequest } from '../../types/lessonPlan';
 import type { ApiError } from '../../types/common';
 import * as lessonPlanService from '../../services/lessonPlanService';
 import LessonPlanModal from '../../components/lecturer/LessonPlanModal';
@@ -77,10 +77,7 @@ export default function LessonPlanPage() {
       if (modal.type === 'create') {
         await lessonPlanService.create(data);
       } else if (modal.type === 'edit' && modal.plan) {
-        const updatedPlan = await lessonPlanService.update(modal.plan.id, data);
-        if (expandedPlan?.id === updatedPlan.id) {
-          setExpandedPlan(updatedPlan);
-        }
+        await lessonPlanService.update(modal.plan.id, data);
       }
       closeModal();
       await loadPlans();

@@ -33,7 +33,6 @@ export default function StudentListTable({
 
   // Column resize state
   const [columnWidths, setColumnWidths] = useState<Map<number, number>>(new Map());
-  const resizingRef = useRef<{ columnId: number; startX: number; startWidth: number } | null>(null);
 
   const columns = useMemo(() =>
     [...list.columns]
