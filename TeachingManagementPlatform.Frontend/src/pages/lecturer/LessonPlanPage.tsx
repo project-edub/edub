@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AxiosError } from 'axios';
-import type { LessonPlanSummary, LessonPlan, CreateLessonPlanRequest } from '../../types/lessonPlan';
+import type { LessonPlanSummary, CreateLessonPlanRequest } from '../../types/lessonPlan';
 import type { ApiError } from '../../types/common';
 import * as lessonPlanService from '../../services/lessonPlanService';
 import LessonPlanModal from '../../components/lecturer/LessonPlanModal';
-import LessonDetailModal from '../../components/lecturer/LessonDetailModal';
 
 interface ModalState {
   type: 'create' | 'edit' | null;
@@ -12,14 +12,13 @@ interface ModalState {
 }
 
 export default function LessonPlanPage() {
+  const navigate = useNavigate();
   const [plans, setPlans] = useState<LessonPlanSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [modal, setModal] = useState<ModalState>({ type: null });
   const [deleteTarget, setDeleteTarget] = useState<LessonPlanSummary | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
-  const [expandedPlan, setExpandedPlan] = useState<LessonPlan | null>(null);
-  const [lessonDetailId, setLessonDetailId] = useState<number | null>(null);
 
   // Filter state
   const [filterGrade, setFilterGrade] = useState('');
@@ -57,22 +56,6 @@ export default function LessonPlanPage() {
     try {
       const full = await lessonPlanService.getById(plan.id);
       setModal({ type: 'edit', plan: full });
-    } catch (err) {
-      setError(extractError(err));
-    } finally {
-      setActionLoading(false);
-    }
-  }
-
-  async function toggleExpandPlan(plan: LessonPlanSummary) {
-    if (expandedPlan?.id === plan.id) {
-      setExpandedPlan(null);
-      return;
-    }
-    setActionLoading(true);
-    try {
-      const full = await lessonPlanService.getById(plan.id);
-      setExpandedPlan(full);
     } catch (err) {
       setError(extractError(err));
     } finally {
@@ -214,12 +197,12 @@ export default function LessonPlanPage() {
                   <td style={tdStyle}>
                     <button
                       type="button"
-                      onClick={() => toggleExpandPlan(plan)}
+                      onClick={() => navigate(`/lecturer/lesson-plans/${plan.id}/lessons`)}
                       disabled={actionLoading}
                       className="btn btn-view"
                       style={{ marginRight: 8 }}
                     >
-                      {expandedPlan?.id === plan.id ? 'Ẩn' : 'Xem'}
+                      Xem
                     </button>
                     <button
                       type="button"
@@ -244,39 +227,6 @@ export default function LessonPlanPage() {
             )}
           </tbody>
         </table>
-      )}
-
-      {/* Expanded Lesson List */}
-      {expandedPlan && (
-        <div style={{ marginTop: 16, border: '1px solid var(--edub-border)', borderRadius: 8, padding: 16 }}>
-          <h3 style={{ marginBottom: 8 }}>Bài học — {expandedPlan.subject}</h3>
-          {expandedPlan.lessons.length === 0 ? (
-            <p style={{ color: 'var(--edub-text-secondary)', fontSize: 14 }}>Chưa có bài học nào</p>
-          ) : (
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              {expandedPlan.lessons.map((lesson) => (
-                <li key={lesson.id} style={{ padding: '6px 0', borderBottom: '1px solid #eee' }}>
-                  <button
-                    type="button"
-                    onClick={() => setLessonDetailId(lesson.id)}
-                    className="btn btn-view"
-                    style={{ fontSize: 13, padding: '4px 10px' }}
-                  >
-                    {lesson.orderIndex}. {lesson.name}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
-
-      {/* Lesson Detail Modal */}
-      {lessonDetailId != null && (
-        <LessonDetailModal
-          lessonId={lessonDetailId}
-          onClose={() => setLessonDetailId(null)}
-        />
       )}
 
       {/* Create / Edit Modal */}

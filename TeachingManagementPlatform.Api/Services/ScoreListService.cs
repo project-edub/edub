@@ -273,6 +273,11 @@ public class ScoreListService : IScoreListService
 
         var createdColumns = new List<StudentListColumn>();
 
+        // Determine the starting sortOrder so template columns go after existing ones
+        var maxExistingSortOrder = studentList.Columns.Count > 0
+            ? studentList.Columns.Max(c => c.SortOrder) + 1
+            : 0;
+
         // Create StudentListColumns and ScoreColumnMetadata for each template column
         foreach (var templateCol in template.Columns.OrderBy(c => c.SortOrder))
         {
@@ -281,7 +286,7 @@ public class ScoreListService : IScoreListService
             {
                 StudentListId = studentListId,
                 Name = templateCol.Name,
-                SortOrder = templateCol.SortOrder
+                SortOrder = maxExistingSortOrder + templateCol.SortOrder
             };
             _context.StudentListColumns.Add(column);
             await _context.SaveChangesAsync(); // Save to get the column ID

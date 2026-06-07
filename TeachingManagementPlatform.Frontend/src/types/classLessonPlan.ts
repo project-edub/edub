@@ -9,6 +9,7 @@ export interface ClassLessonAttachment {
   id: number;
   fileName: string;
   fileReference: string;
+  fileUrl?: string | null;
   fileSize: number;
 }
 

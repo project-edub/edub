@@ -104,6 +104,7 @@ export interface AttachmentResponse {
   id: number;
   fileName: string;
   fileReference: string;
+  fileUrl?: string | null;
   fileSize: number;
 }
 

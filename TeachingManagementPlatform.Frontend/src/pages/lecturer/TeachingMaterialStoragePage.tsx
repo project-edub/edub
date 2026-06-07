@@ -181,7 +181,16 @@ export default function TeachingMaterialStoragePage() {
     if (item.itemType === ItemType.Folder) return;
     const url = storageService.resolveStorageFileUrl(item.fileUrl || null);
     if (!url) return;
-    window.open(url, '_blank', 'noopener,noreferrer');
+
+    const ext = item.name.split('.').pop()?.toLowerCase() ?? '';
+    if (['docx', 'xlsx', 'pptx', 'doc', 'xls', 'ppt'].includes(ext)) {
+      // Use Google Docs Viewer for Office documents
+      const googleViewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
+      window.open(googleViewerUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      // PDF and other files open directly (browser renders PDFs natively)
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
   }
 
   function formatFileSize(bytes?: number | null): string {

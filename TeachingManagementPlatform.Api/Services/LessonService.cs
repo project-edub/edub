@@ -156,6 +156,34 @@ public class LessonService : ILessonService
         await _context.SaveChangesAsync();
     }
 
+    public async Task<(Stream stream, string fileName, string contentType)> GetAttachmentFileAsync(int attachmentId, int lecturerId)
+    {
+        var attachment = await _context.LessonAttachments
+            .Include(a => a.Lesson)
+                .ThenInclude(l => l.LessonPlan)
+            .FirstOrDefaultAsync(a => a.Id == attachmentId)
+            ?? throw new LessonNotFoundException("Không tìm thấy tệp đính kèm");
+
+        if (attachment.Lesson.LessonPlan.LecturerId != lecturerId)
+            throw new LessonNotFoundException("Không tìm thấy tệp đính kèm");
+
+        var stream = await _fileStorage.GetFileAsync(attachment.FileReference);
+        var ext = Path.GetExtension(attachment.FileName).ToLowerInvariant();
+        var contentType = ext switch
+        {
+            ".pdf" => "application/pdf",
+            ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            ".pptx" => "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            ".png" => "image/png",
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".gif" => "image/gif",
+            _ => "application/octet-stream",
+        };
+
+        return (stream, attachment.FileName, contentType);
+    }
+
     private async Task<Lesson> GetLessonWithOwnershipCheck(int lessonId, int lecturerId)
     {
         var lesson = await _context.Lessons
@@ -183,7 +211,7 @@ public class LessonService : ILessonService
             throw new LessonNotFoundException("Không tìm thấy bài học");
     }
 
-    private static LessonDetailResponse MapToDetailResponse(Lesson lesson)
+    private LessonDetailResponse MapToDetailResponse(Lesson lesson)
     {
         return new LessonDetailResponse
         {
@@ -192,7 +220,7 @@ public class LessonService : ILessonService
             OrderIndex = lesson.OrderIndex,
             ScheduledDate = lesson.ScheduledDate,
             Documents = lesson.Documents.Select(MapToDocumentResponse).ToList(),
-            Attachments = lesson.Attachments.Select(MapToAttachmentResponse).ToList(),
+            Attachments = lesson.Attachments.Select(a => MapToAttachmentResponse(a)).ToList(),
             MiniGames = lesson.MiniGames.Select(mg => new MiniGameResponse
             {
                 Id = mg.Id,
@@ -215,13 +243,14 @@ public class LessonService : ILessonService
         };
     }
 
-    private static AttachmentResponse MapToAttachmentResponse(LessonAttachment att)
+    private AttachmentResponse MapToAttachmentResponse(LessonAttachment att)
     {
         return new AttachmentResponse
         {
             Id = att.Id,
             FileName = att.FileName,
             FileReference = att.FileReference,
+            FileUrl = string.IsNullOrWhiteSpace(att.FileReference) ? null : _fileStorage.GetPublicUrl(att.FileReference),
             FileSize = att.FileSize
         };
     }

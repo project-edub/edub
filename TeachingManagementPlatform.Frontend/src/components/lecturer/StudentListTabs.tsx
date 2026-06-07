@@ -43,8 +43,6 @@ export default function StudentListTabs({ classId, className = 'lop-hoc' }: Prop
 
   // Import modal state
   const [showImportModal, setShowImportModal] = useState(false);
-  const [renamingAttendance, setRenamingAttendance] = useState(false);
-  const [attendanceRenameValue, setAttendanceRenameValue] = useState('');
   const [confirmDeleteAttendanceOpen, setConfirmDeleteAttendanceOpen] = useState(false);
   const attendanceImportInputId = 'attendance-import-input';
 
@@ -58,6 +56,13 @@ export default function StudentListTabs({ classId, className = 'lop-hoc' }: Prop
   // Score metadata state
   const [columnConfigs, setColumnConfigs] = useState<Map<number, ScoreColumnConfig>>(new Map());
   const [classificationRanges, setClassificationRanges] = useState<ClassificationRange[]>([]);
+
+  // Column visibility state (Task 4)
+  const [visibleColumns, setVisibleColumns] = useState<Set<number>>(new Set());
+  const [showColumnSelector, setShowColumnSelector] = useState(false);
+
+  // Absence threshold state (Task 6)
+  const [absenceThreshold, setAbsenceThreshold] = useState<number>(20);
 
   const loadLists = useCallback(async () => {
     setLoading(true);
@@ -106,6 +111,13 @@ export default function StudentListTabs({ classId, className = 'lop-hoc' }: Prop
     loadScoreMetadata();
   }, [loadScoreMetadata]);
 
+  // Initialize visible columns when active list changes
+  useEffect(() => {
+    if (activeList) {
+      setVisibleColumns(new Set(activeList.columns.map((c) => c.id)));
+    }
+  }, [activeListId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   function extractError(err: unknown): string {
     const axiosErr = err as AxiosError<ApiError>;
     return axiosErr.response?.data?.error?.message || 'Đã xảy ra lỗi. Vui lòng thử lại.';
@@ -120,7 +132,7 @@ export default function StudentListTabs({ classId, className = 'lop-hoc' }: Prop
           name: resolveStudentName(activeList, entry),
         }))
     : [];
-  const { attendanceList, addSlot, updateSlotDate, removeSlot, renameAttendanceList, resetAttendanceList, toggleSlotStatus, replaceAttendanceList } = useAttendanceStore(classId, attendanceStudents);
+  const { attendanceList, addSlot, updateSlotDate, removeSlot, resetAttendanceList, toggleSlotStatus, replaceAttendanceList } = useAttendanceStore(classId, attendanceStudents);
   const hasStudents = Boolean(activeList && activeList.entries.length > 0);
 
   // --- List CRUD ---
@@ -221,6 +233,15 @@ export default function StudentListTabs({ classId, className = 'lop-hoc' }: Prop
   }
 
   async function handleUpdateColumn(columnId: number, name: string) {
+    if (!activeList) return;
+    // Task 7: Check for duplicate column name (case-insensitive)
+    const isDuplicate = activeList.columns.some(
+      (col) => col.id !== columnId && col.name.toLowerCase() === name.toLowerCase()
+    );
+    if (isDuplicate) {
+      setError(`Cột có tên "${name}" đã tồn tại trong danh sách.`);
+      return;
+    }
     setActionLoading(true);
     try {
       await studentListService.updateColumn(columnId, { name });
@@ -265,18 +286,6 @@ export default function StudentListTabs({ classId, className = 'lop-hoc' }: Prop
     setActionLoading(true);
     try {
       await studentListService.addEntry(activeList.id, { data, sortOrder: activeList.entries.length });
-      await loadLists();
-    } catch (err) {
-      setError(extractError(err));
-    } finally {
-      setActionLoading(false);
-    }
-  }
-
-  async function handleUpdateEntry(entryId: number, data: Record<string, string>) {
-    setActionLoading(true);
-    try {
-      await studentListService.updateEntry(entryId, { data });
       await loadLists();
     } catch (err) {
       setError(extractError(err));
@@ -342,20 +351,12 @@ export default function StudentListTabs({ classId, className = 'lop-hoc' }: Prop
     exportAttendanceExcel(attendanceList, className);
   }
 
-  function handleRenameAttendance() {
-    if (!attendanceRenameValue.trim()) return;
-    renameAttendanceList(attendanceRenameValue.trim());
-    setRenamingAttendance(false);
-  }
-
   function handleDeleteAttendance() {
     setConfirmDeleteAttendanceOpen(true);
   }
 
   function handleConfirmDeleteAttendance() {
     resetAttendanceList();
-    setRenamingAttendance(false);
-    setAttendanceRenameValue('');
     setConfirmDeleteAttendanceOpen(false);
   }
 
@@ -608,34 +609,6 @@ export default function StudentListTabs({ classId, className = 'lop-hoc' }: Prop
                   Xuất Excel
                 </button>
 
-                {renamingAttendance ? (
-                  <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
-                    <input
-                      type="text"
-                      value={attendanceRenameValue}
-                      onChange={(e) => setAttendanceRenameValue(e.target.value)}
-                      style={{ padding: 4 }}
-                      aria-label="Đổi tên danh sách điểm danh"
-                    />
-                    <button type="button" onClick={handleRenameAttendance} disabled={actionLoading} className="btn btn-view" style={actionBtnStyle}>
-                      Lưu
-                    </button>
-                    <button type="button" onClick={() => { setRenamingAttendance(false); setAttendanceRenameValue(''); }} className="btn btn-neutral" style={actionBtnStyle}>
-                      Hủy
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => { setRenamingAttendance(true); setAttendanceRenameValue(attendanceList.name ?? `Điểm danh lớp ${classId}`); }}
-                    disabled={actionLoading}
-                    className="btn btn-view"
-                    style={actionBtnStyle}
-                  >
-                    Sửa tên
-                  </button>
-                )}
-
                 <button
                   type="button"
                   onClick={handleDeleteAttendance}
@@ -645,6 +618,32 @@ export default function StudentListTabs({ classId, className = 'lop-hoc' }: Prop
                 >
                   Xóa danh sách
                 </button>
+
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  marginLeft: 8,
+                  padding: '6px 12px',
+                  borderRadius: 8,
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                }}>
+                  <label htmlFor="absence-threshold-input" style={{ fontSize: 12, whiteSpace: 'nowrap', color: 'var(--edub-text-secondary)' }}>
+                    ⚠️ Ngưỡng vắng
+                  </label>
+                  <input
+                    id="absence-threshold-input"
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={absenceThreshold}
+                    onChange={(e) => setAbsenceThreshold(Math.max(0, Math.min(100, Number(e.target.value) || 0)))}
+                    style={{ width: 48, padding: '4px 6px', fontSize: 13, textAlign: 'center', borderRadius: 6, border: '1px solid #cbd5e1' }}
+                    aria-label="Ngưỡng cảnh báo vắng (%)"
+                  />
+                  <span style={{ fontSize: 12, color: 'var(--edub-text-secondary)' }}>%</span>
+                </div>
               </>
             )}
 
@@ -708,8 +707,79 @@ export default function StudentListTabs({ classId, className = 'lop-hoc' }: Prop
               </button>
             )}
 
-            {/* Req 5: Thêm cột moved to action bar */}
-            {viewMode === 'students' && (
+            {/* Column visibility selector */}
+            {viewMode === 'students' && activeList && (
+              <div style={{ position: 'relative', display: 'inline-block' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowColumnSelector(!showColumnSelector)}
+                  className="btn btn-view"
+                  style={actionBtnStyle}
+                >
+                  Ẩn/Hiện cột
+                </button>
+                {showColumnSelector && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    zIndex: 100,
+                    background: 'var(--edub-surface, #fff)',
+                    border: '1px solid var(--edub-border)',
+                    borderRadius: 6,
+                    padding: 8,
+                    minWidth: 180,
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                    marginTop: 4,
+                  }}>
+                    <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+                      <button
+                        type="button"
+                        onClick={() => setVisibleColumns(new Set(activeList.columns.map((c) => c.id)))}
+                        className="btn btn-view"
+                        style={{ fontSize: 11, padding: '2px 6px' }}
+                      >
+                        Hiện tất cả
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setVisibleColumns(new Set())}
+                        className="btn btn-neutral"
+                        style={{ fontSize: 11, padding: '2px 6px' }}
+                      >
+                        Ẩn tất cả
+                      </button>
+                    </div>
+                    {activeList.columns
+                      .slice()
+                      .sort((a, b) => a.sortOrder - b.sortOrder)
+                      .map((col) => (
+                        <label key={col.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 0', fontSize: 13, cursor: 'pointer' }}>
+                          <input
+                            type="checkbox"
+                            checked={visibleColumns.has(col.id)}
+                            onChange={() => {
+                              setVisibleColumns((prev) => {
+                                const next = new Set(prev);
+                                if (next.has(col.id)) {
+                                  next.delete(col.id);
+                                } else {
+                                  next.add(col.id);
+                                }
+                                return next;
+                              });
+                            }}
+                          />
+                          {col.name}
+                        </label>
+                      ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Req 5: Thêm cột moved to scores action bar */}
+            {viewMode === 'scores' && (
               addingColumn ? (
                 <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                   <input
@@ -744,6 +814,42 @@ export default function StudentListTabs({ classId, className = 'lop-hoc' }: Prop
             {viewMode === 'scores' && (
               <button
                 type="button"
+                onClick={() => handleAddEntry({})}
+                disabled={actionLoading}
+                className="btn btn-view"
+                style={actionBtnStyle}
+              >
+                Thêm học sinh
+              </button>
+            )}
+
+            {viewMode === 'scores' && (
+              <button
+                type="button"
+                onClick={() => setShowImportModal(true)}
+                disabled={actionLoading}
+                className="btn btn-view"
+                style={actionBtnStyle}
+              >
+                Nhập Excel
+              </button>
+            )}
+
+            {viewMode === 'scores' && (
+              <button
+                type="button"
+                onClick={handleExportExcel}
+                disabled={actionLoading}
+                className="btn btn-view"
+                style={actionBtnStyle}
+              >
+                Xuất Excel
+              </button>
+            )}
+
+            {viewMode === 'scores' && (
+              <button
+                type="button"
                 onClick={() => setShowTemplatePicker(true)}
                 disabled={actionLoading}
                 className="btn btn-view"
@@ -759,14 +865,10 @@ export default function StudentListTabs({ classId, className = 'lop-hoc' }: Prop
             <StudentListTable
               list={activeList}
               onAddColumn={handleAddColumn}
-              onUpdateColumn={handleUpdateColumn}
-              onDeleteColumn={handleDeleteColumn}
               onReorderColumns={handleReorderColumns}
-              onAddEntry={handleAddEntry}
-              onUpdateEntry={handleUpdateEntry}
-              onDeleteEntry={handleDeleteEntry}
               actionLoading={actionLoading}
               hideAddColumn
+              visibleColumns={visibleColumns}
             />
           )}
 
@@ -790,27 +892,31 @@ export default function StudentListTabs({ classId, className = 'lop-hoc' }: Prop
                 onConfigSaved={handleConfigSaved}
                 onClassificationRangesSaved={handleClassificationRangesSaved}
                 onReorderColumns={handleReorderColumns}
+                onDeleteEntry={handleDeleteEntry}
+                onDeleteColumn={handleDeleteColumn}
+                onRenameColumn={async (columnId, newName) => { await handleUpdateColumn(columnId, newName); }}
               />
             </div>
           )}
 
           {/* Attendance view */}
           {viewMode === 'attendance' && attendanceList && attendanceList.slots.length > 0 ? (
-            <>
-              <div style={{ marginBottom: 12, color: 'var(--edub-text-secondary)', fontSize: 13 }}>
-                <strong style={{ color: 'var(--edub-text-primary)' }}>{attendanceList.name ?? `Điểm danh lớp ${classId}`}</strong>
-                <span style={{ marginLeft: 8 }}>• {attendanceList.slots.length} buổi</span>
-                <span style={{ marginLeft: 8 }}>• {attendanceList.rows.length} học sinh</span>
-              </div>
-              <AttendanceTable
-                attendanceList={attendanceList}
-                actionLoading={actionLoading}
-                onToggleSlotStatus={toggleSlotStatus}
-                onAddSlot={() => {}}
-                onUpdateSlotDate={updateSlotDate}
-                onRemoveSlot={removeSlot}
-              />
-            </>
+            <AttendanceTable
+              attendanceList={attendanceList}
+              actionLoading={actionLoading}
+              onToggleSlotStatus={toggleSlotStatus}
+              onAddSlot={() => {
+                const newSlot: AttendanceSlot = {
+                  id: crypto.randomUUID(),
+                  date: new Date().toISOString().slice(0, 10),
+                  label: `Buổi ${attendanceList.slots.length + 1}`,
+                };
+                addSlot(newSlot);
+              }}
+              onUpdateSlotDate={updateSlotDate}
+              onRemoveSlot={removeSlot}
+              absenceThreshold={absenceThreshold}
+            />
           ) : viewMode === 'attendance' ? (
             <AttendanceConfigForm
               columns={activeList.columns}

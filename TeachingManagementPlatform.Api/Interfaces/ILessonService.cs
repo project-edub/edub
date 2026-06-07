@@ -12,4 +12,5 @@ public interface ILessonService
     Task<AttachmentResponse> AddAttachmentAsync(int lessonId, int lecturerId, Stream fileStream, string fileName, long fileSize);
     Task<AttachmentResponse> AddAttachmentFromStorageAsync(int lessonId, int lecturerId, int storageItemId);
     Task DeleteAttachmentAsync(int attachmentId, int lecturerId);
+    Task<(Stream stream, string fileName, string contentType)> GetAttachmentFileAsync(int attachmentId, int lecturerId);
 }

@@ -8,6 +8,7 @@ namespace TeachingManagementPlatform.Api.Services;
 public class ClassLessonPlanService : IClassLessonPlanService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IFileStorage _fileStorage;
     private static readonly HashSet<string> ValidLessonStatuses =
         new(StringComparer.OrdinalIgnoreCase)
         {
@@ -16,9 +17,10 @@ public class ClassLessonPlanService : IClassLessonPlanService
             ClassLessonSchedule.PendingStatus
         };
 
-    public ClassLessonPlanService(ApplicationDbContext context)
+    public ClassLessonPlanService(ApplicationDbContext context, IFileStorage fileStorage)
     {
         _context = context;
+        _fileStorage = fileStorage;
     }
 
     public async Task<ClassLessonPlanResponse> AssignLessonPlanAsync(int classId, int lecturerId, AssignLessonPlanRequest request)
@@ -188,7 +190,7 @@ public class ClassLessonPlanService : IClassLessonPlanService
         };
     }
 
-    private static ClassLessonResponse MapToLessonResponse(Lesson lesson, DateTime? scheduledDate, string lessonStatus)
+    private ClassLessonResponse MapToLessonResponse(Lesson lesson, DateTime? scheduledDate, string lessonStatus)
     {
         return new ClassLessonResponse
         {
@@ -211,6 +213,7 @@ public class ClassLessonPlanService : IClassLessonPlanService
                 Id = a.Id,
                 FileName = a.FileName,
                 FileReference = a.FileReference,
+                FileUrl = string.IsNullOrWhiteSpace(a.FileReference) ? null : _fileStorage.GetPublicUrl(a.FileReference),
                 FileSize = a.FileSize
             }).ToList(),
             MiniGames = lesson.MiniGames.Select(mg => new MiniGameResponse
