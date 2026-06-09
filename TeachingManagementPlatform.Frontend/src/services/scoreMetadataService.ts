@@ -10,8 +10,10 @@ export interface UpdateScoreColumnMetadataRequest {
 }
 
 export interface ScoreColumnMetadataResponse {
-  id: number;
-  studentListColumnId: number;
+  id?: number;
+  studentListColumnId?: number;
+  /** @deprecated Old field name — use studentListColumnId */
+  columnId?: number;
   coefficient: number | null;
   isAverageColumn: boolean;
   sourceColumnIds: number[];
@@ -47,6 +49,11 @@ export async function getScoreMetadata(
   return response.data;
 }
 
+/** Resolve the column ID from the response (handles both old and new field names) */
+function resolveColumnId(meta: ScoreColumnMetadataResponse): number {
+  return meta.studentListColumnId ?? meta.columnId ?? 0;
+}
+
 /**
  * Convert API response array to a Map<columnId, ScoreColumnConfig> for use in ScoreGrid.
  */
@@ -55,8 +62,10 @@ export function toColumnConfigMap(
 ): Map<number, ScoreColumnConfig> {
   const map = new Map<number, ScoreColumnConfig>();
   for (const meta of metadataList) {
-    map.set(meta.studentListColumnId, {
-      columnId: meta.studentListColumnId,
+    const colId = resolveColumnId(meta);
+    if (!colId) continue;
+    map.set(colId, {
+      columnId: colId,
       coefficient: meta.coefficient,
       isAverageColumn: meta.isAverageColumn,
       sourceColumnIds: meta.sourceColumnIds,
