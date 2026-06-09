@@ -1,1 +1,2 @@
-1. Khi người dùng thanh toán thành công và đang chờ redirect về trang web, lỗi xảy ra khi người dùng không chờ redirect sau khi thanh toán mà tự ý thoát trang, thanh toán sẽ chuyển qua trạng thái đang chờ mặc dù đã thanh toán thành công
+1. Gói Mặc định thì không cần giảm giá khi nâng cấp
+2. Bỏ tính năng Giảm giá nâng cấp gói đăng ký trong Cấu hình ECoin trò chơi

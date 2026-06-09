@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import * as coinService from '../../services/coinService';
+import * as subscriptionService from '../../services/subscriptionService';
 import { formatCurrency } from '../../utils/formatters';
 
 interface Transaction {
@@ -30,6 +31,7 @@ export default function TransactionHistoryPage() {
     try {
       // Auto-sync any pending transactions before displaying
       await coinService.syncLatestLecturerCoinPurchase().catch(() => {});
+      await subscriptionService.syncLatestSubscriptionPurchase().catch(() => {});
       const data = await coinService.getLecturerTransactions();
       setTransactions(data);
     } catch {

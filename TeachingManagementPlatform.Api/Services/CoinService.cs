@@ -25,7 +25,21 @@ public class CoinService : ICoinService
 
     public async Task<CoinWalletResponse> GetWalletAsync(int userId)
     {
-        return new CoinWalletResponse { CoinBalance = await GetBalanceAsync(userId) };
+        var user = await _context.Users
+            .Include(u => u.SubscriptionPackage)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null)
+            throw new UserNotFoundException("Không tìm thấy tài khoản");
+
+        return new CoinWalletResponse
+        {
+            CoinBalance = user.CoinBalance,
+            SubscriptionPackageName = user.SubscriptionPackage?.Name,
+            SubscriptionPackagePrice = user.SubscriptionPackage?.Price,
+            SubscriptionExpiresAt = user.SubscriptionExpiresAt,
+        };
     }
 
     public async Task<int> AddCoinsAsync(int userId, int amount)

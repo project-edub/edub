@@ -49,6 +49,7 @@ export default function SubscriptionPackagePage() {
   const [formFeatures, setFormFeatures] = useState<string[]>([]);
   const [formError, setFormError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [formUpgradeDiscounts, setFormUpgradeDiscounts] = useState<Record<number, number>>({});
 
   const loadPackages = useCallback(async () => {
     setLoading(true);
@@ -102,6 +103,7 @@ export default function SubscriptionPackagePage() {
       setFormIsDefault(pkg.isDefault);
       setFormIsActive(pkg.isActive);
       setFormFeatures(pkg.unlockedFeatures);
+      setFormUpgradeDiscounts(pkg.upgradeDiscounts ?? {});
     } else {
       setFormName('');
       setFormPrice('0');
@@ -114,6 +116,7 @@ export default function SubscriptionPackagePage() {
       setFormIsDefault(false);
       setFormIsActive(true);
       setFormFeatures([]);
+      setFormUpgradeDiscounts({});
     }
     setFormError('');
     setFieldErrors({});
@@ -196,7 +199,8 @@ export default function SubscriptionPackagePage() {
       isDefault: formIsDefault,
       isActive: formIsActive,
       unlockedFeatures: formFeatures,
-    } satisfies CreateSubscriptionPackageRequest | UpdateSubscriptionPackageRequest;
+      upgradeDiscounts: formUpgradeDiscounts,
+    };
 
     setActionLoading(true);
     try {
@@ -427,6 +431,46 @@ export default function SubscriptionPackagePage() {
                   </span>
                 </label>
               </section>
+
+              {/* Upgrade discounts configuration - only for non-default (paid) packages */}
+              {!formIsDefault && Number(formPrice) > 0 && (
+              <section style={sectionBlockStyle}>
+                <h3 style={sectionTitleStyle}>Giảm giá khi nâng cấp</h3>
+                <span style={helperTextStyle}>Cấu hình % giảm giá khi người dùng nâng cấp từ gói khác lên gói này.</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
+                  {/* Free plan (id=0) */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <span style={{ minWidth: 140, fontSize: 13 }}>Từ gói Miễn phí:</span>
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={formUpgradeDiscounts[0] ?? 0}
+                      onChange={(e) => setFormUpgradeDiscounts((prev) => ({ ...prev, [0]: Number(e.target.value) || 0 }))}
+                      style={{ width: 60, padding: 6, borderRadius: 6, border: '1px solid #cbd5e1', textAlign: 'center' }}
+                    />
+                    <span style={{ fontSize: 13, color: '#64748b' }}>%</span>
+                  </div>
+                  {/* Other packages */}
+                  {packages
+                    .filter((p) => p.id !== modal.pkg?.id && p.price > 0)
+                    .map((p) => (
+                      <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <span style={{ minWidth: 140, fontSize: 13 }}>Từ gói {p.name}:</span>
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={formUpgradeDiscounts[p.id] ?? 0}
+                          onChange={(e) => setFormUpgradeDiscounts((prev) => ({ ...prev, [p.id]: Number(e.target.value) || 0 }))}
+                          style={{ width: 60, padding: 6, borderRadius: 6, border: '1px solid #cbd5e1', textAlign: 'center' }}
+                        />
+                        <span style={{ fontSize: 13, color: '#64748b' }}>%</span>
+                      </div>
+                    ))}
+                </div>
+              </section>
+              )}
 
               <div style={footerActionsStyle}>
                 <button type="button" onClick={closeModal} disabled={actionLoading} className="btn btn-neutral">Hủy</button>

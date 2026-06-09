@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import AccountCircleRoundedIcon from '@mui/icons-material/AccountCircleRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
@@ -7,6 +8,7 @@ import {
   Avatar,
   Box,
   Button,
+  Chip,
   IconButton,
   List,
   ListItemButton,
@@ -18,6 +20,8 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import { Role } from '../../types/auth';
 import { useColorMode } from '../../theme/ColorModeContext';
+import * as coinService from '../../services/coinService';
+import * as subscriptionService from '../../services/subscriptionService';
 
 const lecturerMenuItems = [
   { to: '/lecturer/overview', label: 'Thông tin cá nhân' },
@@ -44,6 +48,32 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const navigate = useNavigate();
   const { mode, toggleMode } = useColorMode();
   const menuItems = role === Role.Admin ? adminMenuItems : lecturerMenuItems;
+
+  // Subscription status
+  const [subName, setSubName] = useState<string | null>(null);
+  const [subExpires, setSubExpires] = useState<string | null>(null);
+  const [coinBalance, setCoinBalance] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (role !== Role.Admin) {
+      // Auto-sync pending payments and load wallet with subscription info
+      (async () => {
+        try {
+          await coinService.syncLatestLecturerCoinPurchase().catch(() => {});
+          await subscriptionService.syncLatestSubscriptionPurchase().catch(() => {});
+          const wallet = await coinService.getLecturerCoinWallet();
+          setSubName(wallet.subscriptionPackageName ?? null);
+          setSubExpires(wallet.subscriptionExpiresAt ?? null);
+          setCoinBalance(wallet.coinBalance);
+        } catch {}
+      })();
+    }
+  }, [role]);
+
+  // Calculate days remaining
+  const daysRemaining = subExpires
+    ? Math.max(0, Math.ceil((new Date(subExpires).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    : null;
 
   function handleLogout() {
     localStorage.removeItem('token');
@@ -174,6 +204,36 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </ListItemButton>
             ))}
           </List>
+
+          {/* Subscription & ECoin status */}
+          {role !== Role.Admin && (
+            <Box sx={{ mt: 2, p: 1.5, borderRadius: 2, bgcolor: 'action.hover' }}>
+              {coinBalance !== null && (
+                <Typography variant="body2" sx={{ fontWeight: 700, mb: 1 }}>
+                  🪙 {coinBalance.toLocaleString('vi-VN')} ECoin
+                </Typography>
+              )}
+              {subName ? (
+                <>
+                  <Chip
+                    label={subName}
+                    color="primary"
+                    size="small"
+                    sx={{ fontWeight: 600, mb: 0.5 }}
+                  />
+                  {daysRemaining !== null && (
+                    <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: daysRemaining <= 5 ? 'error.main' : 'text.secondary' }}>
+                      {daysRemaining > 0 ? `Còn ${daysRemaining} ngày` : 'Đã hết hạn'}
+                    </Typography>
+                  )}
+                </>
+              ) : (
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                  Gói: Miễn phí
+                </Typography>
+              )}
+            </Box>
+          )}
         </Paper>
 
         <Paper

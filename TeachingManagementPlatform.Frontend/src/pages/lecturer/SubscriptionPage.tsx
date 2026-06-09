@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { SubscriptionPackage } from '../../types/subscription';
+import type { CoinWalletResponse } from '../../types/coin';
 import * as subscriptionService from '../../services/subscriptionService';
+import * as coinService from '../../services/coinService';
 import { formatCurrency } from '../../utils/formatters';
 
 export default function SubscriptionPage() {
@@ -12,13 +14,19 @@ export default function SubscriptionPage() {
   const [successMessage, setSuccessMessage] = useState('');
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const [wallet, setWallet] = useState<CoinWalletResponse | null>(null);
 
   const loadPackages = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const data = await subscriptionService.getActiveForLecturer();
+      await subscriptionService.syncLatestSubscriptionPurchase().catch(() => {});
+      const [data, walletData] = await Promise.all([
+        subscriptionService.getActiveForLecturer(),
+        coinService.getLecturerCoinWallet(),
+      ]);
       setPackages(data);
+      setWallet(walletData);
     } catch {
       setError('Không thể tải danh sách gói đăng ký.');
     } finally {
@@ -88,8 +96,9 @@ export default function SubscriptionPage() {
         cancelUrl: `${origin}/lecturer/subscription`,
       });
       window.location.assign(result.checkoutUrl);
-    } catch (err: any) {
-      setError(err?.message || 'Không thể tạo liên kết thanh toán.');
+    } catch (err: unknown) {
+      const message = err && typeof err === 'object' && 'message' in err ? String((err as { message: unknown }).message) : 'Không thể tạo liên kết thanh toán.';
+      setError(message);
     } finally {
       setActionLoading(null);
     }
@@ -116,17 +125,39 @@ export default function SubscriptionPage() {
         <div style={emptyStateStyle}>Chưa có gói đăng ký nào khả dụng.</div>
       ) : (
         <div style={gridStyle}>
-          {packages.map((pkg) => (
-            <article key={pkg.id} style={cardStyle}>
+          {packages.map((pkg) => {
+            const currentPrice = wallet?.subscriptionPackagePrice ?? 0;
+            const isCurrentPlan = wallet?.subscriptionPackageName === pkg.name;
+            const isDowngrade = pkg.price > 0 && pkg.price <= currentPrice && !isCurrentPlan;
+            const isUpgradeFromPaid = pkg.price > currentPrice && currentPrice > 0;
+
+            // Get per-package discount: look up the current package's ID in this package's upgradeDiscounts
+            const currentPkgId = packages.find((p) => p.name === wallet?.subscriptionPackageName)?.id ?? 0;
+            const discountPercent = pkg.upgradeDiscounts?.[currentPkgId] ?? 0;
+            const discountedPrice = discountPercent > 0
+              ? Math.round(pkg.price * (1 - discountPercent / 100))
+              : pkg.price;
+
+            return (
+            <article key={pkg.id} style={{ ...cardStyle, ...(isCurrentPlan ? { border: '2px solid #1976d2' } : {}) }}>
               <div style={cardHeaderStyle}>
                 <h2 style={cardTitleStyle}>{pkg.name}</h2>
                 {pkg.isDefault && <span style={defaultBadge}>Mặc định</span>}
+                {isCurrentPlan && <span style={{ ...defaultBadge, backgroundColor: '#e8f5e9', color: '#2e7d32' }}>Gói hiện tại</span>}
               </div>
 
               <div style={priceRowStyle}>
-                <strong style={priceValueStyle}>
-                  {pkg.price === 0 ? 'Miễn phí' : formatCurrency(pkg.price)}
-                </strong>
+                {isUpgradeFromPaid && discountPercent > 0 ? (
+                  <>
+                    <strong style={priceValueStyle}>{formatCurrency(discountedPrice)}</strong>
+                    <span style={{ textDecoration: 'line-through', color: '#94a3b8', marginLeft: 8, fontSize: 14 }}>{formatCurrency(pkg.price)}</span>
+                    <span style={{ marginLeft: 8, color: '#16a34a', fontSize: 13, fontWeight: 600 }}>-{discountPercent}%</span>
+                  </>
+                ) : (
+                  <strong style={priceValueStyle}>
+                    {pkg.price === 0 ? 'Miễn phí' : formatCurrency(pkg.price)}
+                  </strong>
+                )}
               </div>
 
               <ul style={featureListStyle}>
@@ -150,7 +181,18 @@ export default function SubscriptionPage() {
                 )}
               </ul>
 
-              {pkg.price > 0 ? (
+              {isCurrentPlan ? (
+                <p style={freeNote}>Đang sử dụng gói này</p>
+              ) : isDowngrade ? (
+                <button
+                  type="button"
+                  className="btn btn-neutral"
+                  style={{ width: '100%', marginTop: 12, opacity: 0.6, cursor: 'not-allowed' }}
+                  disabled
+                >
+                  Không thể hạ gói
+                </button>
+              ) : pkg.price > 0 ? (
                 <button
                   type="button"
                   className="btn btn-add"
@@ -158,13 +200,14 @@ export default function SubscriptionPage() {
                   disabled={actionLoading === pkg.id}
                   onClick={() => void handlePurchase(pkg)}
                 >
-                  {actionLoading === pkg.id ? 'Đang xử lý...' : 'Mua gói này'}
+                  {actionLoading === pkg.id ? 'Đang xử lý...' : isUpgradeFromPaid ? 'Nâng cấp gói' : 'Mua gói này'}
                 </button>
               ) : (
-                <p style={freeNote}>Gói hiện tại của tài khoản mới.</p>
+                <p style={freeNote}></p>
               )}
             </article>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

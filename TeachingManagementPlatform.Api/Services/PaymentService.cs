@@ -181,6 +181,12 @@ public class PaymentService : IPaymentService
 
         if (IsPaymentLinkPaid(paymentLink))
         {
+            // If this is a subscription transaction, delegate to the subscription sync
+            if (transaction.SubscriptionPackageId.HasValue)
+            {
+                return await SyncSubscriptionPurchaseAsync(userId, orderCode);
+            }
+
             var coinBalance = await _coinService.AddCoinsAsync(transaction.UserId, transaction.CoinAmount);
 
             transaction.Status = "paid";
@@ -208,6 +214,7 @@ public class PaymentService : IPaymentService
         var candidate = await _context.CoinPurchaseTransactions
             .AsNoTracking()
             .Where(item => item.UserId == userId)
+            .Where(item => item.SubscriptionPackageId == null) // Only coin purchases, not subscriptions
             .Where(item => !string.Equals(item.Status, "paid", StringComparison.OrdinalIgnoreCase))
             .OrderByDescending(item => item.CreatedAt)
             .FirstOrDefaultAsync();
@@ -216,6 +223,22 @@ public class PaymentService : IPaymentService
             return null;
 
         return await SyncCoinPurchaseStatusAsync(userId, candidate.OrderCode);
+    }
+
+    public async Task<CoinPurchaseWebhookResult?> SyncLatestSubscriptionPurchaseAsync(int userId)
+    {
+        var candidate = await _context.CoinPurchaseTransactions
+            .AsNoTracking()
+            .Where(item => item.UserId == userId)
+            .Where(item => item.SubscriptionPackageId != null)
+            .Where(item => !string.Equals(item.Status, "paid", StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(item => item.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        if (candidate == null)
+            return null;
+
+        return await SyncSubscriptionPurchaseAsync(userId, candidate.OrderCode);
     }
 
     public async Task<List<CoinPurchaseHistoryItem>> GetPurchaseHistoryAsync(int userId)
@@ -344,6 +367,7 @@ public class PaymentService : IPaymentService
                 if (user != null && transaction.SubscriptionPackageId.HasValue)
                 {
                     user.SubscriptionPackageId = transaction.SubscriptionPackageId.Value;
+                    user.SubscriptionExpiresAt = DateTime.UtcNow.AddDays(30);
                     user.UpdatedAt = DateTime.UtcNow;
                 }
 
