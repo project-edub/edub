@@ -1,1 +1,1 @@
-1. Phần hệ số trong bảng điểm được lưu ở localhost nhưng trên website đã deploy lại không hiện hay sửa được
+1. Khi người dùng thanh toán thành công và đang chờ redirect về trang web, lỗi xảy ra khi người dùng không chờ redirect sau khi thanh toán mà tự ý thoát trang, thanh toán sẽ chuyển qua trạng thái đang chờ mặc dù đã thanh toán thành công

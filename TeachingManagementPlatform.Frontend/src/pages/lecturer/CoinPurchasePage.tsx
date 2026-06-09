@@ -26,6 +26,8 @@ export default function CoinPurchasePage() {
     setLoading(true);
     setError('');
     try {
+      // Auto-sync any pending transactions (handles case where user left before redirect)
+      await coinService.syncLatestLecturerCoinPurchase().catch(() => {});
       const [walletData, packageData] = await Promise.all([
         coinService.getLecturerCoinWallet(),
         coinService.getLecturerCoinPackages(),
