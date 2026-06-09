@@ -19,7 +19,6 @@ import {
   DialogTitle,
   LinearProgress,
   IconButton,
-  MenuItem,
   Stack,
   TextField,
   Toolbar,
@@ -122,14 +121,6 @@ function normalizeSearchResponse(response: unknown): PublicLecturerProfile[] {
   return list.map((item, index) => normalizeLecturer(item, index + 1));
 }
 
-function renderSelectValue(value: unknown, placeholder: string) {
-  if (typeof value !== 'string' || value.trim() === '') {
-    return <Box component="span" sx={{ color: 'text.disabled' }}>{placeholder}</Box>;
-  }
-
-  return value;
-}
-
 export default function HomePage() {
   const { mode, toggleMode } = useColorMode();
   const { isAuthenticated, email, role } = useAuth();
@@ -138,10 +129,6 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [locationFilter, setLocationFilter] = useState('');
-  const [subjectFilter, setSubjectFilter] = useState('');
-  const [experienceFilter, setExperienceFilter] = useState('');
-  const [ratingFilter, setRatingFilter] = useState('');
   const [selectedLecturer, setSelectedLecturer] = useState<PublicLecturerProfile | null>(null);
 
   const searchLecturers = useCallback(async () => {
@@ -150,10 +137,10 @@ export default function HomePage() {
     try {
       const response = await publicService.searchLecturers(
         searchQuery || undefined,
-        locationFilter || undefined,
-        subjectFilter || undefined,
-        experienceFilter || undefined,
-        ratingFilter || undefined
+        undefined,
+        undefined,
+        undefined,
+        undefined
       );
 
       setLecturers(normalizeSearchResponse(response));
@@ -165,7 +152,7 @@ export default function HomePage() {
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, locationFilter, subjectFilter, experienceFilter, ratingFilter]);
+  }, [searchQuery]);
 
   useEffect(() => {
     searchLecturers();
@@ -201,9 +188,20 @@ export default function HomePage() {
         }}
       >
         <Toolbar sx={{ gap: 1.5 }}>
-          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700 }}>
+          <Typography
+            variant="h6"
+            component={Link}
+            to="/"
+            sx={{ flexGrow: 1, fontWeight: 700, textDecoration: 'none', color: 'inherit' }}
+          >
             EduB
           </Typography>
+          <Button component={Link} to="/" variant="text" sx={{ whiteSpace: 'nowrap' }}>
+            Trang chủ
+          </Button>
+          <Button component={Link} to="/teachers" variant="text" sx={{ whiteSpace: 'nowrap' }}>
+            Tìm giáo viên
+          </Button>
           {!isAuthenticated ? (
             <>
               <IconButton
@@ -244,7 +242,7 @@ export default function HomePage() {
                 <Avatar sx={{ width: 36, height: 36, bgcolor: 'primary.main' }}>{email ? email.charAt(0).toUpperCase() : 'U'}</Avatar>
               </IconButton>
 
-              <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 220, wordBreak: 'break-word' }}>
+              <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {email}
               </Typography>
 
@@ -279,109 +277,16 @@ export default function HomePage() {
         </Box>
 
         <Box component="form" onSubmit={handleSearch} sx={{ mb: 3 }}>
-          <Box
-            sx={{
-              display: 'grid',
-              gap: 1.5,
-              gridTemplateColumns: {
-                xs: '1fr',
-                sm: 'repeat(2, minmax(0, 1fr))',
-                md: 'minmax(0, 2fr) repeat(4, minmax(0, 1fr))',
-              },
-            }}
-          >
-            <Box sx={{ gridColumn: { md: 'span 2' } }}>
-              <TextField
-                fullWidth
-                placeholder="Tìm theo tên giáo viên"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </Box>
-            <Box>
-              <TextField
-                select
-                fullWidth
-                value={locationFilter}
-                onChange={(e) => setLocationFilter(e.target.value)}
-                slotProps={{
-                  select: {
-                    displayEmpty: true,
-                    renderValue: (selected: unknown) => renderSelectValue(selected, 'Địa điểm'),
-                  },
-                }}
-              >
-                <MenuItem value="">Địa điểm</MenuItem>
-                <MenuItem value="Hà Nội">Hà Nội</MenuItem>
-                <MenuItem value="TP.HCM">TP.HCM</MenuItem>
-                <MenuItem value="Đà Nẵng">Đà Nẵng</MenuItem>
-                <MenuItem value="Hải Phòng">Hải Phòng</MenuItem>
-                <MenuItem value="Cần Thơ">Cần Thơ</MenuItem>
-              </TextField>
-            </Box>
-            <Box>
-              <TextField
-                select
-                fullWidth
-                value={subjectFilter}
-                onChange={(e) => setSubjectFilter(e.target.value)}
-                slotProps={{
-                  select: {
-                    displayEmpty: true,
-                    renderValue: (selected: unknown) => renderSelectValue(selected, 'Môn học'),
-                  },
-                }}
-              >
-                <MenuItem value="">Môn học</MenuItem>
-                <MenuItem value="Toán">Toán</MenuItem>
-                <MenuItem value="Tiếng Anh">Tiếng Anh</MenuItem>
-                <MenuItem value="Ngữ văn">Ngữ văn</MenuItem>
-                <MenuItem value="Tin học">Tin học</MenuItem>
-              </TextField>
-            </Box>
-            <Box>
-              <TextField
-                select
-                fullWidth
-                value={experienceFilter}
-                onChange={(e) => setExperienceFilter(e.target.value)}
-                slotProps={{
-                  select: {
-                    displayEmpty: true,
-                    renderValue: (selected: unknown) => renderSelectValue(selected, 'Kinh nghiệm'),
-                  },
-                }}
-              >
-                <MenuItem value="">Kinh nghiệm</MenuItem>
-                <MenuItem value="1-3">1-3 năm</MenuItem>
-                <MenuItem value="3-5">3-5 năm</MenuItem>
-                <MenuItem value="5-10">5-10 năm</MenuItem>
-                <MenuItem value="10+">10+ năm</MenuItem>
-              </TextField>
-            </Box>
-            <Box>
-              <TextField
-                select
-                fullWidth
-                value={ratingFilter}
-                onChange={(e) => setRatingFilter(e.target.value)}
-                slotProps={{
-                  select: {
-                    displayEmpty: true,
-                    renderValue: (selected: unknown) => renderSelectValue(selected, 'Đánh giá'),
-                  },
-                }}
-              >
-                <MenuItem value="">Đánh giá</MenuItem>
-                <MenuItem value="4.5+">4.5+ sao</MenuItem>
-                <MenuItem value="4.0+">4.0+ sao</MenuItem>
-              </TextField>
-            </Box>
-            <Box>
-              <Button type="submit" variant="contained" fullWidth sx={{ height: '100%' }}>
-                Tìm kiếm
-              </Button>
-            </Box>
+          <Box sx={{ display: 'flex', gap: 1.5 }}>
+            <TextField
+              fullWidth
+              placeholder="Tìm theo tên giáo viên"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <Button type="submit" variant="contained" sx={{ whiteSpace: 'nowrap', px: 4 }}>
+              Tìm kiếm
+            </Button>
           </Box>
         </Box>
 
