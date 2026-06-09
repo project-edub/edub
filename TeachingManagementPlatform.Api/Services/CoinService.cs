@@ -87,6 +87,7 @@ public class CoinService : ICoinService
                 IsDefault = sp.IsDefault,
                 IsActive = sp.IsActive,
                 UnlockedFeatures = sp.UnlockedFeatures,
+                UpgradeDiscounts = sp.UpgradeDiscounts,
                 CreatedAt = sp.CreatedAt,
                 UpdatedAt = sp.UpdatedAt
             })
