@@ -272,7 +272,7 @@ interface LessonRowProps {
   onPlayGame: (gameId: number) => void;
 }
 
-function LessonRow({ lesson, expanded, onToggle, onDateChange, onStatusChange, onPlayGame }: LessonRowProps) {
+function LessonRow({ lesson, expanded, onToggle, onDateChange, onStatusChange, }: LessonRowProps) {
   const dateValue = lesson.scheduledDate ? lesson.scheduledDate.split('T')[0] : '';
 
   // Req 4: Status-based background color
@@ -388,40 +388,7 @@ function LessonRow({ lesson, expanded, onToggle, onDateChange, onStatusChange, o
             )}
           </section>
 
-          {/* Mini Games */}
-          <section>
-            <h4 style={{ margin: '0 0 6px' }}>Mini game</h4>
-            {lesson.miniGames.length === 0 ? (
-              <p style={{ color: 'var(--edub-text-secondary)', fontSize: 13 }}>Không có mini game</p>
-            ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                <thead>
-                  <tr>
-                    <th style={thStyle}>Tên</th>
-                    <th style={thStyle}>Loại</th>
-                    <th style={thStyle}>Hành động</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {lesson.miniGames.map((game) => (
-                    <tr key={game.id}>
-                      <td style={tdStyle}>{game.name}</td>
-                      <td style={tdStyle}>{game.type}</td>
-                      <td style={tdStyle}>
-                        <button
-                          type="button"
-                          onClick={() => onPlayGame(game.id)}
-                          className="btn btn-view"
-                        >
-                          Chơi
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </section>
+          
         </div>
       )}
     </div>
