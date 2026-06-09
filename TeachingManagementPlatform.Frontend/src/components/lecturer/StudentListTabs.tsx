@@ -53,6 +53,14 @@ export default function StudentListTabs({ classId, className = 'lop-hoc' }: Prop
   // Score template picker state
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
 
+  // Copy column dialog state
+  const [showCopyColumnDialog, setShowCopyColumnDialog] = useState(false);
+  const [copySourceColId, setCopySourceColId] = useState<number | null>(null);
+  const [copyTargetColId, setCopyTargetColId] = useState<number | null>(null);
+  const [copyBonus, setCopyBonus] = useState('0');
+  const [copyCap, setCopyCap] = useState(true);
+  const [copyMaxScore, setCopyMaxScore] = useState('10');
+
   // Score metadata state
   const [columnConfigs, setColumnConfigs] = useState<Map<number, ScoreColumnConfig>>(new Map());
   const [classificationRanges, setClassificationRanges] = useState<ClassificationRange[]>([]);
@@ -858,6 +866,18 @@ export default function StudentListTabs({ classId, className = 'lop-hoc' }: Prop
                 Áp dụng Template điểm
               </button>
             )}
+
+            {viewMode === 'scores' && activeList && activeList.columns.length >= 2 && (
+              <button
+                type="button"
+                onClick={() => setShowCopyColumnDialog(true)}
+                disabled={actionLoading}
+                className="btn btn-view"
+                style={actionBtnStyle}
+              >
+                Copy cột
+              </button>
+            )}
           </div>
 
           {/* Students view */}
@@ -941,6 +961,131 @@ export default function StudentListTabs({ classId, className = 'lop-hoc' }: Prop
             onClose={() => setShowTemplatePicker(false)}
             onApplied={handleTemplateApplied}
           />
+
+          {/* Copy Column Dialog */}
+          {showCopyColumnDialog && (
+            <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+              <div style={{ backgroundColor: 'var(--edub-surface, #fff)', padding: 24, borderRadius: 12, minWidth: 400, maxWidth: 500, border: '1px solid var(--edub-border)' }}>
+                <h3 style={{ margin: '0 0 16px' }}>Copy cột điểm</h3>
+                <p style={{ fontSize: 13, color: 'var(--edub-text-secondary)', marginBottom: 16 }}>
+                  Sao chép điểm từ cột nguồn sang cột đích. Có thể cộng thêm hệ số bonus.
+                </p>
+                <div style={{ marginBottom: 12 }}>
+                  <label style={{ display: 'block', marginBottom: 4, fontSize: 13, fontWeight: 600 }}>Cột nguồn</label>
+                  <select
+                    value={copySourceColId ?? ''}
+                    onChange={(e) => setCopySourceColId(e.target.value ? Number(e.target.value) : null)}
+                    style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid var(--edub-border)' }}
+                  >
+                    <option value="">-- Chọn cột nguồn --</option>
+                    {activeList.columns.map((col) => (
+                      <option key={col.id} value={col.id}>{col.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div style={{ marginBottom: 12 }}>
+                  <label style={{ display: 'block', marginBottom: 4, fontSize: 13, fontWeight: 600 }}>Cột đích</label>
+                  <select
+                    value={copyTargetColId ?? ''}
+                    onChange={(e) => setCopyTargetColId(e.target.value ? Number(e.target.value) : null)}
+                    style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid var(--edub-border)' }}
+                  >
+                    <option value="">-- Chọn cột đích --</option>
+                    {activeList.columns.filter((col) => col.id !== copySourceColId).map((col) => (
+                      <option key={col.id} value={col.id}>{col.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div style={{ marginBottom: 12 }}>
+                  <label style={{ display: 'block', marginBottom: 4, fontSize: 13, fontWeight: 600 }}>Hệ số bonus (cộng thêm vào điểm nguồn)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={copyBonus}
+                    onChange={(e) => setCopyBonus(e.target.value)}
+                    style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid var(--edub-border)' }}
+                    placeholder="0"
+                  />
+                </div>
+                <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={copyCap}
+                      onChange={(e) => setCopyCap(e.target.checked)}
+                    />
+                    <span style={{ fontWeight: 600 }}>Không cho vượt quá điểm tối đa</span>
+                  </label>
+                </div>
+                {copyCap && (
+                  <div style={{ marginBottom: 16 }}>
+                    <label style={{ display: 'block', marginBottom: 4, fontSize: 13, fontWeight: 600 }}>Điểm tối đa</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={copyMaxScore}
+                      onChange={(e) => setCopyMaxScore(e.target.value)}
+                      style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid var(--edub-border)' }}
+                      placeholder="10"
+                    />
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                  <button className="btn btn-neutral" onClick={() => { setShowCopyColumnDialog(false); setCopySourceColId(null); setCopyTargetColId(null); setCopyBonus('0'); setCopyCap(true); setCopyMaxScore('10'); }}>Hủy</button>
+                  <button
+                    className="btn btn-update"
+                    disabled={!copySourceColId || !copyTargetColId || actionLoading}
+                    onClick={async () => {
+                      if (!copySourceColId || !copyTargetColId || !activeList) return;
+                      const sourceCol = activeList.columns.find((c) => c.id === copySourceColId);
+                      const targetCol = activeList.columns.find((c) => c.id === copyTargetColId);
+                      if (!sourceCol || !targetCol) return;
+                      setActionLoading(true);
+                      try {
+                        const bonus = parseFloat(copyBonus) || 0;
+                        const maxScore = parseFloat(copyMaxScore) || 10;
+                        for (const entry of activeList.entries) {
+                          const sourceValue = entry.data[sourceCol.name] ?? '';
+                          if (!sourceValue.trim()) continue;
+                          // Normalize comma decimal separator to dot for parsing
+                          const normalizedSource = sourceValue.replace(',', '.');
+                          const numValue = parseFloat(normalizedSource);
+                          let newValue: string;
+                          if (!isNaN(numValue)) {
+                            let result = numValue + bonus;
+                            if (copyCap) result = Math.min(maxScore, result);
+                            result = Math.max(0, result);
+                            // Preserve decimal precision: use the source's decimal places or bonus's
+                            const sourceDecimals = (normalizedSource.split('.')[1] || '').length;
+                            const bonusDecimals = (copyBonus.replace(',', '.').split('.')[1] || '').length;
+                            const decimals = Math.max(sourceDecimals, bonusDecimals);
+                            newValue = result.toFixed(decimals);
+                          } else {
+                            newValue = sourceValue;
+                          }
+                          await studentListService.updateEntry(entry.id, { data: { ...entry.data, [targetCol.name]: newValue } });
+                        }
+                        setShowCopyColumnDialog(false);
+                        setCopySourceColId(null);
+                        setCopyTargetColId(null);
+                        setCopyBonus('0');
+                        setCopyCap(true);
+                        setCopyMaxScore('10');
+                        await loadLists();
+                      } catch (err) {
+                        setError(extractError(err));
+                      } finally {
+                        setActionLoading(false);
+                      }
+                    }}
+                  >
+                    {actionLoading ? 'Đang copy...' : 'Copy'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

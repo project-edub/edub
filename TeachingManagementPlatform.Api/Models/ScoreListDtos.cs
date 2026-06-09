@@ -47,7 +47,8 @@ public class ApplyTemplateResponse
 
 public class ScoreColumnMetadataResponse
 {
-    public int ColumnId { get; set; }
+    public int Id { get; set; }
+    public int StudentListColumnId { get; set; }
     public int? Coefficient { get; set; }
     public bool IsAverageColumn { get; set; }
     public List<int> SourceColumnIds { get; set; } = new();

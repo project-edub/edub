@@ -28,6 +28,8 @@ export default function TransactionHistoryPage() {
     setLoading(true);
     setError('');
     try {
+      // Auto-sync any pending transactions before displaying
+      await coinService.syncLatestLecturerCoinPurchase().catch(() => {});
       const data = await coinService.getLecturerTransactions();
       setTransactions(data);
     } catch {

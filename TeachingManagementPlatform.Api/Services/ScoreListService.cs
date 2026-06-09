@@ -156,7 +156,8 @@ public class ScoreListService : IScoreListService
     {
         return new ScoreColumnMetadataResponse
         {
-            ColumnId = metadata.StudentListColumnId,
+            Id = metadata.Id,
+            StudentListColumnId = metadata.StudentListColumnId,
             Coefficient = metadata.Coefficient,
             IsAverageColumn = metadata.IsAverageColumn,
             SourceColumnIds = metadata.SourceColumnIds
