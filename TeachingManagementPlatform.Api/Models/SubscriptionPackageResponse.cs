@@ -14,6 +14,7 @@ public class SubscriptionPackageResponse
     public bool IsDefault { get; set; }
     public bool IsActive { get; set; }
     public List<string> UnlockedFeatures { get; set; } = new();
+    public Dictionary<int, int>? UpgradeDiscounts { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

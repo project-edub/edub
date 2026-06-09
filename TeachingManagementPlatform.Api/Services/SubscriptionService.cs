@@ -56,6 +56,7 @@ public class SubscriptionService : ISubscriptionService
             IsDefault = request.IsDefault,
             IsActive = request.IsActive,
             UnlockedFeatures = request.UnlockedFeatures ?? new List<string>(),
+            UpgradeDiscounts = request.UpgradeDiscounts,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -114,6 +115,9 @@ public class SubscriptionService : ISubscriptionService
 
         if (request.UnlockedFeatures != null)
             package.UnlockedFeatures = request.UnlockedFeatures;
+
+        if (request.UpgradeDiscounts != null)
+            package.UpgradeDiscounts = request.UpgradeDiscounts;
 
         package.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
@@ -186,6 +190,7 @@ public class SubscriptionService : ISubscriptionService
             IsDefault = package.IsDefault,
             IsActive = package.IsActive,
             UnlockedFeatures = package.UnlockedFeatures,
+            UpgradeDiscounts = package.UpgradeDiscounts,
             CreatedAt = package.CreatedAt,
             UpdatedAt = package.UpdatedAt
         };

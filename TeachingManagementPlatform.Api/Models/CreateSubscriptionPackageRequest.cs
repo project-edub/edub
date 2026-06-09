@@ -26,4 +26,6 @@ public class CreateSubscriptionPackageRequest
     public bool IsActive { get; set; } = true;
 
     public List<string> UnlockedFeatures { get; set; } = new();
+
+    public Dictionary<int, int>? UpgradeDiscounts { get; set; }
 }

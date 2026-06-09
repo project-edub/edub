@@ -13,4 +13,5 @@ public class UpdateSubscriptionPackageRequest
     public bool? IsDefault { get; set; }
     public bool? IsActive { get; set; }
     public List<string>? UnlockedFeatures { get; set; }
+    public Dictionary<int, int>? UpgradeDiscounts { get; set; }
 }
