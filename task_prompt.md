@@ -1,1 +1,1 @@
-1. Lỗi sau khi copy cột điểm trong Bảng điểm, phần thập phân sau dấu , bị mất
+1. Phần hệ số trong bảng điểm được lưu ở localhost nhưng trên website đã deploy lại không hiện hay sửa được
