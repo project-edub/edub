@@ -1,1 +1,1 @@
-1. Khi người dùng thanh toán thành công và đang chờ redirect về trang web, lỗi xảy ra khi người dùng không chờ redirect sau khi thanh toán mà tự ý thoát trang, thanh toán sẽ chuyển qua trạng thái đang chờ mặc dù đã thanh toán thành công
+Nếu đang ở gói nào thì không cho phép mua gói rẻ hơn gói đấy, chỉ cho phép nâng cấp gói, thêm cấu hình admin để giảm giá nếu nâng cấp từ một gói trả phí

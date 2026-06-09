@@ -27,6 +27,9 @@ export interface UpdateCoinPackageRequest {
 
 export interface CoinWalletResponse {
   coinBalance: number;
+  subscriptionPackageName?: string | null;
+  subscriptionPackagePrice?: number | null;
+  subscriptionExpiresAt?: string | null;
 }
 
 export interface PurchaseCoinPackageResponse {

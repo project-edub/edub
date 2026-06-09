@@ -46,3 +46,7 @@ export async function syncSubscriptionPurchase(orderCode: number): Promise<{ ord
   );
   return response.data;
 }
+
+export async function syncLatestSubscriptionPurchase(): Promise<void> {
+  await api.post('/lecturer/subscriptions/sync-latest');
+}

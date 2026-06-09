@@ -11,6 +11,7 @@ public class User
     public string Status { get; set; } = "Active"; // "Active" | "Inactive"
     public int CoinBalance { get; set; }
     public int? SubscriptionPackageId { get; set; }
+    public DateTime? SubscriptionExpiresAt { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 

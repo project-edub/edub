@@ -489,6 +489,20 @@ catch (Exception ex)
     app.Logger.LogWarning(ex, "Sample data seeding skipped at startup (DB may be unavailable).");
 }
 
+// Auto-apply pending migrations on startup
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<TeachingManagementPlatform.Api.Data.ApplicationDbContext>();
+    try
+    {
+        db.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogWarning(ex, "Auto-migration skipped.");
+    }
+}
+
 app.Run();
 
 // Make Program class accessible for integration tests

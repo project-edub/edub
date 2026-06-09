@@ -116,6 +116,27 @@ public class LecturerController : ControllerBase
         return Ok(wallet);
     }
 
+    [HttpGet("pricing-config")]
+    public IActionResult GetPricingConfig()
+    {
+        var configPath = Path.Combine(AppContext.BaseDirectory, "game-ecoin-config.json");
+        if (!System.IO.File.Exists(configPath))
+        {
+            return Ok(new { upgradeDiscountPercent = 20 });
+        }
+        try
+        {
+            var json = System.IO.File.ReadAllText(configPath);
+            var doc = System.Text.Json.JsonDocument.Parse(json);
+            var discount = doc.RootElement.TryGetProperty("upgradeDiscountPercent", out var val) ? val.GetInt32() : 20;
+            return Ok(new { upgradeDiscountPercent = discount });
+        }
+        catch
+        {
+            return Ok(new { upgradeDiscountPercent = 20 });
+        }
+    }
+
     [HttpGet("coin-packages")]
     public async Task<IActionResult> GetCoinPackages()
     {
@@ -236,6 +257,24 @@ public class LecturerController : ControllerBase
         try
         {
             var result = await _paymentService.SyncSubscriptionPurchaseAsync(userId, orderCode);
+            return Ok(result);
+        }
+        catch (CoinPurchasePaymentException ex)
+        {
+            return BadRequest(new { error = new { code = "PAYMENT_SYNC_ERROR", message = ex.Message } });
+        }
+    }
+
+    [HttpPost("subscriptions/sync-latest")]
+    public async Task<IActionResult> SyncLatestSubscriptionPurchase()
+    {
+        var userId = GetUserId();
+
+        try
+        {
+            var result = await _paymentService.SyncLatestSubscriptionPurchaseAsync(userId);
+            if (result == null)
+                return Ok(new { status = "no_pending" });
             return Ok(result);
         }
         catch (CoinPurchasePaymentException ex)
