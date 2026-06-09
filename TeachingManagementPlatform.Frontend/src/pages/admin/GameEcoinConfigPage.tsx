@@ -13,7 +13,6 @@ interface EcoinConfig {
   crosswordLanguageRates: Record<string, number>;
   crosswordRegenerateMultiplier: number;
   quizCoinCostPerQuestion: number;
-  upgradeDiscountPercent: number;
 }
 
 const DEFAULT_CONFIG: EcoinConfig = {
@@ -28,7 +27,6 @@ const DEFAULT_CONFIG: EcoinConfig = {
   crosswordLanguageRates: { vi: 0, en: 2 },
   crosswordRegenerateMultiplier: 0.5,
   quizCoinCostPerQuestion: 1,
-  upgradeDiscountPercent: 20,
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -214,24 +212,6 @@ export default function GameEcoinConfigPage() {
           />
           <Typography variant="body2" color="text.secondary">
             ECoin / câu hỏi (tổng = số câu × chi phí)
-          </Typography>
-        </Box>
-      </Paper>
-
-      {/* Upgrade discount */}
-      <Paper variant="outlined" sx={{ p: 3 }}>
-        <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>Giảm giá nâng cấp gói đăng ký</Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <TextField
-            type="number"
-            size="small"
-            value={config.upgradeDiscountPercent}
-            onChange={(e) => setConfig(prev => ({ ...prev, upgradeDiscountPercent: Number(e.target.value) }))}
-            sx={{ width: 100 }}
-            slotProps={{ input: { inputProps: { min: 0, max: 100 } } }}
-          />
-          <Typography variant="body2" color="text.secondary">
-            % giảm giá khi người dùng nâng cấp từ gói trả phí sang gói cao hơn
           </Typography>
         </Box>
       </Paper>

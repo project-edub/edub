@@ -137,6 +137,11 @@ public class ApplicationDbContext : DbContext
                     v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
                     v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null) ?? new List<string>())
                 .HasColumnType("nvarchar(max)");
+            entity.Property(sp => sp.UpgradeDiscounts)
+                .HasConversion(
+                    v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                    v => string.IsNullOrEmpty(v) ? new Dictionary<int, int>() : JsonSerializer.Deserialize<Dictionary<int, int>>(v, (JsonSerializerOptions?)null) ?? new Dictionary<int, int>())
+                .HasColumnType("nvarchar(max)");
         });
 
         modelBuilder.Entity<User>(entity =>

@@ -499,7 +499,24 @@ using (var scope = app.Services.CreateScope())
     }
     catch (Exception ex)
     {
-        app.Logger.LogWarning(ex, "Auto-migration skipped.");
+        app.Logger.LogWarning(ex, "Auto-migration skipped, applying manual schema fixes...");
+    }
+
+    // Ensure new columns exist (fallback for when migrations can't be generated due to locked builds)
+    try
+    {
+        db.Database.ExecuteSqlRaw(@"
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'Users') AND name = 'SubscriptionExpiresAt')
+                ALTER TABLE [Users] ADD [SubscriptionExpiresAt] datetime2 NULL;
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'SubscriptionPackages') AND name = 'UpgradeDiscounts')
+                ALTER TABLE [SubscriptionPackages] ADD [UpgradeDiscounts] nvarchar(max) NOT NULL DEFAULT '{}';
+            IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'SubscriptionPackages') AND name = 'UpgradeDiscounts')
+                UPDATE [SubscriptionPackages] SET [UpgradeDiscounts] = '{}' WHERE [UpgradeDiscounts] IS NULL;
+        ");
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogWarning(ex, "Manual schema fix skipped.");
     }
 }
 

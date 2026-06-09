@@ -5,7 +5,6 @@ import type { CoinWalletResponse } from '../../types/coin';
 import * as subscriptionService from '../../services/subscriptionService';
 import * as coinService from '../../services/coinService';
 import { formatCurrency } from '../../utils/formatters';
-import api from '../../services/api';
 
 export default function SubscriptionPage() {
   const [searchParams] = useSearchParams();
@@ -16,7 +15,6 @@ export default function SubscriptionPage() {
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [wallet, setWallet] = useState<CoinWalletResponse | null>(null);
-  const [upgradeDiscount, setUpgradeDiscount] = useState(20); // default 20%
 
   const loadPackages = useCallback(async () => {
     setLoading(true);
@@ -29,14 +27,6 @@ export default function SubscriptionPage() {
       ]);
       setPackages(data);
       setWallet(walletData);
-
-      // Load discount config
-      try {
-        const configRes = await api.get('/lecturer/pricing-config');
-        if (configRes.data?.upgradeDiscountPercent != null) {
-          setUpgradeDiscount(configRes.data.upgradeDiscountPercent);
-        }
-      } catch { /* use default */ }
     } catch {
       setError('Không thể tải danh sách gói đăng ký.');
     } finally {
@@ -106,8 +96,9 @@ export default function SubscriptionPage() {
         cancelUrl: `${origin}/lecturer/subscription`,
       });
       window.location.assign(result.checkoutUrl);
-    } catch (err: any) {
-      setError(err?.message || 'Không thể tạo liên kết thanh toán.');
+    } catch (err: unknown) {
+      const message = err && typeof err === 'object' && 'message' in err ? String((err as { message: unknown }).message) : 'Không thể tạo liên kết thanh toán.';
+      setError(message);
     } finally {
       setActionLoading(null);
     }
@@ -139,8 +130,12 @@ export default function SubscriptionPage() {
             const isCurrentPlan = wallet?.subscriptionPackageName === pkg.name;
             const isDowngrade = pkg.price > 0 && pkg.price <= currentPrice && !isCurrentPlan;
             const isUpgradeFromPaid = pkg.price > currentPrice && currentPrice > 0;
-            const discountedPrice = isUpgradeFromPaid
-              ? Math.round(pkg.price * (1 - upgradeDiscount / 100))
+
+            // Get per-package discount: look up the current package's ID in this package's upgradeDiscounts
+            const currentPkgId = packages.find((p) => p.name === wallet?.subscriptionPackageName)?.id ?? 0;
+            const discountPercent = pkg.upgradeDiscounts?.[currentPkgId] ?? 0;
+            const discountedPrice = discountPercent > 0
+              ? Math.round(pkg.price * (1 - discountPercent / 100))
               : pkg.price;
 
             return (
@@ -152,11 +147,11 @@ export default function SubscriptionPage() {
               </div>
 
               <div style={priceRowStyle}>
-                {isUpgradeFromPaid && discountedPrice !== pkg.price ? (
+                {isUpgradeFromPaid && discountPercent > 0 ? (
                   <>
                     <strong style={priceValueStyle}>{formatCurrency(discountedPrice)}</strong>
                     <span style={{ textDecoration: 'line-through', color: '#94a3b8', marginLeft: 8, fontSize: 14 }}>{formatCurrency(pkg.price)}</span>
-                    <span style={{ marginLeft: 8, color: '#16a34a', fontSize: 13, fontWeight: 600 }}>-{upgradeDiscount}%</span>
+                    <span style={{ marginLeft: 8, color: '#16a34a', fontSize: 13, fontWeight: 600 }}>-{discountPercent}%</span>
                   </>
                 ) : (
                   <strong style={priceValueStyle}>

@@ -11,6 +11,8 @@ export interface SubscriptionPackage {
   isDefault: boolean;
   isActive: boolean;
   unlockedFeatures: string[];
+  /** Key: source package ID (0 = free/no package), Value: discount percent */
+  upgradeDiscounts?: Record<number, number>;
   createdAt: string;
   updatedAt: string;
 }
@@ -27,6 +29,7 @@ export interface CreateSubscriptionPackageRequest {
   isDefault: boolean;
   isActive: boolean;
   unlockedFeatures: string[];
+  upgradeDiscounts?: Record<number, number>;
 }
 
 export interface UpdateSubscriptionPackageRequest {
@@ -41,4 +44,5 @@ export interface UpdateSubscriptionPackageRequest {
   isDefault?: boolean;
   isActive?: boolean;
   unlockedFeatures?: string[];
+  upgradeDiscounts?: Record<number, number>;
 }

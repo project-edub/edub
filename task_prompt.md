@@ -1,1 +1,2 @@
-Nếu đang ở gói nào thì không cho phép mua gói rẻ hơn gói đấy, chỉ cho phép nâng cấp gói, thêm cấu hình admin để giảm giá nếu nâng cấp từ một gói trả phí
+1. Gói Mặc định thì không cần giảm giá khi nâng cấp
+2. Bỏ tính năng Giảm giá nâng cấp gói đăng ký trong Cấu hình ECoin trò chơi
