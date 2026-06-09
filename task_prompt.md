@@ -1,2 +1,1 @@
-1. Lỗi tài khoản của tôi khi mở bằng localhost thì là gói Cơ Bản nhưng trên deploy lại là gói miễn phí
-2. Giảm giá khi nâng cấp sau khi thêm giá trị thì chưa lưu được
+1. Để trang Trang chủ dùng chung menu dashboard với trang Tìm giáo viên phù hợp với đầy đủ các option Trang chủ, Tìm giáo viên, Bảng điều khiển, Sáng/Tối, Avatar Icon, tên mail (điều chỉnh để nằm trong 1 dòng), Đăng xuất 

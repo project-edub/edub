@@ -23,6 +23,7 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import type { CrosswordListItemDto, GameStatus } from '../../types/crossword';
 import { GameStatus as GameStatusEnum } from '../../types/crossword';
 import * as crosswordService from '../../services/crosswordService';
@@ -54,6 +55,7 @@ export default function CrosswordListPage() {
   const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<CrosswordListItemDto | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [copiedId, setCopiedId] = useState<number | null>(null);
 
   const loadList = useCallback(async () => {
     setLoading(true);
@@ -213,6 +215,20 @@ export default function CrosswordListPage() {
                             onClick={() => window.open(`/play/${item.slug}`, '_blank')}
                           >
                             Chơi
+                          </Button>
+                        )}
+                        {item.status === 'published' && (
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            startIcon={<ContentCopyIcon />}
+                            onClick={async () => {
+                              await navigator.clipboard.writeText(`${window.location.origin}/play/${item.slug}`);
+                              setCopiedId(item.id);
+                              setTimeout(() => setCopiedId(null), 2000);
+                            }}
+                          >
+                            {copiedId === item.id ? 'Đã copy!' : 'Copy link'}
                           </Button>
                         )}
                         <Button

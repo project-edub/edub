@@ -11,6 +11,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CreateIcon from '@mui/icons-material/Create';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import * as quizService from '../../services/quizService';
 import type { QuizListItem } from '../../services/quizService';
 
@@ -27,6 +28,7 @@ export default function QuizListPage() {
   const [manualDialogOpen, setManualDialogOpen] = useState(false);
   const [manualTitle, setManualTitle] = useState('');
   const [creating, setCreating] = useState(false);
+  const [copiedId, setCopiedId] = useState<number | null>(null);
 
   const loadList = useCallback(async () => {
     setLoading(true);
@@ -123,6 +125,20 @@ export default function QuizListPage() {
                       {item.status === 'published' && (
                         <Button size="small" variant="outlined" color="success" startIcon={<PlayArrowIcon />} onClick={() => window.open(`/quiz/${item.slug}`, '_blank')}>
                           Chơi
+                        </Button>
+                      )}
+                      {item.status === 'published' && (
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          startIcon={<ContentCopyIcon />}
+                          onClick={async () => {
+                            await navigator.clipboard.writeText(`${window.location.origin}/quiz/${item.slug}`);
+                            setCopiedId(item.id);
+                            setTimeout(() => setCopiedId(null), 2000);
+                          }}
+                        >
+                          {copiedId === item.id ? 'Đã copy!' : 'Copy link'}
                         </Button>
                       )}
                       <Button size="small" variant="outlined" startIcon={<EditIcon />} onClick={() => navigate(`/lecturer/quiz/${item.id}/edit`)}>
