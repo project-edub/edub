@@ -55,3 +55,8 @@ export async function syncLatestLecturerCoinPurchase(): Promise<CoinPurchaseStat
   const response = await api.post<CoinPurchaseStatusResponse>('/lecturer/coin-purchases/sync-latest');
   return response.data;
 }
+
+export async function getLecturerTransactions(): Promise<any[]> {
+  const response = await api.get<any[]>('/lecturer/coin-purchases');
+  return response.data;
+}

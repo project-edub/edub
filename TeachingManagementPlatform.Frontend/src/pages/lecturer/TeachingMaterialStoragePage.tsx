@@ -181,14 +181,24 @@ export default function TeachingMaterialStoragePage() {
     if (item.itemType === ItemType.Folder) return;
     const url = storageService.resolveStorageFileUrl(item.fileUrl || null);
     if (!url) return;
-    window.open(url, '_blank', 'noopener,noreferrer');
+
+    const ext = item.name.split('.').pop()?.toLowerCase() ?? '';
+    if (['docx', 'xlsx', 'pptx', 'doc', 'xls', 'ppt'].includes(ext)) {
+      // Use Google Docs Viewer for Office documents
+      const googleViewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
+      window.open(googleViewerUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      // PDF and other files open directly (browser renders PDFs natively)
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
   }
 
   function formatFileSize(bytes?: number | null): string {
     if (bytes == null) return '—';
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
   }
 
   function formatQuotaPercent(value: number): string {
@@ -402,7 +412,7 @@ export default function TeachingMaterialStoragePage() {
                       <button
                         type="button"
                         onClick={() => openFolder(item)}
-                        style={{ background: 'none', border: 'none', color: '#1976d2', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                        style={{ background: 'none', border: 'none', color: '#1976d2', cursor: 'pointer', padding: 0}}
                       >
                         📁 {item.name}
                       </button>

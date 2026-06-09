@@ -1,4 +1,5 @@
 import api from './api';
+import { getApiBaseUrl } from './apiConfig';
 import type {
   LessonDetail,
   AddDocumentRequest,
@@ -49,4 +50,63 @@ export async function addAttachmentFromStorage(lessonId: number, storageItemId: 
 
 export async function deleteAttachment(attachmentId: number): Promise<void> {
   await api.delete(`/lesson-attachments/${attachmentId}`);
+}
+
+export function getAttachmentDownloadUrl(attachmentId: number): string {
+  return `${getApiBaseUrl()}/lesson-attachments/${attachmentId}/download`;
+}
+
+/**
+ * Returns a publicly accessible view URL for the attachment (uses JWT token as query param).
+ * This URL can be passed to Google Docs Viewer or Office Online for inline rendering.
+ */
+export function getAttachmentViewUrl(attachmentId: number): string {
+  const token = localStorage.getItem('token') ?? '';
+  return `${getApiBaseUrl()}/lesson-attachments/${attachmentId}/view?token=${encodeURIComponent(token)}`;
+}
+
+/**
+ * Opens an attachment file in the browser using the best available viewer:
+ * - PDF: opens directly in browser (native PDF viewer)
+ * - DOCX/XLSX/PPTX: uses Google Docs Viewer for inline rendering
+ * - Other: downloads as blob and opens in new tab
+ */
+export function openAttachmentInViewer(attachmentId: number, fileName: string, fileUrl?: string | null): void {
+  const ext = fileName.split('.').pop()?.toLowerCase() ?? '';
+
+  // If we have a public file URL, use it directly (same as storage page)
+  if (fileUrl) {
+    if (['docx', 'xlsx', 'pptx', 'doc', 'xls', 'ppt'].includes(ext)) {
+      const googleViewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(fileUrl)}&embedded=true`;
+      window.open(googleViewerUrl, '_blank');
+    } else {
+      window.open(fileUrl, '_blank');
+    }
+    return;
+  }
+
+  // Fallback: use the authenticated view endpoint
+  const viewUrl = getAttachmentViewUrl(attachmentId);
+
+  if (ext === 'pdf') {
+    window.open(viewUrl, '_blank');
+  } else if (['docx', 'xlsx', 'pptx', 'doc', 'xls', 'ppt'].includes(ext)) {
+    const googleViewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(viewUrl)}&embedded=true`;
+    window.open(googleViewerUrl, '_blank');
+  } else {
+    // Fallback: download and open blob
+    const downloadUrl = getAttachmentDownloadUrl(attachmentId);
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetch(downloadUrl, { headers: { Authorization: `Bearer ${token}` } })
+        .then((res) => res.blob())
+        .then((blob) => {
+          const blobUrl = URL.createObjectURL(blob);
+          window.open(blobUrl, '_blank');
+        })
+        .catch(() => {});
+    } else {
+      window.open(downloadUrl, '_blank');
+    }
+  }
 }

@@ -25,7 +25,21 @@ public class CoinService : ICoinService
 
     public async Task<CoinWalletResponse> GetWalletAsync(int userId)
     {
-        return new CoinWalletResponse { CoinBalance = await GetBalanceAsync(userId) };
+        var user = await _context.Users
+            .Include(u => u.SubscriptionPackage)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null)
+            throw new UserNotFoundException("Không tìm thấy tài khoản");
+
+        return new CoinWalletResponse
+        {
+            CoinBalance = user.CoinBalance,
+            SubscriptionPackageName = user.SubscriptionPackage?.Name,
+            SubscriptionPackagePrice = user.SubscriptionPackage?.Price,
+            SubscriptionExpiresAt = user.SubscriptionExpiresAt,
+        };
     }
 
     public async Task<int> AddCoinsAsync(int userId, int amount)
@@ -53,6 +67,31 @@ public class CoinService : ICoinService
         user.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
         return user.CoinBalance;
+    }
+
+    public async Task<List<SubscriptionPackageResponse>> GetActiveSubscriptionPackagesAsync()
+    {
+        return await _context.SubscriptionPackages
+            .Where(sp => sp.IsActive)
+            .Select(sp => new SubscriptionPackageResponse
+            {
+                Id = sp.Id,
+                Name = sp.Name,
+                Price = sp.Price,
+                StorageLimitBytes = sp.StorageLimitBytes,
+                MaxFilesPerQuizGeneration = sp.MaxFilesPerQuizGeneration,
+                MaxQuestionsPerQuiz = sp.MaxQuestionsPerQuiz,
+                MaxCrosswordFilesPerGeneration = sp.MaxCrosswordFilesPerGeneration,
+                MaxCrosswordWordsPerGeneration = sp.MaxCrosswordWordsPerGeneration,
+                MaxCrosswordGenerationsPerDay = sp.MaxCrosswordGenerationsPerDay,
+                IsDefault = sp.IsDefault,
+                IsActive = sp.IsActive,
+                UnlockedFeatures = sp.UnlockedFeatures,
+                UpgradeDiscounts = sp.UpgradeDiscounts,
+                CreatedAt = sp.CreatedAt,
+                UpdatedAt = sp.UpdatedAt
+            })
+            .ToListAsync();
     }
 
     private async Task<User> GetUserAsync(int userId)

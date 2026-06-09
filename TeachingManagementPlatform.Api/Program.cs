@@ -132,6 +132,12 @@ builder.Services.AddScoped<IClassService, ClassService>();
 // Register student list service
 builder.Services.AddScoped<IStudentListService, StudentListService>();
 
+// Register score list service
+builder.Services.AddScoped<IScoreListService, ScoreListService>();
+
+// Register score template service
+builder.Services.AddScoped<IScoreTemplateService, ScoreTemplateService>();
+
 // Register Excel service
 builder.Services.AddScoped<IExcelService, ExcelService>();
 
@@ -173,8 +179,12 @@ builder.Services.AddHttpClient<IAIService, AIService>(client =>
 
 // Register quiz mapping/validation service
 builder.Services.AddScoped<IQuizMappingService, QuizMappingService>();
-// Register Google Forms service
-builder.Services.AddScoped<IGoogleFormsService, GoogleFormsService>();
+
+// Register crossword service
+builder.Services.AddScoped<ICrosswordService, CrosswordService>();
+
+// Register crossword background cleanup service (clears SourceDocumentContent after 24h)
+builder.Services.AddHostedService<CrosswordCleanupService>();
 
 var app = builder.Build();
 var r2PublicBaseUrl = builder.Configuration["R2:PublicBaseUrl"];
@@ -477,6 +487,37 @@ try
 catch (Exception ex)
 {
     app.Logger.LogWarning(ex, "Sample data seeding skipped at startup (DB may be unavailable).");
+}
+
+// Auto-apply pending migrations on startup
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<TeachingManagementPlatform.Api.Data.ApplicationDbContext>();
+    try
+    {
+        db.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogWarning(ex, "Auto-migration skipped, applying manual schema fixes...");
+    }
+
+    // Ensure new columns exist (fallback for when migrations can't be generated due to locked builds)
+    try
+    {
+        db.Database.ExecuteSqlRaw(@"
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'Users') AND name = 'SubscriptionExpiresAt')
+                ALTER TABLE [Users] ADD [SubscriptionExpiresAt] datetime2 NULL;
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'SubscriptionPackages') AND name = 'UpgradeDiscounts')
+                ALTER TABLE [SubscriptionPackages] ADD [UpgradeDiscounts] nvarchar(max) NOT NULL DEFAULT '{}';
+            IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'SubscriptionPackages') AND name = 'UpgradeDiscounts')
+                UPDATE [SubscriptionPackages] SET [UpgradeDiscounts] = '{}' WHERE [UpgradeDiscounts] IS NULL;
+        ");
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogWarning(ex, "Manual schema fix skipped.");
+    }
 }
 
 app.Run();

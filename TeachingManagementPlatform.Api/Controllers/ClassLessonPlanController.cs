@@ -66,6 +66,21 @@ public class ClassLessonPlanController : ControllerBase
         }
     }
 
+    [HttpDelete("{classId}/lesson-plan")]
+    public async Task<IActionResult> UnassignLessonPlan(int classId)
+    {
+        var lecturerId = GetUserId();
+        try
+        {
+            await _service.UnassignLessonPlanAsync(classId, lecturerId);
+            return NoContent();
+        }
+        catch (ClassLessonPlanNotFoundException ex)
+        {
+            return NotFound(new { error = new { code = "NOT_FOUND", message = ex.Message } });
+        }
+    }
+
     private int GetUserId()
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier)

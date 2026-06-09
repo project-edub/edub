@@ -8,6 +8,7 @@ namespace TeachingManagementPlatform.Api.Services;
 public class ClassLessonPlanService : IClassLessonPlanService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IFileStorage _fileStorage;
     private static readonly HashSet<string> ValidLessonStatuses =
         new(StringComparer.OrdinalIgnoreCase)
         {
@@ -16,9 +17,10 @@ public class ClassLessonPlanService : IClassLessonPlanService
             ClassLessonSchedule.PendingStatus
         };
 
-    public ClassLessonPlanService(ApplicationDbContext context)
+    public ClassLessonPlanService(ApplicationDbContext context, IFileStorage fileStorage)
     {
         _context = context;
+        _fileStorage = fileStorage;
     }
 
     public async Task<ClassLessonPlanResponse> AssignLessonPlanAsync(int classId, int lecturerId, AssignLessonPlanRequest request)
@@ -83,6 +85,26 @@ public class ClassLessonPlanService : IClassLessonPlanService
             ?? throw new ClassLessonPlanNotFoundException("Không tìm thấy giáo án");
 
         return MapToResponse(plan, classId);
+    }
+
+    public async Task UnassignLessonPlanAsync(int classId, int lecturerId)
+    {
+        var cls = await _context.Classes
+            .Include(c => c.LessonSchedules)
+            .FirstOrDefaultAsync(c => c.Id == classId && c.LecturerId == lecturerId)
+            ?? throw new ClassLessonPlanNotFoundException("Không tìm thấy lớp học");
+
+        if (cls.AssignedLessonPlanId == null)
+            throw new ClassLessonPlanNotFoundException("Lớp học chưa được gán giáo án");
+
+        // Remove all lesson schedules for this class
+        if (cls.LessonSchedules.Any())
+        {
+            _context.ClassLessonSchedules.RemoveRange(cls.LessonSchedules);
+        }
+
+        cls.AssignedLessonPlanId = null;
+        await _context.SaveChangesAsync();
     }
 
     public async Task<ClassLessonResponse> UpdateLessonScheduleAsync(int classId, int lessonId, int lecturerId, UpdateLessonScheduleRequest request)
@@ -168,7 +190,7 @@ public class ClassLessonPlanService : IClassLessonPlanService
         };
     }
 
-    private static ClassLessonResponse MapToLessonResponse(Lesson lesson, DateTime? scheduledDate, string lessonStatus)
+    private ClassLessonResponse MapToLessonResponse(Lesson lesson, DateTime? scheduledDate, string lessonStatus)
     {
         return new ClassLessonResponse
         {
@@ -191,6 +213,7 @@ public class ClassLessonPlanService : IClassLessonPlanService
                 Id = a.Id,
                 FileName = a.FileName,
                 FileReference = a.FileReference,
+                FileUrl = string.IsNullOrWhiteSpace(a.FileReference) ? null : _fileStorage.GetPublicUrl(a.FileReference),
                 FileSize = a.FileSize
             }).ToList(),
             MiniGames = lesson.MiniGames.Select(mg => new MiniGameResponse

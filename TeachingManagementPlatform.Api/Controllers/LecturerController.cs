@@ -116,6 +116,27 @@ public class LecturerController : ControllerBase
         return Ok(wallet);
     }
 
+    [HttpGet("pricing-config")]
+    public IActionResult GetPricingConfig()
+    {
+        var configPath = Path.Combine(AppContext.BaseDirectory, "game-ecoin-config.json");
+        if (!System.IO.File.Exists(configPath))
+        {
+            return Ok(new { upgradeDiscountPercent = 20 });
+        }
+        try
+        {
+            var json = System.IO.File.ReadAllText(configPath);
+            var doc = System.Text.Json.JsonDocument.Parse(json);
+            var discount = doc.RootElement.TryGetProperty("upgradeDiscountPercent", out var val) ? val.GetInt32() : 20;
+            return Ok(new { upgradeDiscountPercent = discount });
+        }
+        catch
+        {
+            return Ok(new { upgradeDiscountPercent = 20 });
+        }
+    }
+
     [HttpGet("coin-packages")]
     public async Task<IActionResult> GetCoinPackages()
     {
@@ -174,6 +195,86 @@ public class LecturerController : ControllerBase
             if (result == null)
                 return NotFound(new { error = new { code = "COIN_PURCHASE_NOT_FOUND", message = "Không tìm thấy giao dịch cần đồng bộ." } });
 
+            return Ok(result);
+        }
+        catch (CoinPurchasePaymentException ex)
+        {
+            return BadRequest(new { error = new { code = "PAYMENT_SYNC_ERROR", message = ex.Message } });
+        }
+    }
+
+    [HttpGet("coin-purchases")]
+    public async Task<IActionResult> GetCoinPurchases()
+    {
+        var userId = GetUserId();
+
+        try
+        {
+            var result = await _paymentService.GetPurchaseHistoryAsync(userId);
+            return Ok(result);
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { error = new { code = "INTERNAL_ERROR", message = "Không thể tải lịch sử giao dịch." } });
+        }
+    }
+
+    [HttpGet("subscriptions")]
+    public async Task<IActionResult> GetActiveSubscriptions()
+    {
+        try
+        {
+            var packages = await _coinService.GetActiveSubscriptionPackagesAsync();
+            return Ok(packages);
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { error = new { code = "INTERNAL_ERROR", message = "Không thể tải danh sách gói đăng ký." } });
+        }
+    }
+
+    [HttpPost("subscriptions/{packageId:int}/purchase")]
+    public async Task<IActionResult> PurchaseSubscription(int packageId, [FromBody] CreateCoinPurchaseRequest request)
+    {
+        var userId = GetUserId();
+
+        try
+        {
+            var result = await _paymentService.CreateSubscriptionPurchaseCheckoutAsync(userId, packageId, request);
+            return Ok(result);
+        }
+        catch (CoinPurchasePaymentException ex)
+        {
+            return BadRequest(new { error = new { code = "PAYMENT_ERROR", message = ex.Message } });
+        }
+    }
+
+    [HttpPost("subscriptions/sync/{orderCode:long}")]
+    public async Task<IActionResult> SyncSubscriptionPurchase(long orderCode)
+    {
+        var userId = GetUserId();
+
+        try
+        {
+            var result = await _paymentService.SyncSubscriptionPurchaseAsync(userId, orderCode);
+            return Ok(result);
+        }
+        catch (CoinPurchasePaymentException ex)
+        {
+            return BadRequest(new { error = new { code = "PAYMENT_SYNC_ERROR", message = ex.Message } });
+        }
+    }
+
+    [HttpPost("subscriptions/sync-latest")]
+    public async Task<IActionResult> SyncLatestSubscriptionPurchase()
+    {
+        var userId = GetUserId();
+
+        try
+        {
+            var result = await _paymentService.SyncLatestSubscriptionPurchaseAsync(userId);
+            if (result == null)
+                return Ok(new { status = "no_pending" });
             return Ok(result);
         }
         catch (CoinPurchasePaymentException ex)

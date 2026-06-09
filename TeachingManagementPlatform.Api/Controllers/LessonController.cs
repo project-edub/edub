@@ -140,6 +140,60 @@ public class LessonController : ControllerBase
         }
     }
 
+    [HttpGet("api/lesson-attachments/{id}/download")]
+    public async Task<IActionResult> DownloadAttachment(int id)
+    {
+        var userId = GetUserId();
+        try
+        {
+            var (stream, fileName, contentType) = await _lessonService.GetAttachmentFileAsync(id, userId);
+            return File(stream, contentType, fileName);
+        }
+        catch (LessonNotFoundException ex)
+        {
+            return NotFound(new { error = new { code = "ATTACHMENT_NOT_FOUND", message = ex.Message } });
+        }
+    }
+
+    /// <summary>
+    /// Public download endpoint that accepts JWT token as a query parameter.
+    /// Used by Google Docs Viewer / Office Online to access the file.
+    /// </summary>
+    [HttpGet("api/lesson-attachments/{id}/view")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ViewAttachment(int id, [FromQuery] string token)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+            return Unauthorized();
+
+        // Validate the JWT token manually
+        int userId;
+        try
+        {
+            var handler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadJwtToken(token);
+            var userIdClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier || c.Type == "sub");
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out userId))
+                return Unauthorized();
+        }
+        catch
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            var (stream, fileName, contentType) = await _lessonService.GetAttachmentFileAsync(id, userId);
+            // Set Content-Disposition to inline so browsers/viewers render the file
+            Response.Headers.Append("Content-Disposition", $"inline; filename=\"{fileName}\"");
+            return File(stream, contentType);
+        }
+        catch (LessonNotFoundException)
+        {
+            return NotFound();
+        }
+    }
+
     private int GetUserId()
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier)

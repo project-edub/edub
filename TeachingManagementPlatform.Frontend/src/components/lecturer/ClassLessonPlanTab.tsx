@@ -5,6 +5,7 @@ import type { ClassLessonPlanResponse, ClassLessonResponse } from '../../types/c
 import type { ApiError } from '../../types/common';
 import * as lessonPlanService from '../../services/lessonPlanService';
 import * as classLessonPlanService from '../../services/classLessonPlanService';
+import { openAttachmentInViewer } from '../../services/lessonService';
 import QuizPlayModal from './QuizPlayModal';
 
 interface ClassLessonPlanTabProps {
@@ -32,6 +33,8 @@ export default function ClassLessonPlanTab({ classId }: ClassLessonPlanTabProps)
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedLessonId, setExpandedLessonId] = useState<number | null>(null);
   const [playGameId, setPlayGameId] = useState<number | null>(null);
+  const [confirmUnassign, setConfirmUnassign] = useState(false);
+  const [unassigning, setUnassigning] = useState(false);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -68,6 +71,21 @@ export default function ClassLessonPlanTab({ classId }: ClassLessonPlanTabProps)
       setError(extractError(err));
     } finally {
       setAssigning(false);
+    }
+  }
+
+  async function handleUnassign() {
+    setUnassigning(true);
+    setError('');
+    try {
+      await classLessonPlanService.unassignLessonPlan(classId);
+      setAssignedPlan(null);
+      setSelectedPlanId('');
+      setConfirmUnassign(false);
+    } catch (err) {
+      setError(extractError(err));
+    } finally {
+      setUnassigning(false);
     }
   }
 
@@ -155,7 +173,44 @@ export default function ClassLessonPlanTab({ classId }: ClassLessonPlanTabProps)
         >
           {assigning ? 'Đang gán...' : 'Gán giáo án'}
         </button>
+        {assignedPlan && (
+          <button
+            type="button"
+            onClick={() => setConfirmUnassign(true)}
+            disabled={unassigning}
+            className="btn btn-delete"
+          >
+            Bỏ gán giáo án
+          </button>
+        )}
       </div>
+
+      {/* Confirm unassign dialog */}
+      {confirmUnassign && (
+        <div
+          role="dialog"
+          aria-label="Xác nhận bỏ gán giáo án"
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+          }}
+        >
+          <div style={{ background: '#fff', borderRadius: 8, padding: 24, maxWidth: 420 }}>
+            <h3 style={{ marginTop: 0, color: '#d32f2f' }}>Bỏ gán giáo án?</h3>
+            <p style={{ color: 'var(--edub-text-secondary)', marginBottom: 16 }}>
+              ⚠️ Tất cả lưu trữ tiến độ giảng dạy (ngày dạy, trạng thái bài học) sẽ bị mất và không thể hoàn tác.
+            </p>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button type="button" onClick={() => setConfirmUnassign(false)} disabled={unassigning} className="btn btn-neutral">
+                Hủy
+              </button>
+              <button type="button" onClick={handleUnassign} disabled={unassigning} className="btn btn-delete">
+                {unassigning ? 'Đang xóa...' : 'Xác nhận bỏ gán'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Assigned plan content */}
       {assignedPlan ? (
@@ -220,10 +275,20 @@ interface LessonRowProps {
 function LessonRow({ lesson, expanded, onToggle, onDateChange, onStatusChange, onPlayGame }: LessonRowProps) {
   const dateValue = lesson.scheduledDate ? lesson.scheduledDate.split('T')[0] : '';
 
+  // Req 4: Status-based background color
+  const statusBgColor =
+    lesson.lessonStatus === 'finish' ? '#e8f5e9' :    // green for completed
+    lesson.lessonStatus === 'pending' ? '#fff8e1' :   // yellow for in-progress
+    'transparent';                                     // default for unfinish
+
   return (
     <div style={{ borderBottom: '1px solid var(--edub-border)' }}>
       <div
-        style={{ display: 'flex', alignItems: 'center', padding: '10px 12px', gap: 12, cursor: 'pointer' }}
+        style={{
+          display: 'flex', alignItems: 'center', padding: '10px 12px', gap: 12, cursor: 'pointer',
+          backgroundColor: statusBgColor,
+          transition: 'background-color 200ms ease',
+        }}
         onClick={onToggle}
         role="button"
         tabIndex={0}
@@ -303,7 +368,18 @@ function LessonRow({ lesson, expanded, onToggle, onDateChange, onStatusChange, o
                 <tbody>
                   {lesson.attachments.map((att) => (
                     <tr key={att.id}>
-                      <td style={tdStyle}>{att.fileName}</td>
+                      <td style={tdStyle}>
+                        <a
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            openAttachmentInViewer(att.id, att.fileName, att.fileUrl);
+                          }}
+                          style={{ color: '#1565c0', textDecoration: 'underline', cursor: 'pointer' }}
+                        >
+                          {att.fileName}
+                        </a>
+                      </td>
                       <td style={tdStyle}>{formatFileSize(att.fileSize)}</td>
                     </tr>
                   ))}

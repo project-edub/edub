@@ -15,7 +15,17 @@ public class CreateSubscriptionPackageRequest
 
     public int MaxQuestionsPerQuiz { get; set; }
 
+    public int MaxCrosswordFilesPerGeneration { get; set; }
+
+    public int MaxCrosswordWordsPerGeneration { get; set; }
+
+    public int MaxCrosswordGenerationsPerDay { get; set; }
+
     public bool IsDefault { get; set; }
 
+    public bool IsActive { get; set; } = true;
+
     public List<string> UnlockedFeatures { get; set; } = new();
+
+    public Dictionary<int, int>? UpgradeDiscounts { get; set; }
 }

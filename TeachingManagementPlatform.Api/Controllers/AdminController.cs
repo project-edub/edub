@@ -258,4 +258,60 @@ public class AdminController : ControllerBase
             return NotFound(new { error = new { code = "COIN_PACKAGE_NOT_FOUND", message = ex.Message } });
         }
     }
+
+    // ── Game ECoin Config Endpoints ──
+
+    private static readonly string EcoinConfigPath = Path.Combine(AppContext.BaseDirectory, "game-ecoin-config.json");
+
+    [HttpGet("game-ecoin-config")]
+    public IActionResult GetGameEcoinConfig()
+    {
+        if (!System.IO.File.Exists(EcoinConfigPath))
+        {
+            // Return default config
+            return Ok(new
+            {
+                crosswordBaseRates = new[]
+                {
+                    new { minWords = 5, maxWords = 10, baseCost = 5 },
+                    new { minWords = 11, maxWords = 15, baseCost = 8 },
+                    new { minWords = 16, maxWords = 20, baseCost = 10 },
+                    new { minWords = 21, maxWords = 25, baseCost = 12 },
+                    new { minWords = 26, maxWords = 30, baseCost = 15 },
+                },
+                crosswordClueStyleRates = new Dictionary<string, int>
+                {
+                    ["definition"] = 0,
+                    ["fill-in-blank"] = 3,
+                    ["multiple-choice"] = 5,
+                },
+                crosswordLanguageRates = new Dictionary<string, int>
+                {
+                    ["vi"] = 0,
+                    ["en"] = 2,
+                },
+                crosswordRegenerateMultiplier = 0.5,
+                quizCoinCostPerQuestion = 1,
+                upgradeDiscountPercent = 20,
+            });
+        }
+
+        var json = System.IO.File.ReadAllText(EcoinConfigPath);
+        return Content(json, "application/json");
+    }
+
+    [HttpPut("game-ecoin-config")]
+    public IActionResult SaveGameEcoinConfig([FromBody] System.Text.Json.JsonElement config)
+    {
+        try
+        {
+            var json = config.GetRawText();
+            System.IO.File.WriteAllText(EcoinConfigPath, json);
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = new { code = "SAVE_FAILED", message = ex.Message } });
+        }
+    }
 }

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import type { LessonPlan, CreateLessonPlanRequest, CreateLessonRequest } from '../../types/lessonPlan';
+import type { LessonPlan, CreateLessonPlanRequest } from '../../types/lessonPlan';
 
 const GRADE_OPTIONS = [
   'Lớp 1', 'Lớp 2', 'Lớp 3', 'Lớp 4', 'Lớp 5', 'Lớp 6',
@@ -15,35 +15,12 @@ interface LessonPlanModalProps {
   onClose: () => void;
 }
 
-function getInitialLessons(mode: string, plan?: LessonPlan | null): CreateLessonRequest[] {
-  if (mode === 'edit' && plan) {
-    return plan.lessons.map((l) => ({ id: l.id, name: l.name, orderIndex: l.orderIndex }));
-  }
-  return [];
-}
-
 export default function LessonPlanModal({ mode, plan, loading, onSubmit, onClose }: LessonPlanModalProps) {
   const [subject, setSubject] = useState(mode === 'edit' && plan ? plan.subject : '');
   const [grade, setGrade] = useState(mode === 'edit' && plan ? plan.grade : GRADE_OPTIONS[0]);
   const [schoolYearStart, setSchoolYearStart] = useState(mode === 'edit' && plan ? plan.schoolYearStart : '');
   const [schoolYearEnd, setSchoolYearEnd] = useState(mode === 'edit' && plan ? plan.schoolYearEnd : '');
-  const [lessons, setLessons] = useState<CreateLessonRequest[]>(() => getInitialLessons(mode, plan));
   const [formError, setFormError] = useState('');
-
-  function handleAddLesson() {
-    setLessons((prev) => [...prev, { name: '', orderIndex: prev.length + 1 }]);
-  }
-
-  function handleRemoveLesson(index: number) {
-    setLessons((prev) => {
-      const updated = prev.filter((_, i) => i !== index);
-      return updated.map((l, i) => ({ ...l, orderIndex: i + 1 }));
-    });
-  }
-
-  function handleLessonNameChange(index: number, name: string) {
-    setLessons((prev) => prev.map((l, i) => (i === index ? { ...l, name } : l)));
-  }
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -59,7 +36,7 @@ export default function LessonPlanModal({ mode, plan, loading, onSubmit, onClose
       grade,
       schoolYearStart: schoolYearStart.trim(),
       schoolYearEnd: schoolYearEnd.trim(),
-      lessons,
+      lessons: [],
     });
   }
 
@@ -126,39 +103,6 @@ export default function LessonPlanModal({ mode, plan, loading, onSubmit, onClose
                 style={inputStyle}
               />
             </div>
-          </div>
-
-          <div style={{ marginBottom: 12 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <span style={{ fontWeight: 'bold' }}>Bài học</span>
-              <button type="button" onClick={handleAddLesson} className="btn btn-add" style={{ padding: '4px 12px' }}>
-                Thêm bài học
-              </button>
-            </div>
-            {lessons.length === 0 && (
-              <p style={{ color: '#888', fontSize: 14 }}>Chưa có bài học nào</p>
-            )}
-            {lessons.map((lesson, index) => (
-              <div key={index} style={{ display: 'flex', gap: 8, marginBottom: 6, alignItems: 'center' }}>
-                <span style={{ minWidth: 24 }}>{index + 1}.</span>
-                <input
-                  type="text"
-                  placeholder="Tên bài học"
-                  aria-label={`Bài học ${index + 1}`}
-                  value={lesson.name}
-                  onChange={(e) => handleLessonNameChange(index, e.target.value)}
-                  style={{ ...inputStyle, flex: 1 }}
-                />
-                <button
-                  type="button"
-                  onClick={() => handleRemoveLesson(index)}
-                  className="btn btn-delete"
-                  style={{ padding: '4px 8px' }}
-                >
-                  Xóa bài học
-                </button>
-              </div>
-            ))}
           </div>
 
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>

@@ -204,30 +204,40 @@ public class StudentListController : ControllerBase
             var lecturerId = GetUserId();
             var studentList = await _studentListService.GetByIdAsync(id, lecturerId);
 
-            var columnNames = studentList.Columns.Select(c => c.Name).ToList();
-
             using var stream = file.OpenReadStream();
 
-            // Validate headers
-            var mismatched = _excelService.ValidateHeaders(stream, columnNames);
-            if (mismatched.Count > 0)
+            // Import data from any Excel file (no header validation)
+            var importedRows = _excelService.ImportData(stream);
+
+            if (importedRows.Count == 0)
             {
                 return BadRequest(new
                 {
                     error = new
                     {
-                        code = "HEADER_MISMATCH",
-                        message = "Tiêu đề cột không khớp",
-                        details = new { mismatchedHeaders = mismatched }
+                        code = "EMPTY_FILE",
+                        message = "File Excel không có dữ liệu"
                     }
                 });
             }
 
-            // Reset stream position for import
-            stream.Position = 0;
+            // Auto-create columns that don't exist yet
+            var existingColumns = studentList.Columns.Select(c => c.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var allHeaders = importedRows.SelectMany(r => r.Keys).Distinct().ToList();
+            var columnSortOrder = studentList.Columns.Count;
 
-            // Import data
-            var importedRows = _excelService.ImportData(stream);
+            foreach (var header in allHeaders)
+            {
+                if (!existingColumns.Contains(header))
+                {
+                    await _studentListService.AddColumnAsync(id, lecturerId, new CreateColumnRequest
+                    {
+                        Name = header,
+                        SortOrder = columnSortOrder++
+                    });
+                    existingColumns.Add(header);
+                }
+            }
 
             // Create student entries from imported data
             var sortOrder = studentList.Entries.Count;

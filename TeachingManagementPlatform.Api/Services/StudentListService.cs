@@ -173,13 +173,41 @@ public class StudentListService : IStudentListService
         var column = await _context.StudentListColumns
             .Include(c => c.StudentList)
                 .ThenInclude(sl => sl.Class)
+            .Include(c => c.StudentList)
+                .ThenInclude(sl => sl.Entries)
             .FirstOrDefaultAsync(c => c.Id == columnId);
 
         if (column == null || column.StudentList.Class.LecturerId != lecturerId)
             throw new StudentListNotFoundException("Không tìm thấy cột");
 
-        if (request.Name != null)
+        var oldName = column.Name;
+
+        if (request.Name != null && request.Name != oldName)
+        {
+            // Prevent renaming to an existing column name (case-insensitive)
+            var duplicateExists = await _context.StudentListColumns
+                .AnyAsync(c => c.StudentListId == column.StudentListId
+                    && c.Id != columnId
+                    && c.Name.ToLower() == request.Name.ToLower());
+
+            if (duplicateExists)
+                throw new InvalidOperationException($"Cột có tên '{request.Name}' đã tồn tại trong danh sách.");
+
             column.Name = request.Name;
+
+            // Update entry data keys to match the new column name
+            foreach (var entry in column.StudentList.Entries)
+            {
+                if (entry.Data.ContainsKey(oldName))
+                {
+                    var value = entry.Data[oldName];
+                    entry.Data.Remove(oldName);
+                    entry.Data[request.Name] = value;
+                    _context.Entry(entry).Property(e => e.Data).IsModified = true;
+                }
+            }
+        }
+
         if (request.SortOrder.HasValue)
             column.SortOrder = request.SortOrder.Value;
 

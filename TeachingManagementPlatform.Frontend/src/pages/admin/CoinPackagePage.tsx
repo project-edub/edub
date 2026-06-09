@@ -186,13 +186,12 @@ export default function CoinPackagePage() {
   }
 
   const activeCount = packages.filter((pkg) => pkg.isActive).length;
-  const totalCoinValue = packages.reduce((sum, pkg) => sum + pkg.coinAmount, 0);
 
   return (
     <div style={pageStyle}>
       <div style={heroStyle}>
         <div>
-          <p style={eyebrowStyle}>ECoin Packages</p>
+          <p style={eyebrowStyle}>Gói ECoin</p>
           <h1 style={titleStyle}>Quản lý gói mua ECoin</h1>
           <p style={subtitleStyle}>
             Tạo và điều chỉnh các gói nạp coin cho giảng viên. Thanh toán thật sẽ được nối sau.
@@ -208,10 +207,6 @@ export default function CoinPackagePage() {
             <div style={statCardStyle}>
               <span style={statValueStyle}>{activeCount}</span>
               <span style={statLabelStyle}>đang mở bán</span>
-            </div>
-            <div style={statCardStyle}>
-              <span style={statValueStyle}>{totalCoinValue.toLocaleString('vi-VN')}</span>
-              <span style={statLabelStyle}>tổng ECoin</span>
             </div>
           </div>
 
@@ -401,7 +396,7 @@ const heroActionsStyle: React.CSSProperties = {
 
 const statsGridStyle: React.CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: 'repeat(3, minmax(84px, 1fr))',
+  gridTemplateColumns: 'repeat(2, minmax(84px, 1fr))',
   gap: 10,
 };
 

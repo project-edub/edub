@@ -363,6 +363,17 @@ export default function LessonDetailModal({ lessonId, onClose }: LessonDetailMod
                         <td style={tdStyle}>{att.fileName}</td>
                         <td style={tdStyle}>{formatFileSize(att.fileSize)}</td>
                         <td style={tdStyle}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const url = storageService.resolveStorageFileUrl(att.fileReference);
+                              if (url) window.open(url, '_blank', 'noopener,noreferrer');
+                            }}
+                            className="btn btn-view"
+                            style={{ marginRight: 4 }}
+                          >
+                            Mở
+                          </button>
                           <button type="button" onClick={() => handleDeleteAttachment(att.id)} disabled={actionLoading} className="btn btn-delete">
                             Xóa
                           </button>
@@ -423,6 +434,36 @@ export default function LessonDetailModal({ lessonId, onClose }: LessonDetailMod
                   })}
                 </div>
               )}
+            </section>
+
+            {/* Quiz & Crossword Section */}
+            <section style={{ marginBottom: 20 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <h4>Quiz & Crossword</h4>
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <a
+                  href="/lecturer/quiz-generator"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-view"
+                  style={{ padding: '6px 12px', fontSize: 13, textDecoration: 'none' }}
+                >
+                  📝 Mở danh sách Quiz
+                </a>
+                <a
+                  href="/lecturer/crossword"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-view"
+                  style={{ padding: '6px 12px', fontSize: 13, textDecoration: 'none' }}
+                >
+                  🧩 Mở danh sách Crossword
+                </a>
+              </div>
+              <p style={{ color: 'var(--edub-text-secondary)', fontSize: 12, marginTop: 8 }}>
+                Mở trang Quiz hoặc Crossword để chọn trò chơi, sau đó sao chép link chia sẻ và thêm vào mục Tài liệu ở trên.
+              </p>
             </section>
           </>
         ) : null}
