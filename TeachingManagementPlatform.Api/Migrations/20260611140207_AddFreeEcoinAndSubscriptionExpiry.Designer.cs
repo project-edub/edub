@@ -12,8 +12,8 @@ using TeachingManagementPlatform.Api.Data;
 namespace TeachingManagementPlatform.Api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260609151552_AddSubscriptionExpiresAt")]
-    partial class AddSubscriptionExpiresAt
+    [Migration("20260611140207_AddFreeEcoinAndSubscriptionExpiry")]
+    partial class AddFreeEcoinAndSubscriptionExpiry
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -1207,6 +1207,9 @@ namespace TeachingManagementPlatform.Api.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("UpgradeDiscounts")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
                     b.ToTable("SubscriptionPackages");
@@ -1229,6 +1232,9 @@ namespace TeachingManagementPlatform.Api.Migrations
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("FreeEcoinBalance")
+                        .HasColumnType("int");
 
                     b.Property<string>("FullName")
                         .IsRequired()

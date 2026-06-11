@@ -20,7 +20,7 @@ public class CoinService : ICoinService
         if (user == null)
             throw new UserNotFoundException("Không tìm thấy tài khoản");
 
-        return user.CoinBalance;
+        return user.FreeEcoinBalance + user.CoinBalance;
     }
 
     public async Task<CoinWalletResponse> GetWalletAsync(int userId)
@@ -36,6 +36,7 @@ public class CoinService : ICoinService
         return new CoinWalletResponse
         {
             CoinBalance = user.CoinBalance,
+            FreeEcoinBalance = user.FreeEcoinBalance,
             SubscriptionPackageName = user.SubscriptionPackage?.Name,
             SubscriptionPackagePrice = user.SubscriptionPackage?.Price,
             SubscriptionExpiresAt = user.SubscriptionExpiresAt,
@@ -60,10 +61,23 @@ public class CoinService : ICoinService
             throw new CoinBalanceException("Số ECoin trừ đi phải lớn hơn 0");
 
         var user = await GetUserAsync(userId);
-        if (user.CoinBalance < amount)
+        var totalAvailable = user.FreeEcoinBalance + user.CoinBalance;
+        if (totalAvailable < amount)
             throw new CoinBalanceException("Không đủ ECoin để thực hiện thao tác");
 
-        user.CoinBalance -= amount;
+        // Deduct from free ecoin first, then paid ecoin
+        var remaining = amount;
+        if (user.FreeEcoinBalance > 0)
+        {
+            var freeDeduct = Math.Min(user.FreeEcoinBalance, remaining);
+            user.FreeEcoinBalance -= freeDeduct;
+            remaining -= freeDeduct;
+        }
+        if (remaining > 0)
+        {
+            user.CoinBalance -= remaining;
+        }
+
         user.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
         return user.CoinBalance;

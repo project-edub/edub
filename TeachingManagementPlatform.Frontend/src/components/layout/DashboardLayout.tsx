@@ -39,7 +39,7 @@ const adminMenuItems = [
   { to: '/admin/accounts', label: 'Quản lý tài khoản' },
   { to: '/admin/subscriptions', label: 'Gói đăng ký' },
   { to: '/admin/coin-packages', label: 'Gói ECoin' },
-  { to: '/admin/game-ecoin-config', label: 'Cấu hình ECoin trò chơi' },
+  { to: '/admin/game-ecoin-config', label: 'Cấu hình chung' },
   { to: '/admin/score-templates', label: 'Template điểm' },
 ];
 
@@ -53,6 +53,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [subName, setSubName] = useState<string | null>(null);
   const [subExpires, setSubExpires] = useState<string | null>(null);
   const [coinBalance, setCoinBalance] = useState<number | null>(null);
+  const [freeEcoinBalance, setFreeEcoinBalance] = useState<number | null>(null);
 
   useEffect(() => {
     if (role !== Role.Admin) {
@@ -65,6 +66,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           setSubName(wallet.subscriptionPackageName ?? null);
           setSubExpires(wallet.subscriptionExpiresAt ?? null);
           setCoinBalance(wallet.coinBalance);
+          setFreeEcoinBalance(wallet.freeEcoinBalance ?? 0);
         } catch {}
       })();
     }
@@ -209,9 +211,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {role !== Role.Admin && (
             <Box sx={{ mt: 2, p: 1.5, borderRadius: 2, bgcolor: 'action.hover' }}>
               {coinBalance !== null && (
-                <Typography variant="body2" sx={{ fontWeight: 700, mb: 1 }}>
-                  🪙 {coinBalance.toLocaleString('vi-VN')} ECoin
-                </Typography>
+                <Box sx={{ mb: 1 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                    🪙 {((freeEcoinBalance ?? 0) + coinBalance).toLocaleString('vi-VN')} ECoin
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {(freeEcoinBalance ?? 0).toLocaleString('vi-VN')} miễn phí + {coinBalance.toLocaleString('vi-VN')} mua
+                  </Typography>
+                </Box>
               )}
               {subName ? (
                 <>

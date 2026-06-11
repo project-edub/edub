@@ -165,7 +165,7 @@ export default function CoinPurchasePage() {
 
         <div style={walletCardStyle}>
           <span style={walletLabelStyle}>Số dư hiện tại</span>
-          <span style={walletValueStyle}>{wallet.coinBalance.toLocaleString('vi-VN')} ECoin</span>
+          <span style={walletValueStyle}>{((wallet.freeEcoinBalance ?? 0) + wallet.coinBalance).toLocaleString('vi-VN')} ECoin</span>
           <button type="button" className="btn btn-neutral" onClick={() => navigate('/lecturer/quiz-generator')}>
             Quay lại tạo quiz
           </button>

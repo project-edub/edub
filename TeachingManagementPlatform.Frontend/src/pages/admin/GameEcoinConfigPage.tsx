@@ -13,6 +13,9 @@ interface EcoinConfig {
   crosswordLanguageRates: Record<string, number>;
   crosswordRegenerateMultiplier: number;
   quizCoinCostPerQuestion: number;
+  freeEcoinOnRegister: number;
+  freeEcoinMaxPerAccount: number;
+  freeEcoinMonthlyTopUp: number;
 }
 
 const DEFAULT_CONFIG: EcoinConfig = {
@@ -27,6 +30,9 @@ const DEFAULT_CONFIG: EcoinConfig = {
   crosswordLanguageRates: { vi: 0, en: 2 },
   crosswordRegenerateMultiplier: 0.5,
   quizCoinCostPerQuestion: 1,
+  freeEcoinOnRegister: 10,
+  freeEcoinMaxPerAccount: 50,
+  freeEcoinMonthlyTopUp: 5,
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -95,7 +101,7 @@ export default function GameEcoinConfigPage() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <Box>
-        <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>Cấu hình ECoin trò chơi</Typography>
+        <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>Cấu hình chung</Typography>
         <Typography variant="body2" color="text.secondary">
           Quản lý chi phí ECoin cho crossword và quiz.
         </Typography>
@@ -213,6 +219,49 @@ export default function GameEcoinConfigPage() {
           <Typography variant="body2" color="text.secondary">
             ECoin / câu hỏi (tổng = số câu × chi phí)
           </Typography>
+        </Box>
+      </Paper>
+
+      {/* Free ECoin config */}
+      <Paper variant="outlined" sx={{ p: 3 }}>
+        <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>ECoin miễn phí</Typography>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography sx={{ minWidth: 220 }}>Cấp khi tạo tài khoản:</Typography>
+            <TextField
+              type="number"
+              size="small"
+              value={config.freeEcoinOnRegister}
+              onChange={(e) => setConfig(prev => ({ ...prev, freeEcoinOnRegister: Number(e.target.value) }))}
+              sx={{ width: 100 }}
+              slotProps={{ input: { inputProps: { min: 0 } } }}
+            />
+            <Typography variant="body2" color="text.secondary">ECoin</Typography>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography sx={{ minWidth: 220 }}>Tối đa mỗi tài khoản:</Typography>
+            <TextField
+              type="number"
+              size="small"
+              value={config.freeEcoinMaxPerAccount}
+              onChange={(e) => setConfig(prev => ({ ...prev, freeEcoinMaxPerAccount: Number(e.target.value) }))}
+              sx={{ width: 100 }}
+              slotProps={{ input: { inputProps: { min: 0 } } }}
+            />
+            <Typography variant="body2" color="text.secondary">ECoin</Typography>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography sx={{ minWidth: 220 }}>Cộng thêm đầu mỗi tháng:</Typography>
+            <TextField
+              type="number"
+              size="small"
+              value={config.freeEcoinMonthlyTopUp}
+              onChange={(e) => setConfig(prev => ({ ...prev, freeEcoinMonthlyTopUp: Number(e.target.value) }))}
+              sx={{ width: 100 }}
+              slotProps={{ input: { inputProps: { min: 0 } } }}
+            />
+            <Typography variant="body2" color="text.secondary">ECoin</Typography>
+          </Box>
         </Box>
       </Paper>
 

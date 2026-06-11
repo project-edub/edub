@@ -77,7 +77,7 @@ export default function CrosswordCreatorPage() {
     void (async () => {
       try {
         const wallet = await coinService.getLecturerCoinWallet();
-        setCoinBalance(wallet.coinBalance);
+        setCoinBalance((wallet.freeEcoinBalance ?? 0) + wallet.coinBalance);
       } catch {
         setCoinBalance(0);
       } finally {

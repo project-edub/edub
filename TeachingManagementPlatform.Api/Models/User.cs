@@ -10,6 +10,7 @@ public class User
     public string? GoogleId { get; set; }
     public string Status { get; set; } = "Active"; // "Active" | "Inactive"
     public int CoinBalance { get; set; }
+    public int FreeEcoinBalance { get; set; }
     public int? SubscriptionPackageId { get; set; }
     public DateTime? SubscriptionExpiresAt { get; set; }
     public DateTime CreatedAt { get; set; }

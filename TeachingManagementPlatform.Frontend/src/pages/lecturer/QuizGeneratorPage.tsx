@@ -27,7 +27,8 @@ export default function QuizGeneratorPage() {
   }, []);
 
   const estimatedCost = Math.max(1, questionCount);
-  const hasEnoughCoin = wallet.coinBalance >= estimatedCost;
+  const totalBalance = (wallet.freeEcoinBalance ?? 0) + wallet.coinBalance;
+  const hasEnoughCoin = totalBalance >= estimatedCost;
 
   const handleGenerate = useCallback(async () => {
     if (selectedFiles.length === 0) return;
@@ -123,7 +124,7 @@ export default function QuizGeneratorPage() {
         <button type="button" className="btn btn-add" disabled={selectedFiles.length === 0 || loading || !hasEnoughCoin} onClick={() => void handleGenerate()}>
           {loading ? 'Đang tạo...' : `Tạo quiz (${estimatedCost} ECoin)`}
         </button>
-        <span style={{ color: '#64748b', fontSize: 13 }}>Số dư: {wallet.coinBalance} ECoin</span>
+        <span style={{ color: '#64748b', fontSize: 13 }}>Số dư: {totalBalance} ECoin</span>
         {!hasEnoughCoin && <span style={{ color: '#dc2626', fontSize: 13 }}>Không đủ ECoin</span>}
       </div>
     </div>

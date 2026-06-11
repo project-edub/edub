@@ -508,6 +508,8 @@ using (var scope = app.Services.CreateScope())
         db.Database.ExecuteSqlRaw(@"
             IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'Users') AND name = 'SubscriptionExpiresAt')
                 ALTER TABLE [Users] ADD [SubscriptionExpiresAt] datetime2 NULL;
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'Users') AND name = 'FreeEcoinBalance')
+                ALTER TABLE [Users] ADD [FreeEcoinBalance] int NOT NULL DEFAULT 0;
             IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'SubscriptionPackages') AND name = 'UpgradeDiscounts')
                 ALTER TABLE [SubscriptionPackages] ADD [UpgradeDiscounts] nvarchar(max) NOT NULL DEFAULT '{}';
             IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'SubscriptionPackages') AND name = 'UpgradeDiscounts')

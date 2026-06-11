@@ -24,6 +24,7 @@ export default function AccountManagementPage() {
   const [formPassword, setFormPassword] = useState('');
   const [formFullName, setFormFullName] = useState('');
   const [formCoinBalance, setFormCoinBalance] = useState('0');
+  const [formFreeEcoinBalance, setFormFreeEcoinBalance] = useState('0');
   const [formSubscriptionPackageId, setFormSubscriptionPackageId] = useState<string>('');
   const [formError, setFormError] = useState('');
   const [subscriptionPackages, setSubscriptionPackages] = useState<SubscriptionPackage[]>([]);
@@ -59,6 +60,7 @@ export default function AccountManagementPage() {
     setFormPassword('');
     setFormFullName('');
     setFormCoinBalance('0');
+    setFormFreeEcoinBalance('0');
     setFormError('');
     setModal({ type: 'create' });
   }
@@ -68,6 +70,7 @@ export default function AccountManagementPage() {
     setFormPassword('');
     setFormFullName(account.fullName);
     setFormCoinBalance(String(account.coinBalance));
+    setFormFreeEcoinBalance(String(account.freeEcoinBalance ?? 0));
     setFormSubscriptionPackageId(account.subscriptionPackageId != null ? String(account.subscriptionPackageId) : '');
     setFormError('');
     setModal({ type: 'edit', account });
@@ -126,6 +129,10 @@ export default function AccountManagementPage() {
       const coinBalance = Number(formCoinBalance);
       if (!Number.isNaN(coinBalance)) {
         data.coinBalance = coinBalance;
+      }
+      const freeEcoin = Number(formFreeEcoinBalance);
+      if (!Number.isNaN(freeEcoin)) {
+        data.freeEcoinBalance = freeEcoin;
       }
       data.subscriptionPackageId = formSubscriptionPackageId ? Number(formSubscriptionPackageId) : null;
       await accountService.update(modal.account.id, data);
@@ -212,7 +219,7 @@ export default function AccountManagementPage() {
                 <tr key={account.id}>
                   <td style={tdStyle}>{account.email}</td>
                   <td style={tdStyle}>{account.fullName}</td>
-                  <td style={tdStyle}>{account.coinBalance.toLocaleString('vi-VN')}</td>
+                  <td style={tdStyle}>{((account.freeEcoinBalance ?? 0) + account.coinBalance).toLocaleString('vi-VN')}</td>
                   <td style={tdStyle}>
                     {account.status === AccountStatus.Active ? 'Hoạt động' : 'Vô hiệu hóa'}
                   </td>
@@ -315,6 +322,22 @@ export default function AccountManagementPage() {
                     placeholder="0"
                     value={formCoinBalance}
                     onChange={(e) => setFormCoinBalance(e.target.value)}
+                    style={inputStyle}
+                  />
+                </div>
+              )}
+
+              {modal.type === 'edit' && (
+                <div style={{ marginBottom: 16 }}>
+                  <label htmlFor="modal-free-ecoin-balance" style={{ display: 'block', marginBottom: 4 }}>ECoin miễn phí</label>
+                  <input
+                    id="modal-free-ecoin-balance"
+                    type="number"
+                    min="0"
+                    step="1"
+                    placeholder="0"
+                    value={formFreeEcoinBalance}
+                    onChange={(e) => setFormFreeEcoinBalance(e.target.value)}
                     style={inputStyle}
                   />
                 </div>
