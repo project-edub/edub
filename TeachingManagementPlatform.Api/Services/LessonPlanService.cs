@@ -158,12 +158,37 @@ public class LessonPlanService : ILessonPlanService
     public async Task DeleteAsync(int id, int lecturerId)
     {
         var plan = await _context.LessonPlans
-            .Include(lp => lp.Lessons)
             .FirstOrDefaultAsync(lp => lp.Id == id && lp.LecturerId == lecturerId);
 
         if (plan == null)
             throw new LessonPlanNotFoundException("Không tìm thấy giáo án");
 
+        // Get lesson IDs for this plan
+        var lessonIds = await _context.Lessons
+            .Where(l => l.LessonPlanId == id)
+            .Select(l => l.Id)
+            .ToListAsync();
+
+        if (lessonIds.Count > 0)
+        {
+            // Delete all child entities of lessons
+            _context.LessonDocuments.RemoveRange(
+                await _context.LessonDocuments.Where(d => lessonIds.Contains(d.LessonId)).ToListAsync());
+            _context.LessonAttachments.RemoveRange(
+                await _context.LessonAttachments.Where(a => lessonIds.Contains(a.LessonId)).ToListAsync());
+            _context.MiniGames.RemoveRange(
+                await _context.MiniGames.Where(g => lessonIds.Contains(g.LessonId)).ToListAsync());
+            _context.ClassLessonSchedules.RemoveRange(
+                await _context.ClassLessonSchedules.Where(s => lessonIds.Contains(s.LessonId)).ToListAsync());
+            _context.LessonSuggestionCaches.RemoveRange(
+                await _context.LessonSuggestionCaches.Where(c => lessonIds.Contains(c.LessonId)).ToListAsync());
+
+            // Delete lessons themselves
+            _context.Lessons.RemoveRange(
+                await _context.Lessons.Where(l => l.LessonPlanId == id).ToListAsync());
+        }
+
+        // Now delete the plan (no loaded navigation properties to conflict)
         _context.LessonPlans.Remove(plan);
         await _context.SaveChangesAsync();
     }
@@ -177,6 +202,8 @@ public class LessonPlanService : ILessonPlanService
             Grade = plan.Grade,
             SchoolYearStart = plan.SchoolYearStart,
             SchoolYearEnd = plan.SchoolYearEnd,
+            IsShared = plan.IsShared,
+            ShareCode = plan.ShareCode,
             Lessons = plan.Lessons
                 .OrderBy(l => l.OrderIndex)
                 .Select(l => new LessonResponse

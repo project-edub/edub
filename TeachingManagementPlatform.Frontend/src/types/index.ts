@@ -132,6 +132,35 @@ export type {
   StorageFilter,
 } from './storage';
 
+// Curriculum Template
+export type {
+  CurriculumTemplate,
+  CurriculumTemplateLesson,
+  GeneratedLesson,
+  GenerateFromTemplateRequest,
+  GenerateFromTemplateResponse,
+  SaveAsTemplateRequest,
+} from './curriculumTemplate';
+
+// Teaching Schedule
+export type {
+  WeekdaySlot,
+  ClassSubjectSchedule,
+  SchoolYearCalendar,
+  SchoolYearHoliday,
+  LessonDate,
+  CalculateDatesResponse,
+  UpsertScheduleRequest,
+  ApplyDatesRequest,
+} from './teachingSchedule';
+
+// Lesson Suggestion (AI)
+export type {
+  SuggestedAttachment,
+  LessonSuggestionResponse,
+  AcceptSuggestionRequest,
+} from './lessonSuggestion';
+
 // Crossword
 export { GameStatus, Direction, CellState } from './crossword';
 export type {

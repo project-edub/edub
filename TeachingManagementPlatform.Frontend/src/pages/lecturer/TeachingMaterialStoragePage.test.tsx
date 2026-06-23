@@ -172,10 +172,10 @@ describe('TeachingMaterialStoragePage', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('Tạo thư mục')).toBeInTheDocument();
+      expect(screen.getByText(/Tạo thư mục/)).toBeInTheDocument();
     });
 
-    await user.click(screen.getByText('Tạo thư mục'));
+    await user.click(screen.getByText(/Tạo thư mục/));
     expect(screen.getByLabelText('Tên thư mục mới')).toBeInTheDocument();
 
     await user.type(screen.getByLabelText('Tên thư mục mới'), 'Thư mục mới');
@@ -196,10 +196,10 @@ describe('TeachingMaterialStoragePage', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('Đổi tên')).toBeInTheDocument();
+      expect(screen.getByTitle('Đổi tên')).toBeInTheDocument();
     });
 
-    await user.click(screen.getByText('Đổi tên'));
+    await user.click(screen.getByTitle('Đổi tên'));
     expect(screen.getByLabelText('Tên mới')).toHaveValue('bai_tap.pdf');
 
     await user.clear(screen.getByLabelText('Tên mới'));
@@ -218,18 +218,17 @@ describe('TeachingMaterialStoragePage', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('Xóa')).toBeInTheDocument();
+      expect(screen.getByTitle('Xóa')).toBeInTheDocument();
     });
 
-    await user.click(screen.getByText('Xóa'));
+    await user.click(screen.getByTitle('Xóa'));
     expect(screen.getByText('Xác nhận xóa')).toBeInTheDocument();
 
     // Click the red delete button in the confirmation modal
-    const deleteButtons = screen.getAllByText('Xóa');
-    const confirmBtn = deleteButtons.find(
-      (btn) => (btn as HTMLElement).style?.color === 'rgb(211, 47, 47)',
+    const deleteButtons = screen.getAllByRole('button').filter(
+      (btn) => btn.textContent === 'Xóa' && btn.classList.contains('btn-delete'),
     );
-    await user.click(confirmBtn!);
+    await user.click(deleteButtons[0]);
 
     await waitFor(() => {
       expect(storageService.deleteItem).toHaveBeenCalledWith(2);
@@ -285,8 +284,8 @@ describe('TeachingMaterialStoragePage', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('Tạo thư mục')).toBeInTheDocument();
-      expect(screen.getByText('Tải lên')).toBeInTheDocument();
+      expect(screen.getByText(/Tạo thư mục/)).toBeInTheDocument();
+      expect(screen.getByText(/Tải lên/)).toBeInTheDocument();
     });
   });
 });

@@ -27,6 +27,7 @@ const lecturerMenuItems = [
   { to: '/lecturer/overview', label: 'Thông tin cá nhân' },
   { to: '/lecturer/classes', label: 'Danh sách lớp' },
   { to: '/lecturer/lesson-plans', label: 'Giáo án' },
+  { to: '/lecturer/shared-plans', label: 'Giáo án cộng đồng' },
   { to: '/lecturer/storage', label: 'Kho tài liệu' },
   { to: '/lecturer/quiz-generator', label: 'Quiz' },
   { to: '/lecturer/crossword', label: 'Tạo Crossword' },
@@ -41,6 +42,7 @@ const adminMenuItems = [
   { to: '/admin/coin-packages', label: 'Gói ECoin' },
   { to: '/admin/game-ecoin-config', label: 'Cấu hình chung' },
   { to: '/admin/score-templates', label: 'Template điểm' },
+  { to: '/admin/curriculum-templates', label: 'Mẫu giáo án' },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -228,11 +230,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     size="small"
                     sx={{ fontWeight: 600, mb: 0.5 }}
                   />
-                  {daysRemaining !== null && (
-                    <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: daysRemaining <= 5 ? 'error.main' : 'text.secondary' }}>
-                      {daysRemaining > 0 ? `Còn ${daysRemaining} ngày` : 'Đã hết hạn'}
-                    </Typography>
-                  )}
+                  <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: daysRemaining !== null && daysRemaining <= 5 ? 'error.main' : 'text.secondary' }}>
+                    {daysRemaining !== null
+                      ? (daysRemaining > 0 ? `Còn ${daysRemaining} ngày` : 'Đã hết hạn')
+                      : 'Chưa xác định thời hạn'}
+                  </Typography>
                 </>
               ) : (
                 <Typography variant="caption" sx={{ color: 'text.secondary' }}>

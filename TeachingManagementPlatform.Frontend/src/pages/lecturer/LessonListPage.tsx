@@ -1,8 +1,25 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContentText from '@mui/material/DialogContentText';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
 import * as lessonPlanService from '../../services/lessonPlanService';
 import type { LessonPlan } from '../../types/lessonPlan';
+import TemplateSelectionDialog from '../../components/lecturer/lessonPlan/TemplateSelectionDialog';
+import AISuggestionPanel from '../../components/lecturer/lessonPlan/AISuggestionPanel';
+
+function parseGradeNumber(grade: string): number {
+  const match = grade.match(/\d+/);
+  return match ? parseInt(match[0], 10) : 0;
+}
 
 export default function LessonListPage() {
   const { id: idParam } = useParams<{ id: string }>();
@@ -15,6 +32,14 @@ export default function LessonListPage() {
   const [adding, setAdding] = useState(false);
   const [newLessonName, setNewLessonName] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Auto-generate state
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+
+  // AI suggestion state
+  const [aiPanelOpen, setAiPanelOpen] = useState(false);
+  const [selectedLessonForAI, setSelectedLessonForAI] = useState<{ id: number; name: string } | null>(null);
 
   useEffect(() => {
     if (!planId || isNaN(planId)) { setError('ID không hợp lệ.'); setLoading(false); return; }
@@ -58,6 +83,50 @@ export default function LessonListPage() {
     }
   }
 
+  function handleAutoGenerateClick() {
+    if (plan && plan.lessons.length > 0) {
+      setConfirmDialogOpen(true);
+    } else {
+      setTemplateDialogOpen(true);
+    }
+  }
+
+  function handleConfirmAppend() {
+    setConfirmDialogOpen(false);
+    setTemplateDialogOpen(true);
+  }
+
+  async function handleConfirmReplace() {
+    setConfirmDialogOpen(false);
+    // Clear all existing lessons first, then open template dialog
+    if (!plan) return;
+    setActionLoading(true);
+    setError('');
+    try {
+      await lessonPlanService.update(planId, { lessons: [] });
+      await loadPlan();
+      setTemplateDialogOpen(true);
+    } catch (err: any) {
+      setError(err?.message || 'Xóa bài học cũ thất bại.');
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  function handleGenerated() {
+    loadPlan();
+  }
+
+  function handleOpenAISuggestion(lessonId: number, lessonName: string) {
+    setSelectedLessonForAI({ id: lessonId, name: lessonName });
+    setAiPanelOpen(true);
+  }
+
+  function handleCloseAISuggestion() {
+    setAiPanelOpen(false);
+    setSelectedLessonForAI(null);
+  }
+
   if (loading) return <div style={pageStyle}><p>Đang tải...</p></div>;
   if (error && !plan) return <div style={pageStyle}><p style={{ color: '#d32f2f' }}>{error}</p><button className="btn btn-neutral" onClick={() => navigate('/lecturer/lesson-plans')}>← Quay lại</button></div>;
   if (!plan) return null;
@@ -76,9 +145,9 @@ export default function LessonListPage() {
       </p>
 
       {/* Add lesson button */}
-      <div style={{ marginBottom: 16 }}>
+      <div style={{ marginBottom: 16, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
         {adding ? (
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flex: 1 }}>
             <input
               type="text"
               placeholder="Tên bài học"
@@ -94,7 +163,18 @@ export default function LessonListPage() {
             <button className="btn btn-neutral" onClick={() => { setAdding(false); setNewLessonName(''); }}>Hủy</button>
           </div>
         ) : (
-          <button className="btn btn-add" onClick={() => setAdding(true)}>+ Thêm bài học</button>
+          <>
+            <button className="btn btn-add" onClick={() => setAdding(true)}>+ Thêm bài học</button>
+            <Button
+              variant="outlined"
+              startIcon={<MenuBookIcon />}
+              onClick={handleAutoGenerateClick}
+              disabled={actionLoading}
+              size="small"
+            >
+              Sử dụng giáo án có sẵn
+            </Button>
+          </>
         )}
       </div>
 
@@ -125,17 +205,76 @@ export default function LessonListPage() {
                 onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = 'none'; }}
               >
-                <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                   <span style={{ fontWeight: 700, marginRight: 8, color: 'var(--edub-text-secondary)' }}>
                     {idx + 1}.
                   </span>
                   <span style={{ fontWeight: 600 }}>{lesson.name}</span>
+                  <span style={{ marginLeft: 8, fontSize: 12, color: 'var(--edub-text-secondary)', background: '#f1f5f9', padding: '2px 6px', borderRadius: 4 }}>
+                    1 tiết
+                  </span>
+                  <Tooltip title="Gợi ý AI">
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenAISuggestion(lesson.id, lesson.name);
+                      }}
+                      aria-label={`Gợi ý AI cho bài ${lesson.name}`}
+                      sx={{ ml: 0.5, color: 'primary.main' }}
+                    >
+                      <AutoAwesomeIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
                 </div>
                 <span style={{ color: 'var(--edub-text-secondary)', fontSize: 13 }}>Xem & sửa →</span>
               </div>
             ))}
         </div>
       )}
+
+      {/* Template Selection Dialog */}
+      <TemplateSelectionDialog
+        open={templateDialogOpen}
+        onClose={() => setTemplateDialogOpen(false)}
+        lessonPlanId={planId}
+        subject={plan.subject}
+        grade={parseGradeNumber(plan.grade)}
+        onGenerated={handleGenerated}
+      />
+
+      {/* Confirmation Dialog when lessons already exist */}
+      <Dialog
+        open={confirmDialogOpen}
+        onClose={() => setConfirmDialogOpen(false)}
+      >
+        <DialogTitle>Giáo án đã có bài học</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Giáo án hiện tại đã có {plan.lessons.length} bài học. Bạn muốn thêm bài mới từ mẫu vào cuối hay thay thế toàn bộ?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmDialogOpen(false)}>Hủy</Button>
+          <Button onClick={handleConfirmAppend} variant="outlined">
+            Thêm vào cuối
+          </Button>
+          <Button onClick={handleConfirmReplace} variant="contained" color="warning">
+            Thay thế toàn bộ
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* AI Suggestion Panel */}
+      {selectedLessonForAI && (
+        <AISuggestionPanel
+          open={aiPanelOpen}
+          onClose={handleCloseAISuggestion}
+          lessonId={selectedLessonForAI.id}
+          lessonName={selectedLessonForAI.name}
+        />
+      )}
+
     </div>
   );
 }

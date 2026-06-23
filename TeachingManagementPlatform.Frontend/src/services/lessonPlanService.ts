@@ -6,6 +6,7 @@ import type {
   UpdateLessonPlanRequest,
   LessonPlanSearchParams,
   Lesson,
+  SharedLessonPlan,
 } from '../types/lessonPlan';
 
 type ApiLesson = {
@@ -91,4 +92,29 @@ export async function update(id: number, data: UpdateLessonPlanRequest): Promise
 
 export async function remove(id: number): Promise<void> {
   await api.delete(`/lesson-plans/${id}`);
+}
+
+export async function toggleShare(id: number, isShared: boolean): Promise<{ isShared: boolean }> {
+  const response = await api.put<{ isShared: boolean }>(`/lesson-plans/${id}/share`, { isShared });
+  return response.data;
+}
+
+export async function getSharedPlans(subject?: string, grade?: string): Promise<SharedLessonPlan[]> {
+  const response = await api.get<SharedLessonPlan[]>('/shared-lesson-plans', { params: { subject, grade } });
+  return response.data;
+}
+
+export async function copySharedPlan(sharedPlanId: number): Promise<{ id: number }> {
+  const response = await api.post<{ id: number }>(`/lesson-plans/copy/${sharedPlanId}`);
+  return response.data;
+}
+
+export async function generateShareCode(id: number): Promise<{ shareCode: string }> {
+  const response = await api.post<{ shareCode: string }>(`/lesson-plans/${id}/generate-code`);
+  return response.data;
+}
+
+export async function joinByCode(code: string): Promise<{ id: number; subject: string }> {
+  const response = await api.post<{ id: number; subject: string }>(`/lesson-plans/join/${code}`);
+  return response.data;
 }

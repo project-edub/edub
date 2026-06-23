@@ -16,6 +16,7 @@ interface EcoinConfig {
   freeEcoinOnRegister: number;
   freeEcoinMaxPerAccount: number;
   freeEcoinMonthlyTopUp: number;
+  subscriptionDurationDays: number;
 }
 
 const DEFAULT_CONFIG: EcoinConfig = {
@@ -33,6 +34,7 @@ const DEFAULT_CONFIG: EcoinConfig = {
   freeEcoinOnRegister: 10,
   freeEcoinMaxPerAccount: 50,
   freeEcoinMonthlyTopUp: 5,
+  subscriptionDurationDays: 30,
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -262,6 +264,23 @@ export default function GameEcoinConfigPage() {
             />
             <Typography variant="body2" color="text.secondary">ECoin</Typography>
           </Box>
+        </Box>
+      </Paper>
+
+      {/* Subscription duration */}
+      <Paper variant="outlined" sx={{ p: 3 }}>
+        <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>Gói đăng ký — Thời hạn</Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Typography sx={{ minWidth: 220 }}>Số ngày mỗi gói:</Typography>
+          <TextField
+            type="number"
+            size="small"
+            value={config.subscriptionDurationDays}
+            onChange={(e) => setConfig(prev => ({ ...prev, subscriptionDurationDays: Number(e.target.value) }))}
+            sx={{ width: 100 }}
+            slotProps={{ input: { inputProps: { min: 1 } } }}
+          />
+          <Typography variant="body2" color="text.secondary">ngày</Typography>
         </Box>
       </Paper>
 

@@ -8,6 +8,8 @@ public class LessonPlan
     public string Grade { get; set; } = string.Empty;
     public string SchoolYearStart { get; set; } = string.Empty;
     public string SchoolYearEnd { get; set; } = string.Empty;
+    public bool IsShared { get; set; } = false;
+    public string? ShareCode { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 

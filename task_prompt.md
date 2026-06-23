@@ -1,1 +1,0 @@
-Đổi hết ecoin ở những chỗ hiển thị trên web thành tổng của ecoin free + ecoin

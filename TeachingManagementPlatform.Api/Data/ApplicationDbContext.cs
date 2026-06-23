@@ -45,6 +45,13 @@ public class ApplicationDbContext : DbContext
     public DbSet<ScoreEditHistory> ScoreEditHistories => Set<ScoreEditHistory>();
     public DbSet<ScoreTemplate> ScoreTemplates => Set<ScoreTemplate>();
     public DbSet<ScoreTemplateColumn> ScoreTemplateColumns => Set<ScoreTemplateColumn>();
+    public DbSet<CurriculumTemplate> CurriculumTemplates => Set<CurriculumTemplate>();
+    public DbSet<CurriculumTemplateLesson> CurriculumTemplateLessons => Set<CurriculumTemplateLesson>();
+    public DbSet<SchoolYearCalendar> SchoolYearCalendars => Set<SchoolYearCalendar>();
+    public DbSet<SchoolYearHoliday> SchoolYearHolidays => Set<SchoolYearHoliday>();
+    public DbSet<ClassSubjectSchedule> ClassSubjectSchedules => Set<ClassSubjectSchedule>();
+    public DbSet<StorageItemEmbedding> StorageItemEmbeddings => Set<StorageItemEmbedding>();
+    public DbSet<LessonSuggestionCache> LessonSuggestionCaches => Set<LessonSuggestionCache>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -232,6 +239,8 @@ public class ApplicationDbContext : DbContext
         // ── LessonPlan ──
         modelBuilder.Entity<LessonPlan>(entity =>
         {
+            entity.Property(lp => lp.IsShared).HasDefaultValue(false);
+
             entity.HasOne(lp => lp.Lecturer)
                 .WithMany(u => u.LessonPlans)
                 .HasForeignKey(lp => lp.LecturerId)
@@ -294,6 +303,19 @@ public class ApplicationDbContext : DbContext
                 .OnDelete(DeleteBehavior.NoAction);
 
             entity.Property(si => si.ItemType).HasMaxLength(20);
+        });
+
+        // ── StorageItemEmbedding ──
+        modelBuilder.Entity<StorageItemEmbedding>(entity =>
+        {
+            entity.HasOne(sie => sie.StorageItem)
+                .WithOne()
+                .HasForeignKey<StorageItemEmbedding>(sie => sie.StorageItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(sie => sie.StorageItemId).IsUnique();
+
+            entity.Property(sie => sie.Embedding).HasColumnType("nvarchar(max)");
         });
 
         // ── ClassLessonSchedule ──
@@ -445,6 +467,92 @@ public class ApplicationDbContext : DbContext
             entity.HasMany(st => st.Columns)
                 .WithOne(stc => stc.ScoreTemplate)
                 .HasForeignKey(stc => stc.ScoreTemplateId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ── CurriculumTemplate ──
+        modelBuilder.Entity<CurriculumTemplate>(entity =>
+        {
+            entity.HasIndex(ct => new { ct.Subject, ct.Grade });
+
+            entity.Property(ct => ct.IsPublic).HasDefaultValue(false);
+            entity.Property(ct => ct.UsageCount).HasDefaultValue(0);
+
+            entity.HasOne(ct => ct.Creator)
+                .WithMany()
+                .HasForeignKey(ct => ct.CreatedBy)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // ── CurriculumTemplateLesson ──
+        modelBuilder.Entity<CurriculumTemplateLesson>(entity =>
+        {
+            entity.Property(ctl => ctl.SuggestedPeriods).HasDefaultValue(1);
+
+            entity.HasOne(ctl => ctl.Template)
+                .WithMany(ct => ct.Lessons)
+                .HasForeignKey(ctl => ctl.TemplateId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ── SchoolYearCalendar ──
+        modelBuilder.Entity<SchoolYearCalendar>(entity =>
+        {
+            entity.Property(c => c.IsDefault).HasDefaultValue(false);
+
+            entity.HasOne(c => c.Creator)
+                .WithMany()
+                .HasForeignKey(c => c.CreatedBy)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // ── SchoolYearHoliday ──
+        modelBuilder.Entity<SchoolYearHoliday>(entity =>
+        {
+            entity.HasOne(h => h.Calendar)
+                .WithMany(c => c.Holidays)
+                .HasForeignKey(h => h.CalendarId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ── ClassSubjectSchedule ──
+        modelBuilder.Entity<ClassSubjectSchedule>(entity =>
+        {
+            entity.HasIndex(css => new { css.ClassId, css.Subject }).IsUnique();
+
+            entity.Property(css => css.WeekdaySlots)
+                .HasConversion(
+                    v => v,
+                    v => v)
+                .HasColumnType("nvarchar(max)");
+
+            entity.HasOne(css => css.Class)
+                .WithMany()
+                .HasForeignKey(css => css.ClassId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(css => css.Calendar)
+                .WithMany()
+                .HasForeignKey(css => css.CalendarId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ── LessonSuggestionCache ──
+        modelBuilder.Entity<LessonSuggestionCache>(entity =>
+        {
+            entity.HasIndex(lsc => new { lsc.LessonId, lsc.LessonNameHash });
+
+            entity.Property(lsc => lsc.LessonNameHash).HasMaxLength(64);
+            entity.Property(lsc => lsc.SuggestedAttachments).HasColumnType("nvarchar(max)");
+            entity.Property(lsc => lsc.SuggestedKeywords).HasColumnType("nvarchar(max)");
+            entity.Property(lsc => lsc.SuggestedQuizTopic).HasMaxLength(500);
+            entity.Property(lsc => lsc.SuggestedCrosswordTopic).HasMaxLength(500);
+
+            entity.HasOne(lsc => lsc.Lesson)
+                .WithMany()
+                .HasForeignKey(lsc => lsc.LessonId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }
