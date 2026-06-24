@@ -68,3 +68,10 @@ export async function downloadItem(id: number): Promise<{ blob: Blob; fileName: 
 
   return { blob: response.data, fileName };
 }
+
+export async function downloadFolder(folderId: number): Promise<Blob> {
+  const response = await api.get<Blob>(`/storage/${folderId}/download-folder`, {
+    responseType: 'blob',
+  });
+  return response.data;
+}

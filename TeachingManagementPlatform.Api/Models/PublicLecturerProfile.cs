@@ -7,18 +7,11 @@ public class PublicLecturerProfile
     public string FullName { get; set; } = string.Empty;
     public string? Introduction { get; set; }
     public string? AvatarUrl { get; set; }
-    public List<PublicOccupation> Occupations { get; set; } = new();
     public List<PublicTeachingLocation> TeachingLocations { get; set; } = new();
     public List<PublicExpertise> Expertises { get; set; } = new();
     public List<PublicExperience> Experiences { get; set; } = new();
     public List<PublicTeachingSkill> TeachingSkills { get; set; } = new();
-    public List<PublicTuitionFee> TuitionFees { get; set; } = new();
     public List<PublicNote> Notes { get; set; } = new();
-}
-
-public class PublicOccupation
-{
-    public string Value { get; set; } = string.Empty;
 }
 
 public class PublicTeachingLocation
@@ -30,6 +23,7 @@ public class PublicExpertise
 {
     public string Specialty { get; set; } = string.Empty;
     public string Degree { get; set; } = string.Empty;
+    public string? CertificateImageUrl { get; set; }
 }
 
 public class PublicExperience
@@ -42,11 +36,6 @@ public class PublicTeachingSkill
 {
     public string Description { get; set; } = string.Empty;
     public string? ImageUrl { get; set; }
-}
-
-public class PublicTuitionFee
-{
-    public string Description { get; set; } = string.Empty;
 }
 
 public class PublicNote

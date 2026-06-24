@@ -165,6 +165,25 @@ public class StorageController : ControllerBase
         }
     }
 
+    [HttpGet("{folderId:int}/download-folder")]
+    public async Task<IActionResult> DownloadFolder(int folderId)
+    {
+        var userId = GetUserId();
+        try
+        {
+            var result = await _storageService.DownloadFolderAsync(folderId, userId);
+            return File(result.ZipBytes, "application/zip", $"{result.FolderName}.zip");
+        }
+        catch (StorageItemNotFoundException ex)
+        {
+            return NotFound(new { error = new { code = "STORAGE_NOT_FOUND", message = ex.Message } });
+        }
+        catch (StorageValidationException ex)
+        {
+            return BadRequest(new { error = new { code = "EMPTY_FOLDER", message = ex.Message } });
+        }
+    }
+
     private int GetUserId()
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier)

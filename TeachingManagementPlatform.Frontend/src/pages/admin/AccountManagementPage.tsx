@@ -5,6 +5,7 @@ import type { SubscriptionPackage } from '../../types/subscription';
 import { AccountStatus, type ApiError } from '../../types/common';
 import * as accountService from '../../services/accountService';
 import * as subscriptionService from '../../services/subscriptionService';
+import Pagination, { usePagination } from '../../components/common/Pagination';
 
 interface ModalState {
   type: 'create' | 'edit' | null;
@@ -29,6 +30,8 @@ export default function AccountManagementPage() {
   const [formSubscriptionDays, setFormSubscriptionDays] = useState('');
   const [formError, setFormError] = useState('');
   const [subscriptionPackages, setSubscriptionPackages] = useState<SubscriptionPackage[]>([]);
+
+  const { paginatedItems: paginatedAccounts, currentPage, pageSize, totalItems, setCurrentPage, setPageSize } = usePagination(accounts);
 
   const loadAccounts = useCallback(async () => {
     setLoading(true);
@@ -222,14 +225,14 @@ export default function AccountManagementPage() {
             </tr>
           </thead>
           <tbody>
-            {accounts.length === 0 ? (
+            {paginatedAccounts.length === 0 ? (
               <tr>
                 <td colSpan={6} style={{ textAlign: 'center', padding: 16 }}>
                   Không có tài khoản nào
                 </td>
               </tr>
             ) : (
-              accounts.map((account) => (
+              paginatedAccounts.map((account) => (
                 <tr key={account.id}>
                   <td style={tdStyle}>{account.email}</td>
                   <td style={tdStyle}>{account.fullName}</td>
@@ -279,6 +282,14 @@ export default function AccountManagementPage() {
           </tbody>
         </table>
       )}
+
+      <Pagination
+        totalItems={totalItems}
+        currentPage={currentPage}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+      />
 
       {/* Create / Edit Modal */}
       {modal.type && (

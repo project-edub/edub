@@ -51,6 +51,9 @@ export default function LessonEditPage() {
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState('');
 
+  // Số tiết
+  const [periodsValue, setPeriodsValue] = useState(1);
+
   useEffect(() => {
     if (!lessonId || isNaN(lessonId)) { setError('ID không hợp lệ.'); setLoading(false); return; }
     loadLesson();
@@ -261,6 +264,22 @@ export default function LessonEditPage() {
           </h1>
         )}
       </div>
+
+      {/* Số tiết */}
+      <section style={sectionStyle}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <h3 style={{ margin: 0 }}>Số tiết</h3>
+          <input
+            type="number"
+            min={1}
+            max={20}
+            value={periodsValue}
+            onChange={(e) => setPeriodsValue(Math.max(1, Number(e.target.value) || 1))}
+            style={{ ...inputStyle, width: 70, textAlign: 'center' }}
+          />
+          <span style={{ color: 'var(--edub-text-secondary)', fontSize: 14 }}>tiết</span>
+        </div>
+      </section>
 
       {/* Documents (regular only, excluding game docs) */}
       <section style={sectionStyle}>

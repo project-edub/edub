@@ -39,7 +39,23 @@ public class LessonSuggestionService : ILessonSuggestionService
         _embeddingModel = configuration["OpenAI:EmbeddingModel"] ?? "text-embedding-3-small";
     }
 
-    public async Task<LessonSuggestionResponse> SuggestContentAsync(int lessonId, int lecturerId)
+    public async Task<LessonSuggestionResponse?> GetCachedSuggestionAsync(int lessonId)
+    {
+        var lesson = await _context.Lessons.FirstOrDefaultAsync(l => l.Id == lessonId);
+        if (lesson == null) return null;
+
+        var lessonNameHash = ComputeSha256Hash(lesson.Name);
+        var cachedEntry = await _context.LessonSuggestionCaches
+            .Where(c => c.LessonId == lessonId
+                && c.LessonNameHash == lessonNameHash
+                && c.ExpiresAt > DateTime.UtcNow)
+            .FirstOrDefaultAsync();
+
+        if (cachedEntry == null) return null;
+        return DeserializeCacheEntry(cachedEntry);
+    }
+
+    public async Task<LessonSuggestionResponse> SuggestContentAsync(int lessonId, int lecturerId, string? description = null)
     {
         var lesson = await _context.Lessons
             .Include(l => l.LessonPlan)
@@ -69,12 +85,16 @@ public class LessonSuggestionService : ILessonSuggestionService
         // Bước 2a: Match documents using embedding similarity
         var suggestedAttachments = await MatchDocumentsByEmbeddingAsync(lesson, lecturerId);
 
+        // Bước 2b: Generate content suggestions using GPT
+        var (keywords, quizTopic, crosswordTopic, suggestedLinks) = await GenerateContentSuggestionsAsync(lesson, description);
+
         var response = new LessonSuggestionResponse
         {
             SuggestedAttachments = suggestedAttachments,
-            SuggestedKeywords = new List<string>(), // TODO (task 9.6): LLM keywords
-            SuggestedQuizTopic = null,              // TODO (task 9.6): LLM quiz topic
-            SuggestedCrosswordTopic = null           // TODO (task 9.6): LLM crossword topic
+            SuggestedKeywords = new List<string>(),
+            SuggestedQuizTopic = quizTopic,
+            SuggestedCrosswordTopic = crosswordTopic,
+            SuggestedLinks = suggestedLinks
         };
 
         // ── Save to cache with 24h TTL ──
@@ -113,6 +133,24 @@ public class LessonSuggestionService : ILessonSuggestionService
                 };
 
                 _context.LessonAttachments.Add(attachment);
+                await _context.SaveChangesAsync();
+                return true;
+
+            case "link":
+                var linkData = JsonSerializer.Deserialize<JsonElement>(request.Value);
+                var linkUrl = linkData.TryGetProperty("url", out var urlProp) ? urlProp.GetString() ?? "" : "";
+                var linkTitle = linkData.TryGetProperty("title", out var titleProp) ? titleProp.GetString() ?? linkUrl : linkUrl;
+
+                if (string.IsNullOrWhiteSpace(linkUrl))
+                    throw new InvalidOperationException("URL đường dẫn không hợp lệ.");
+
+                var document = new LessonDocument
+                {
+                    LessonId = lessonId,
+                    Name = linkTitle,
+                    Link = linkUrl
+                };
+                _context.LessonDocuments.Add(document);
                 await _context.SaveChangesAsync();
                 return true;
 
@@ -328,6 +366,142 @@ public class LessonSuggestionService : ILessonSuggestionService
         return dotProduct / (magnitudeA * magnitudeB);
     }
 
+    // ── GPT Content Generation ──
+
+    /// <summary>
+    /// Calls OpenAI GPT-4o to generate lesson content suggestions: keywords, quiz topic, crossword topic, and reference links.
+    /// </summary>
+    private async Task<(List<string> keywords, string? quizTopic, string? crosswordTopic, List<SuggestedLinkDto> links)> GenerateContentSuggestionsAsync(Lesson lesson, string? userPrompt = null)
+    {
+        if (string.IsNullOrWhiteSpace(_apiKey))
+        {
+            return (new List<string>(), null, null, new List<SuggestedLinkDto>());
+        }
+
+        var subject = lesson.LessonPlan?.Subject ?? "";
+        var systemMessage = "You are a teaching assistant that helps Vietnamese teachers prepare lesson content. Respond in JSON format only.";
+        var userMessage = $@"Lesson: ""{lesson.Name}"" (Subject: {subject})
+{(string.IsNullOrWhiteSpace(userPrompt) ? "" : $"Teacher's request: {userPrompt}")}
+
+IMPORTANT RULES:
+- Detect the language of the lesson name. If Vietnamese, ALL responses and links MUST be in Vietnamese from Vietnamese educational websites (e.g. hoc247.net, loigiaihay.com, violet.vn, tailieu.vn, thuvienhoclieu.com, giaoan.me).
+- If English, provide English resources.
+- Only suggest links from well-known, active educational websites. Do NOT make up URLs.
+- Each link must be from a real, currently active domain.
+
+Generate suggestions in this JSON format:
+{{
+  ""quizTopic"": ""a quiz topic suggestion in the same language as lesson name"",
+  ""crosswordTopic"": ""a crossword topic suggestion in the same language as lesson name"",
+  ""suggestedLinks"": [
+    {{ ""url"": ""https://..."", ""title"": ""..."", ""description"": ""..."" }}
+  ]
+}}
+
+Provide 3-5 reference links that are relevant to this lesson topic.";
+
+        var requestBody = new
+        {
+            model = "gpt-4o",
+            messages = new[]
+            {
+                new { role = "system", content = systemMessage },
+                new { role = "user", content = userMessage }
+            },
+            temperature = 0.7,
+            max_tokens = 1000,
+            response_format = new { type = "json_object" }
+        };
+
+        var jsonContent = JsonSerializer.Serialize(requestBody);
+        var request = new HttpRequestMessage(HttpMethod.Post, "https://api.openai.com/v1/chat/completions")
+        {
+            Content = new StringContent(jsonContent, Encoding.UTF8, "application/json")
+        };
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
+
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            var response = await _httpClient.SendAsync(request, cts.Token);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError("OpenAI API returned {StatusCode} for content generation", response.StatusCode);
+                return (new List<string>(), null, null, new List<SuggestedLinkDto>());
+            }
+
+            var responseJson = await response.Content.ReadAsStringAsync();
+            return ParseGptResponse(responseJson);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to generate content suggestions for lesson {LessonId}", lesson.Id);
+            return (new List<string>(), null, null, new List<SuggestedLinkDto>());
+        }
+    }
+
+    /// <summary>
+    /// Parses the GPT chat completion response to extract keywords, quiz topic, crossword topic, and links.
+    /// </summary>
+    private static (List<string> keywords, string? quizTopic, string? crosswordTopic, List<SuggestedLinkDto> links) ParseGptResponse(string responseJson)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(responseJson);
+            var content = doc.RootElement
+                .GetProperty("choices")[0]
+                .GetProperty("message")
+                .GetProperty("content")
+                .GetString();
+
+            if (string.IsNullOrEmpty(content))
+                return (new List<string>(), null, null, new List<SuggestedLinkDto>());
+
+            using var contentDoc = JsonDocument.Parse(content);
+            var root = contentDoc.RootElement;
+
+            var keywords = new List<string>();
+            if (root.TryGetProperty("keywords", out var kws))
+            {
+                foreach (var kw in kws.EnumerateArray())
+                {
+                    var val = kw.GetString();
+                    if (!string.IsNullOrEmpty(val)) keywords.Add(val);
+                }
+            }
+
+            string? quizTopic = null;
+            if (root.TryGetProperty("quizTopic", out var qt))
+                quizTopic = qt.GetString();
+
+            string? crosswordTopic = null;
+            if (root.TryGetProperty("crosswordTopic", out var ct))
+                crosswordTopic = ct.GetString();
+
+            var links = new List<SuggestedLinkDto>();
+            if (root.TryGetProperty("suggestedLinks", out var sl))
+            {
+                foreach (var linkEl in sl.EnumerateArray())
+                {
+                    var url = linkEl.TryGetProperty("url", out var u) ? u.GetString() : null;
+                    var title = linkEl.TryGetProperty("title", out var t) ? t.GetString() : null;
+                    var desc = linkEl.TryGetProperty("description", out var d) ? d.GetString() : null;
+                    if (!string.IsNullOrEmpty(url))
+                    {
+                        links.Add(new SuggestedLinkDto { Url = url, Title = title ?? url, Description = desc ?? "" });
+                    }
+                }
+            }
+
+            return (keywords, quizTopic, crosswordTopic, links);
+        }
+        catch
+        {
+            return (new List<string>(), null, null, new List<SuggestedLinkDto>());
+        }
+    }
+
     // ── Cache Helpers ──
 
     /// <summary>
@@ -354,12 +528,18 @@ public class LessonSuggestionService : ILessonSuggestionService
             : JsonSerializer.Deserialize<List<string>>(cache.SuggestedKeywords, jsonOptions)
               ?? new List<string>();
 
+        var links = string.IsNullOrEmpty(cache.SuggestedLinks)
+            ? new List<SuggestedLinkDto>()
+            : JsonSerializer.Deserialize<List<SuggestedLinkDto>>(cache.SuggestedLinks, jsonOptions)
+              ?? new List<SuggestedLinkDto>();
+
         return new LessonSuggestionResponse
         {
             SuggestedAttachments = attachments,
             SuggestedKeywords = keywords,
             SuggestedQuizTopic = cache.SuggestedQuizTopic,
-            SuggestedCrosswordTopic = cache.SuggestedCrosswordTopic
+            SuggestedCrosswordTopic = cache.SuggestedCrosswordTopic,
+            SuggestedLinks = links
         };
     }
 
@@ -385,6 +565,7 @@ public class LessonSuggestionService : ILessonSuggestionService
             SuggestedKeywords = JsonSerializer.Serialize(response.SuggestedKeywords, jsonOptions),
             SuggestedQuizTopic = response.SuggestedQuizTopic,
             SuggestedCrosswordTopic = response.SuggestedCrosswordTopic,
+            SuggestedLinks = JsonSerializer.Serialize(response.SuggestedLinks, jsonOptions),
             CreatedAt = DateTime.UtcNow,
             ExpiresAt = DateTime.UtcNow.AddHours(24)
         };

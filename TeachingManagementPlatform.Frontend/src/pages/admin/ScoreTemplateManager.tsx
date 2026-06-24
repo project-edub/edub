@@ -6,6 +6,7 @@ import type {
   ScoreTemplate,
   ScoreTemplateColumn,
 } from '../../services/scoreTemplateService';
+import Pagination, { usePagination } from '../../components/common/Pagination';
 
 interface ModalState {
   type: 'create' | 'edit' | null;
@@ -32,6 +33,8 @@ export default function ScoreTemplateManager() {
   const [formColumns, setFormColumns] = useState<ColumnFormRow[]>([]);
   const [formError, setFormError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const { paginatedItems, currentPage, pageSize, totalItems, setCurrentPage, setPageSize } = usePagination(templates);
 
   const loadTemplates = useCallback(async () => {
     setLoading(true);
@@ -257,62 +260,65 @@ export default function ScoreTemplateManager() {
           Chưa có template nào. Tạo template đầu tiên để giáo viên có thể nhanh chóng thiết lập bảng điểm.
         </div>
       ) : (
-        <div style={tableShellStyle}>
-          <table style={tableStyle}>
-            <thead>
-              <tr>
-                <th style={thStyle}>Tên template</th>
-                <th style={thStyle}>Môn học</th>
-                <th style={thStyle}>Số cột</th>
-                <th style={thStyle}>Cấu hình cột</th>
-                <th style={thStyle}>Hành động</th>
-              </tr>
-            </thead>
-            <tbody>
-              {templates.map((tpl) => (
-                <tr key={tpl.id}>
-                  <td style={tdStyle}>{tpl.name}</td>
-                  <td style={tdStyle}>{tpl.subject}</td>
-                  <td style={tdStyle}>{tpl.columns.length}</td>
-                  <td style={tdStyle}>
-                    <div style={columnChipsStyle}>
-                      {tpl.columns
-                        .slice()
-                        .sort((a, b) => a.sortOrder - b.sortOrder)
-                        .map((col, idx) => (
-                          <span key={idx} style={col.isAverageColumn ? chipAvgStyle : chipStyle}>
-                            {col.name}
-                            {col.coefficient !== null && ` (×${col.coefficient})`}
-                            {col.isAverageColumn && ' [ĐTB]'}
-                          </span>
-                        ))}
-                    </div>
-                  </td>
-                  <td style={tdStyle}>
-                    <div style={actionButtonsStyle}>
-                      <button
-                        type="button"
-                        onClick={() => openEditModal(tpl)}
-                        disabled={actionLoading}
-                        className="btn btn-update"
-                      >
-                        Sửa
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDeleteTarget(tpl)}
-                        disabled={actionLoading}
-                        className="btn btn-delete"
-                      >
-                        Xóa
-                      </button>
-                    </div>
-                  </td>
+        <>
+          <div style={tableShellStyle}>
+            <table style={tableStyle}>
+              <thead>
+                <tr>
+                  <th style={thStyle}>Tên template</th>
+                  <th style={thStyle}>Môn học</th>
+                  <th style={thStyle}>Số cột</th>
+                  <th style={thStyle}>Cấu hình cột</th>
+                  <th style={thStyle}>Hành động</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {paginatedItems.map((tpl) => (
+                  <tr key={tpl.id}>
+                    <td style={tdStyle}>{tpl.name}</td>
+                    <td style={tdStyle}>{tpl.subject}</td>
+                    <td style={tdStyle}>{tpl.columns.length}</td>
+                    <td style={tdStyle}>
+                      <div style={columnChipsStyle}>
+                        {tpl.columns
+                          .slice()
+                          .sort((a, b) => a.sortOrder - b.sortOrder)
+                          .map((col, idx) => (
+                            <span key={idx} style={col.isAverageColumn ? chipAvgStyle : chipStyle}>
+                              {col.name}
+                              {col.coefficient !== null && ` (×${col.coefficient})`}
+                              {col.isAverageColumn && ' [ĐTB]'}
+                            </span>
+                          ))}
+                      </div>
+                    </td>
+                    <td style={tdStyle}>
+                      <div style={actionButtonsStyle}>
+                        <button
+                          type="button"
+                          onClick={() => openEditModal(tpl)}
+                          disabled={actionLoading}
+                          className="btn btn-update"
+                        >
+                          Sửa
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDeleteTarget(tpl)}
+                          disabled={actionLoading}
+                          className="btn btn-delete"
+                        >
+                          Xóa
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <Pagination totalItems={totalItems} currentPage={currentPage} pageSize={pageSize} onPageChange={setCurrentPage} onPageSizeChange={setPageSize} />
+        </>
       )}
 
       {/* Create/Edit Modal */}

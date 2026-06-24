@@ -4,6 +4,7 @@ import type { ApiError } from '../../types/common';
 import type { CoinPackage, CreateCoinPackageRequest, UpdateCoinPackageRequest } from '../../types/coin';
 import * as coinService from '../../services/coinService';
 import { formatCurrency } from '../../utils/formatters';
+import Pagination, { usePagination } from '../../components/common/Pagination';
 
 interface ModalState {
   type: 'create' | 'edit' | null;
@@ -25,6 +26,8 @@ export default function CoinPackagePage() {
   const [formIsActive, setFormIsActive] = useState(true);
   const [formError, setFormError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const { paginatedItems, currentPage, pageSize, totalItems, setCurrentPage, setPageSize } = usePagination(packages);
 
   const loadPackages = useCallback(async () => {
     setLoading(true);
@@ -227,41 +230,44 @@ export default function CoinPackagePage() {
       ) : packages.length === 0 ? (
         <div style={emptyStateStyle}>Chưa có gói ECoin nào. Tạo gói đầu tiên để giảng viên có thể nạp coin.</div>
       ) : (
-        <div style={tableShellStyle}>
-          <table style={tableStyle}>
-            <thead>
-              <tr>
-                <th style={thStyle}>Gói</th>
-                <th style={thStyle}>Giá</th>
-                <th style={thStyle}>ECoin</th>
-                <th style={thStyle}>Mô tả</th>
-                <th style={thStyle}>Trạng thái</th>
-                <th style={thStyle}>Hành động</th>
-              </tr>
-            </thead>
-            <tbody>
-              {packages.map((pkg) => (
-                <tr key={pkg.id}>
-                  <td style={tdStyle}>{pkg.name}</td>
-                  <td style={tdStyle}>{formatCurrency(pkg.price)}</td>
-                  <td style={tdStyle}>{pkg.coinAmount.toLocaleString('vi-VN')}</td>
-                  <td style={tdStyle}>{pkg.description || '—'}</td>
-                  <td style={tdStyle}>{pkg.isActive ? 'Đang mở bán' : 'Tạm ẩn'}</td>
-                  <td style={tdStyle}>
-                    <div style={actionButtonsStyle}>
-                      <button type="button" onClick={() => openEditModal(pkg)} disabled={actionLoading} className="btn btn-update">
-                        Sửa
-                      </button>
-                      <button type="button" onClick={() => setDeleteTarget(pkg)} disabled={actionLoading} className="btn btn-delete">
-                        Xóa
-                      </button>
-                    </div>
-                  </td>
+        <>
+          <div style={tableShellStyle}>
+            <table style={tableStyle}>
+              <thead>
+                <tr>
+                  <th style={thStyle}>Gói</th>
+                  <th style={thStyle}>Giá</th>
+                  <th style={thStyle}>ECoin</th>
+                  <th style={thStyle}>Mô tả</th>
+                  <th style={thStyle}>Trạng thái</th>
+                  <th style={thStyle}>Hành động</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {paginatedItems.map((pkg) => (
+                  <tr key={pkg.id}>
+                    <td style={tdStyle}>{pkg.name}</td>
+                    <td style={tdStyle}>{formatCurrency(pkg.price)}</td>
+                    <td style={tdStyle}>{pkg.coinAmount.toLocaleString('vi-VN')}</td>
+                    <td style={tdStyle}>{pkg.description || '—'}</td>
+                    <td style={tdStyle}>{pkg.isActive ? 'Đang mở bán' : 'Tạm ẩn'}</td>
+                    <td style={tdStyle}>
+                      <div style={actionButtonsStyle}>
+                        <button type="button" onClick={() => openEditModal(pkg)} disabled={actionLoading} className="btn btn-update">
+                          Sửa
+                        </button>
+                        <button type="button" onClick={() => setDeleteTarget(pkg)} disabled={actionLoading} className="btn btn-delete">
+                          Xóa
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <Pagination totalItems={totalItems} currentPage={currentPage} pageSize={pageSize} onPageChange={setCurrentPage} onPageSizeChange={setPageSize} />
+        </>
       )}
 
       {modal.type && (

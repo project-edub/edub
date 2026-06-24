@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AxiosError } from 'axios';
@@ -31,6 +31,7 @@ import { getApiOrigin } from '../services/apiConfig';
 import { useColorMode } from '../theme/ColorModeContext';
 import { useAuth } from '../hooks/useAuth';
 import { Role } from '../types/auth';
+import Pagination, { usePagination } from '../components/common/Pagination';
 
 function resolveImageUrl(value: unknown): string {
   if (typeof value !== 'string') return '';
@@ -66,7 +67,7 @@ function normalizeTextList(items: unknown): string[] {
   return Array.from(new Set(values));
 }
 
-function normalizeExpertises(items: unknown): { specialty: string; degree: string }[] {
+function normalizeExpertises(items: unknown): { specialty: string; degree: string; certificateImageUrl?: string }[] {
   if (!Array.isArray(items)) return [];
 
   return items
@@ -81,14 +82,44 @@ function normalizeExpertises(items: unknown): { specialty: string; degree: strin
       const candidate = item as Record<string, unknown>;
       const specialtyRaw = candidate.specialty ?? candidate.subject ?? candidate.value;
       const degreeRaw = candidate.degree ?? candidate.level ?? '';
+      const certUrlRaw = candidate.certificateImageUrl ?? '';
 
       const specialty = typeof specialtyRaw === 'string' ? specialtyRaw.trim() : '';
       const degree = typeof degreeRaw === 'string' ? degreeRaw.trim() : '';
+      const certificateImageUrl = typeof certUrlRaw === 'string' && certUrlRaw.trim() ? certUrlRaw.trim() : undefined;
 
       if (!specialty && !degree) return null;
-      return { specialty, degree };
+      return { specialty, degree, certificateImageUrl };
     })
-    .filter((item): item is { specialty: string; degree: string } => Boolean(item));
+    .filter((item): item is { specialty: string; degree: string; certificateImageUrl?: string } => Boolean(item));
+}
+
+function normalizeDescriptionList(items: unknown): { description: string; imageUrl?: string }[] {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((item) => {
+      if (typeof item === 'string') return item.trim() ? { description: item.trim() } : null;
+      if (!item || typeof item !== 'object') return null;
+      const candidate = item as Record<string, unknown>;
+      const desc = candidate.description ?? candidate.value ?? '';
+      const imgUrlRaw = candidate.imageUrl ?? '';
+      const imageUrl = typeof imgUrlRaw === 'string' && imgUrlRaw.trim() ? imgUrlRaw.trim() : undefined;
+      return typeof desc === 'string' && desc.trim() ? { description: desc.trim(), imageUrl } : null;
+    })
+    .filter((item): item is { description: string; imageUrl?: string } => Boolean(item));
+}
+
+function normalizeContentList(items: unknown): { content: string }[] {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((item) => {
+      if (typeof item === 'string') return item.trim() ? { content: item.trim() } : null;
+      if (!item || typeof item !== 'object') return null;
+      const candidate = item as Record<string, unknown>;
+      const content = candidate.content ?? candidate.value ?? '';
+      return typeof content === 'string' && content.trim() ? { content: content.trim() } : null;
+    })
+    .filter((item): item is { content: string } => Boolean(item));
 }
 
 function normalizeLecturer(input: unknown, fallbackId: number): PublicLecturerProfile {
@@ -105,9 +136,11 @@ function normalizeLecturer(input: unknown, fallbackId: number): PublicLecturerPr
     fullName,
     introduction,
     avatarUrl: resolveImageUrl(source.avatarUrl),
-    occupations: normalizeTextList(source.occupations).map((value) => ({ value })),
     teachingLocations: normalizeTextList(source.teachingLocations).map((value) => ({ value })),
     expertises: normalizeExpertises(source.expertises),
+    experiences: normalizeDescriptionList(source.experiences),
+    teachingSkills: normalizeDescriptionList(source.teachingSkills),
+    notes: normalizeContentList(source.notes),
   };
 }
 
@@ -121,6 +154,26 @@ function normalizeSearchResponse(response: unknown): PublicLecturerProfile[] {
   return list.map((item, index) => normalizeLecturer(item, index + 1));
 }
 
+/** Client-side filter: matches search query against all profile text fields */
+function matchesSearch(lecturer: PublicLecturerProfile, query: string): boolean {
+  if (!query.trim()) return true;
+  const lowerQuery = query.toLowerCase().trim();
+
+  const searchableTexts: string[] = [
+    lecturer.fullName,
+    lecturer.introduction || '',
+    ...lecturer.teachingLocations.map((l) => l.value),
+    ...lecturer.expertises.map((e) => `${e.specialty} ${e.degree}`),
+    ...(lecturer.experiences || []).map((e) => e.description),
+    ...(lecturer.teachingSkills || []).map((s) => s.description),
+    ...(lecturer.notes || []).map((n) => n.content),
+  ];
+
+  return searchableTexts.some((text) => text.toLowerCase().includes(lowerQuery));
+}
+
+const PAGE_SIZE = 9;
+
 export default function HomePage() {
   const { mode, toggleMode } = useColorMode();
   const { isAuthenticated, email, role } = useAuth();
@@ -130,6 +183,7 @@ export default function HomePage() {
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLecturer, setSelectedLecturer] = useState<PublicLecturerProfile | null>(null);
+  const [expandedImage, setExpandedImage] = useState<string | null>(null);
 
   const searchLecturers = useCallback(async () => {
     setLoading(true);
@@ -158,8 +212,25 @@ export default function HomePage() {
     searchLecturers();
   }, [searchLecturers]);
 
+  // Client-side filtering across all profile fields
+  const filteredLecturers = useMemo(() => {
+    const safeLecturers = Array.isArray(lecturers) ? lecturers : [];
+    return safeLecturers.filter((lecturer) => matchesSearch(lecturer, searchQuery));
+  }, [lecturers, searchQuery]);
+
+  // Pagination
+  const {
+    paginatedItems: paginatedLecturers,
+    currentPage,
+    pageSize,
+    totalItems,
+    setCurrentPage,
+    setPageSize,
+  } = usePagination(filteredLecturers, PAGE_SIZE);
+
   const handleSearch = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setCurrentPage(1);
     searchLecturers();
   };
 
@@ -170,8 +241,6 @@ export default function HomePage() {
   const handleCloseProfile = () => {
     setSelectedLecturer(null);
   };
-
-  const safeLecturers = Array.isArray(lecturers) ? lecturers : [];
 
   return (
     <Box sx={{ minHeight: '100vh' }}>
@@ -280,7 +349,7 @@ export default function HomePage() {
           <Box sx={{ display: 'flex', gap: 1.5 }}>
             <TextField
               fullWidth
-              placeholder="Tìm theo tên giáo viên"
+              placeholder="Tìm theo tên, chuyên môn, địa điểm, kinh nghiệm..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -295,19 +364,19 @@ export default function HomePage() {
 
         {!loading && (
           <Typography variant="h6" sx={{ mb: 2 }}>
-            {safeLecturers.length} giáo viên được tìm thấy
+            {filteredLecturers.length} giáo viên được tìm thấy
           </Typography>
         )}
 
         <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(3, minmax(0, 1fr))' } }}>
-          {safeLecturers.map((lecturer) => (
+          {paginatedLecturers.map((lecturer) => (
             <Box key={lecturer.id}>
               <LecturerCard lecturer={lecturer} onViewProfile={() => handleOpenProfile(lecturer)} />
             </Box>
           ))}
         </Box>
 
-        {!loading && safeLecturers.length === 0 && (
+        {!loading && filteredLecturers.length === 0 && (
           <Card elevation={0} sx={{ border: '1px dashed', borderColor: 'divider', textAlign: 'center', mt: 2 }}>
             <CardContent>
               <Typography color="text.secondary">
@@ -317,6 +386,18 @@ export default function HomePage() {
           </Card>
         )}
 
+        {/* Pagination */}
+        {!loading && filteredLecturers.length > 0 && (
+          <Pagination
+            totalItems={totalItems}
+            currentPage={currentPage}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+          />
+        )}
+
+        {/* Teacher profile modal */}
         <Dialog open={Boolean(selectedLecturer)} onClose={handleCloseProfile} maxWidth="sm" fullWidth>
           <DialogTitle>Thông tin giáo viên</DialogTitle>
           <DialogContent dividers>
@@ -331,39 +412,100 @@ export default function HomePage() {
                   </Avatar>
                   <Box>
                     <Typography variant="h6" sx={{ lineHeight: 1.2 }}>{selectedLecturer.fullName}</Typography>
-                    <Typography color="text.secondary">
-                      {selectedLecturer.occupations.map((o) => o.value).join(', ') || 'Chưa cập nhật nghề nghiệp'}
-                    </Typography>
                   </Box>
                 </Stack>
 
                 {selectedLecturer.introduction && (
-                  <Typography>{selectedLecturer.introduction}</Typography>
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ mb: 0.5 }}>Giới thiệu</Typography>
+                    <Typography>{selectedLecturer.introduction}</Typography>
+                  </Box>
                 )}
 
-                <Box>
-                  <Typography variant="subtitle2" sx={{ mb: 0.8 }}>Địa điểm giảng dạy</Typography>
-                  <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-                    {selectedLecturer.teachingLocations.map((l) => (
-                      <Chip key={`${selectedLecturer.id}-${l.value}`} label={l.value} />
-                    ))}
-                  </Stack>
-                </Box>
+                {selectedLecturer.teachingLocations.length > 0 && (
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ mb: 0.8 }}>Địa điểm giảng dạy</Typography>
+                    <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
+                      {selectedLecturer.teachingLocations.map((l) => (
+                        <Chip key={`${selectedLecturer.id}-loc-${l.value}`} label={l.value} />
+                      ))}
+                    </Stack>
+                  </Box>
+                )}
 
-                <Box>
-                  <Typography variant="subtitle2" sx={{ mb: 0.8 }}>Chuyên môn</Typography>
-                  <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-                    {selectedLecturer.expertises.map((e, index) => (
-                      <Chip
-                        key={`${selectedLecturer.id}-${index}-${e.specialty}`}
-                        color="primary"
-                        variant="outlined"
-                        label={e.degree ? `${e.specialty} (${e.degree})` : e.specialty}
-                      />
-                    ))}
-                  </Stack>
-                </Box>
+                {selectedLecturer.expertises.length > 0 && (
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ mb: 0.8 }}>Chuyên môn</Typography>
+                    <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
+                      {selectedLecturer.expertises.map((e, index) => (
+                        <Box key={`${selectedLecturer.id}-exp-${index}-${e.specialty}`}>
+                          <Chip
+                            color="primary"
+                            variant="outlined"
+                            label={e.degree ? `${e.specialty} (${e.degree})` : e.specialty}
+                          />
+                          {e.certificateImageUrl && (
+                            <img src={resolveImageUrl(e.certificateImageUrl)} alt="" style={{ maxWidth: 200, borderRadius: 8, marginTop: 4, display: 'block', cursor: 'pointer' }} onClick={() => setExpandedImage(resolveImageUrl(e.certificateImageUrl!))} />
+                          )}
+                        </Box>
+                      ))}
+                    </Stack>
+                  </Box>
+                )}
+
+                {selectedLecturer.experiences && selectedLecturer.experiences.length > 0 && (
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ mb: 0.8 }}>Kinh nghiệm</Typography>
+                    <Stack spacing={0.5}>
+                      {selectedLecturer.experiences.map((exp, index) => (
+                        <Box key={`${selectedLecturer.id}-experience-${index}`}>
+                          <Typography variant="body2">• {exp.description}</Typography>
+                          {exp.imageUrl && (
+                            <img src={resolveImageUrl(exp.imageUrl)} alt="" style={{ maxWidth: 200, borderRadius: 8, marginTop: 4, cursor: 'pointer' }} onClick={() => setExpandedImage(resolveImageUrl(exp.imageUrl!))} />
+                          )}
+                        </Box>
+                      ))}
+                    </Stack>
+                  </Box>
+                )}
+
+                {selectedLecturer.teachingSkills && selectedLecturer.teachingSkills.length > 0 && (
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ mb: 0.8 }}>Kỹ năng giảng dạy</Typography>
+                    <Stack spacing={0.5}>
+                      {selectedLecturer.teachingSkills.map((skill, index) => (
+                        <Box key={`${selectedLecturer.id}-skill-${index}`}>
+                          <Typography variant="body2">• {skill.description}</Typography>
+                          {skill.imageUrl && (
+                            <img src={resolveImageUrl(skill.imageUrl)} alt="" style={{ maxWidth: 200, borderRadius: 8, marginTop: 4, cursor: 'pointer' }} onClick={() => setExpandedImage(resolveImageUrl(skill.imageUrl!))} />
+                          )}
+                        </Box>
+                      ))}
+                    </Stack>
+                  </Box>
+                )}
+
+                {selectedLecturer.notes && selectedLecturer.notes.length > 0 && (
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ mb: 0.8 }}>Ghi chú</Typography>
+                    <Stack spacing={0.5}>
+                      {selectedLecturer.notes.map((note, index) => (
+                        <Typography key={`${selectedLecturer.id}-note-${index}`} variant="body2">
+                          • {note.content}
+                        </Typography>
+                      ))}
+                    </Stack>
+                  </Box>
+                )}
               </Stack>
+            )}
+          </DialogContent>
+        </Dialog>
+        {/* Image lightbox */}
+        <Dialog open={Boolean(expandedImage)} onClose={() => setExpandedImage(null)} maxWidth="md">
+          <DialogContent sx={{ p: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            {expandedImage && (
+              <img src={expandedImage} alt="" style={{ maxWidth: '100%', maxHeight: '80vh', borderRadius: 8 }} />
             )}
           </DialogContent>
         </Dialog>
@@ -378,7 +520,6 @@ interface LecturerCardProps {
 }
 
 function LecturerCard({ lecturer, onViewProfile }: LecturerCardProps) {
-  const occupationText = lecturer.occupations.map((o) => o.value).join(', ');
   const locationText = lecturer.teachingLocations.map((l) => l.value).join(', ');
 
   return (
@@ -390,7 +531,6 @@ function LecturerCard({ lecturer, onViewProfile }: LecturerCardProps) {
           </Avatar>
           <Box>
             <Typography variant="h6" sx={{ fontSize: '1.05rem', lineHeight: 1.2 }}>{lecturer.fullName}</Typography>
-            <Typography variant="body2" color="text.secondary">{occupationText || 'Chưa cập nhật nghề nghiệp'}</Typography>
           </Box>
         </Stack>
 

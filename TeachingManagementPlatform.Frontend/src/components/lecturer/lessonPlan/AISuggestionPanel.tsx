@@ -11,7 +11,13 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Link from '@mui/material/Link';
+import IconButton from '@mui/material/IconButton';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import LinkIcon from '@mui/icons-material/Link';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import type { LessonSuggestionResponse } from '../../../types/lessonSuggestion';
 import * as lessonSuggestionService from '../../../services/lessonSuggestionService';
 
@@ -82,38 +88,6 @@ function SuggestionContent({
       setSelectedAttachments([]);
     } catch {
       // silently fail, user can retry
-    } finally {
-      setApplying(false);
-    }
-  }
-
-  async function handleAcceptQuizTopic() {
-    if (!suggestion?.suggestedQuizTopic) return;
-    setApplying(true);
-    try {
-      await lessonSuggestionService.acceptSuggestion(lessonId, {
-        type: 'quiz_topic',
-        value: suggestion.suggestedQuizTopic,
-      });
-      setApplySuccess('Đã áp dụng chủ đề quiz!');
-    } catch {
-      // silently fail
-    } finally {
-      setApplying(false);
-    }
-  }
-
-  async function handleAcceptCrosswordTopic() {
-    if (!suggestion?.suggestedCrosswordTopic) return;
-    setApplying(true);
-    try {
-      await lessonSuggestionService.acceptSuggestion(lessonId, {
-        type: 'crossword_topic',
-        value: suggestion.suggestedCrosswordTopic,
-      });
-      setApplySuccess('Đã áp dụng chủ đề crossword!');
-    } catch {
-      // silently fail
     } finally {
       setApplying(false);
     }
@@ -203,30 +177,76 @@ function SuggestionContent({
         </Box>
       )}
 
-      {/* Keywords */}
-      {suggestion.suggestedKeywords.length > 0 && (
+      {/* Suggested Links */}
+      {suggestion.suggestedLinks && suggestion.suggestedLinks.length > 0 && (
         <Box sx={{ mb: 2 }}>
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>
-            Từ khóa gợi ý
+          <Typography variant="subtitle2" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <LinkIcon fontSize="small" />
+            Đường dẫn tham khảo gợi ý
           </Typography>
-          <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-            {suggestion.suggestedKeywords.map((kw, i) => (
-              <Chip key={i} label={kw} size="small" variant="outlined" />
-            ))}
-          </Box>
+          {suggestion.suggestedLinks.map((link, i) => (
+            <Card key={i} variant="outlined" sx={{ mb: 1 }}>
+              <CardContent sx={{ py: 1, px: 1.5, '&:last-child': { pb: 1 } }}>
+                <Link
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  variant="body2"
+                  sx={{ fontWeight: 600 }}
+                >
+                  {link.title}
+                </Link>
+                {link.description && (
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                    {link.description}
+                  </Typography>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={async () => {
+              setApplying(true);
+              try {
+                for (const link of suggestion.suggestedLinks) {
+                  await lessonSuggestionService.acceptSuggestion(lessonId, {
+                    type: 'link',
+                    value: JSON.stringify({ url: link.url, title: link.title }),
+                  });
+                }
+                setApplySuccess('Đã thêm đường dẫn!');
+              } catch {
+                // silently fail
+              } finally {
+                setApplying(false);
+              }
+            }}
+            disabled={applying}
+            sx={{ mt: 1 }}
+          >
+            Thêm tất cả vào bài học
+          </Button>
         </Box>
       )}
 
       {/* Quiz topic */}
       {suggestion.suggestedQuizTopic && (
         <Box sx={{ mb: 2 }}>
-          <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-            Chủ đề quiz gợi ý
-          </Typography>
+          <Typography variant="subtitle2" sx={{ mb: 0.5 }}>Chủ đề quiz gợi ý</Typography>
           <Typography variant="body2" sx={{ mb: 1 }}>
             {suggestion.suggestedQuizTopic}
+            <IconButton
+              size="small"
+              onClick={() => { navigator.clipboard.writeText(suggestion.suggestedQuizTopic!); setApplySuccess('Đã sao chép!'); }}
+              title="Sao chép"
+              sx={{ ml: 0.5 }}
+            >
+              <ContentCopyIcon sx={{ fontSize: 14 }} />
+            </IconButton>
           </Typography>
-          <Button variant="outlined" size="small" onClick={handleAcceptQuizTopic} disabled={applying}>
+          <Button variant="outlined" size="small" onClick={() => window.open('/lecturer/quiz-generator', '_blank')}>
             Tạo quiz
           </Button>
         </Box>
@@ -235,13 +255,19 @@ function SuggestionContent({
       {/* Crossword topic */}
       {suggestion.suggestedCrosswordTopic && (
         <Box sx={{ mb: 2 }}>
-          <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-            Chủ đề crossword gợi ý
-          </Typography>
+          <Typography variant="subtitle2" sx={{ mb: 0.5 }}>Chủ đề crossword gợi ý</Typography>
           <Typography variant="body2" sx={{ mb: 1 }}>
             {suggestion.suggestedCrosswordTopic}
+            <IconButton
+              size="small"
+              onClick={() => { navigator.clipboard.writeText(suggestion.suggestedCrosswordTopic!); setApplySuccess('Đã sao chép!'); }}
+              title="Sao chép"
+              sx={{ ml: 0.5 }}
+            >
+              <ContentCopyIcon sx={{ fontSize: 14 }} />
+            </IconButton>
           </Typography>
-          <Button variant="outlined" size="small" onClick={handleAcceptCrosswordTopic} disabled={applying}>
+          <Button variant="outlined" size="small" onClick={() => window.open('/lecturer/crossword/new', '_blank')}>
             Tạo crossword
           </Button>
         </Box>
@@ -287,15 +313,27 @@ function AISuggestionDialog({ open, onClose, lessonId, lessonName }: DialogModeP
 
   const aiSuggestionCost = 5; // Hardcoded for now, can be fetched from config
 
-  // Reset state when dialog opens
   useEffect(() => {
     if (open) {
-      setStep('input');
       setDescription('');
-      setSuggestion(null);
       setError(null);
+      setSuggestion(null);
+      setStep('loading');
+      lessonSuggestionService
+        .getCachedSuggestion(lessonId)
+        .then((data) => {
+          if (data) {
+            setSuggestion(data);
+            setStep('result');
+          } else {
+            setStep('input');
+          }
+        })
+        .catch(() => {
+          setStep('input');
+        });
     }
-  }, [open]);
+  }, [open, lessonId]);
 
   function handleConfirm() {
     setStep('loading');
@@ -385,7 +423,14 @@ function AISuggestionDialog({ open, onClose, lessonId, lessonName }: DialogModeP
             Đóng
           </Button>
         )}
-        {step === 'result' && <Button onClick={onClose}>Đóng</Button>}
+        {step === 'result' && (
+          <>
+            <Button onClick={() => { setStep('input'); setSuggestion(null); }}>
+              Tạo lại gợi ý
+            </Button>
+            <Button onClick={onClose}>Đóng</Button>
+          </>
+        )}
       </DialogActions>
     </Dialog>
   );

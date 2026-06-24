@@ -12,6 +12,7 @@ import DialogContentText from '@mui/material/DialogContentText';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import * as lessonPlanService from '../../services/lessonPlanService';
+import * as lessonSuggestionService from '../../services/lessonSuggestionService';
 import type { LessonPlan } from '../../types/lessonPlan';
 import TemplateSelectionDialog from '../../components/lecturer/lessonPlan/TemplateSelectionDialog';
 import AISuggestionPanel from '../../components/lecturer/lessonPlan/AISuggestionPanel';
@@ -40,6 +41,13 @@ export default function LessonListPage() {
   // AI suggestion state
   const [aiPanelOpen, setAiPanelOpen] = useState(false);
   const [selectedLessonForAI, setSelectedLessonForAI] = useState<{ id: number; name: string } | null>(null);
+
+  // Batch AI suggestion state
+  const [batchAIOpen, setBatchAIOpen] = useState(false);
+  const [batchDescription, setBatchDescription] = useState('');
+  const [batchCostInfo, setBatchCostInfo] = useState<{ totalLessons: number; uncachedCount: number; totalCost: number } | null>(null);
+  const [batchLoading, setBatchLoading] = useState(false);
+  const [batchResult, setBatchResult] = useState<string | null>(null);
 
   useEffect(() => {
     if (!planId || isNaN(planId)) { setError('ID không hợp lệ.'); setLoading(false); return; }
@@ -127,6 +135,32 @@ export default function LessonListPage() {
     setSelectedLessonForAI(null);
   }
 
+  async function openBatchAI() {
+    setBatchAIOpen(true);
+    setBatchDescription('');
+    setBatchResult(null);
+    setBatchCostInfo(null);
+    try {
+      const cost = await lessonSuggestionService.getSuggestAllCost(planId);
+      setBatchCostInfo(cost);
+    } catch {
+      setBatchCostInfo(null);
+    }
+  }
+
+  async function handleBatchAI() {
+    setBatchLoading(true);
+    setBatchResult(null);
+    try {
+      const result = await lessonSuggestionService.suggestAll(planId, batchDescription || undefined);
+      setBatchResult(`Đã tạo gợi ý cho ${result.totalProcessed} bài học (chi phí: ${result.totalCost} ECoin)`);
+    } catch (err: any) {
+      setBatchResult(err?.response?.data?.error?.message || 'Có lỗi xảy ra.');
+    } finally {
+      setBatchLoading(false);
+    }
+  }
+
   if (loading) return <div style={pageStyle}><p>Đang tải...</p></div>;
   if (error && !plan) return <div style={pageStyle}><p style={{ color: '#d32f2f' }}>{error}</p><button className="btn btn-neutral" onClick={() => navigate('/lecturer/lesson-plans')}>← Quay lại</button></div>;
   if (!plan) return null;
@@ -173,6 +207,15 @@ export default function LessonListPage() {
               size="small"
             >
               Sử dụng giáo án có sẵn
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<AutoAwesomeIcon />}
+              onClick={openBatchAI}
+              disabled={actionLoading || plan.lessons.length === 0}
+              size="small"
+            >
+              Gợi ý AI cho toàn bộ
             </Button>
           </>
         )}
@@ -274,6 +317,38 @@ export default function LessonListPage() {
           lessonName={selectedLessonForAI.name}
         />
       )}
+
+      {/* Batch AI Suggestion Dialog */}
+      <Dialog open={batchAIOpen} onClose={() => setBatchAIOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Gợi ý AI cho toàn bộ bài học</DialogTitle>
+        <DialogContent>
+          {batchCostInfo && (
+            <div style={{ marginBottom: 16, padding: 12, borderRadius: 8, backgroundColor: '#f1f5f9' }}>
+              <p style={{ margin: 0, fontSize: 14 }}>Tổng bài học: <strong>{batchCostInfo.totalLessons}</strong></p>
+              <p style={{ margin: '4px 0 0', fontSize: 14 }}>Bài chưa có gợi ý: <strong>{batchCostInfo.uncachedCount}</strong></p>
+              <p style={{ margin: '4px 0 0', fontSize: 14 }}>Chi phí ước tính: <strong>{batchCostInfo.totalCost} ECoin</strong></p>
+            </div>
+          )}
+          <p style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Mô tả ngắn gọn nội dung môn học:</p>
+          <textarea
+            value={batchDescription}
+            onChange={(e) => setBatchDescription(e.target.value)}
+            placeholder="VD: Toán lớp 9 chương trình mới, tập trung vào hình học..."
+            style={{ width: '100%', minHeight: 80, padding: 10, borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, resize: 'vertical', boxSizing: 'border-box' }}
+          />
+          {batchResult && (
+            <div style={{ marginTop: 12, padding: 10, borderRadius: 8, backgroundColor: batchResult.includes('Đã tạo') ? '#ecfdf5' : '#fef2f2', color: batchResult.includes('Đã tạo') ? '#065f46' : '#991b1b', fontSize: 13 }}>
+              {batchResult}
+            </div>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setBatchAIOpen(false)}>Đóng</Button>
+          <Button variant="contained" onClick={handleBatchAI} disabled={batchLoading || !batchCostInfo || batchCostInfo.uncachedCount === 0}>
+            {batchLoading ? 'Đang xử lý...' : 'Gợi ý AI'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
     </div>
   );

@@ -6,6 +6,7 @@ import type {
   CurriculumTemplate,
   CurriculumTemplateLesson,
 } from '../../types/curriculumTemplate';
+import Pagination, { usePagination } from '../../components/common/Pagination';
 
 interface DialogState {
   mode: 'create' | 'edit' | 'view' | null;
@@ -33,6 +34,8 @@ export default function CurriculumTemplateManagementPage() {
   // Delete state (confirmation handled by Task 7.3)
   const [deleteTarget, setDeleteTarget] = useState<CurriculumTemplate | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+
+  const { paginatedItems, currentPage, pageSize, totalItems, setCurrentPage, setPageSize } = usePagination(templates);
 
   const loadTemplates = useCallback(async () => {
     setLoading(true);
@@ -168,63 +171,66 @@ export default function CurriculumTemplateManagementPage() {
           Không tìm thấy mẫu giáo án nào. Thử thay đổi bộ lọc hoặc tạo mẫu mới.
         </div>
       ) : (
-        <div style={tableShellStyle}>
-          <table style={tableStyle}>
-            <thead>
-              <tr>
-                <th style={thStyle}>Tên môn</th>
-                <th style={thStyle}>Lớp</th>
-                <th style={thStyle}>Số bài học</th>
-                <th style={thStyle}>Số lần sử dụng</th>
-                <th style={thStyle}>Ngày tạo</th>
-                <th style={thStyle}>Hành động</th>
-              </tr>
-            </thead>
-            <tbody>
-              {templates.map((tpl) => {
-                return (
-                  <tr key={tpl.id}>
-                    <td style={tdStyle}>{tpl.subject}</td>
-                    <td style={tdStyle}>{tpl.grade}</td>
-                    <td style={tdStyle}>{tpl.lessonCount}</td>
-                    <td style={tdStyle}>{tpl.usageCount}</td>
-                    <td style={tdStyle}>{formatDate(tpl.createdAt)}</td>
-                    <td style={tdStyle}>
-                      <div style={actionButtonsStyle}>
-                        <button
-                          type="button"
-                          onClick={() => openViewDialog(tpl)}
-                          className="btn btn-neutral"
-                          style={actionBtnStyle}
-                        >
-                          Xem
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => openEditDialog(tpl)}
-                          disabled={actionLoading}
-                          className="btn btn-update"
-                          style={actionBtnStyle}
-                        >
-                          Sửa
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDeleteTarget(tpl)}
-                          disabled={actionLoading}
-                          className="btn btn-delete"
-                          style={actionBtnStyle}
-                        >
-                          Xóa
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <>
+          <div style={tableShellStyle}>
+            <table style={tableStyle}>
+              <thead>
+                <tr>
+                  <th style={thStyle}>Tên môn</th>
+                  <th style={thStyle}>Lớp</th>
+                  <th style={thStyle}>Số bài học</th>
+                  <th style={thStyle}>Số lần sử dụng</th>
+                  <th style={thStyle}>Ngày tạo</th>
+                  <th style={thStyle}>Hành động</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedItems.map((tpl) => {
+                  return (
+                    <tr key={tpl.id}>
+                      <td style={tdStyle}>{tpl.subject}</td>
+                      <td style={tdStyle}>{tpl.grade}</td>
+                      <td style={tdStyle}>{tpl.lessonCount}</td>
+                      <td style={tdStyle}>{tpl.usageCount}</td>
+                      <td style={tdStyle}>{formatDate(tpl.createdAt)}</td>
+                      <td style={tdStyle}>
+                        <div style={actionButtonsStyle}>
+                          <button
+                            type="button"
+                            onClick={() => openViewDialog(tpl)}
+                            className="btn btn-neutral"
+                            style={actionBtnStyle}
+                          >
+                            Xem
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openEditDialog(tpl)}
+                            disabled={actionLoading}
+                            className="btn btn-update"
+                            style={actionBtnStyle}
+                          >
+                            Sửa
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeleteTarget(tpl)}
+                            disabled={actionLoading}
+                            className="btn btn-delete"
+                            style={actionBtnStyle}
+                          >
+                            Xóa
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <Pagination totalItems={totalItems} currentPage={currentPage} pageSize={pageSize} onPageChange={setCurrentPage} onPageSizeChange={setPageSize} />
+        </>
       )}
 
       {/* Delete Confirmation */}

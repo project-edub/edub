@@ -201,6 +201,9 @@ builder.Services.AddHostedService<CrosswordCleanupService>();
 // Register storage embedding background service (pre-computes embeddings for new files)
 builder.Services.AddHostedService<StorageEmbeddingBackgroundService>();
 
+// Register subscription expiry background service (resets expired subscriptions to free plan)
+builder.Services.AddHostedService<SubscriptionExpiryBackgroundService>();
+
 var app = builder.Build();
 var r2PublicBaseUrl = builder.Configuration["R2:PublicBaseUrl"];
 var useR2Storage = !string.IsNullOrWhiteSpace(builder.Configuration["R2:AccountId"])
@@ -305,6 +308,16 @@ END
 IF COL_LENGTH('LessonPlans', 'ShareCode') IS NULL
 BEGIN
     ALTER TABLE [LessonPlans] ADD [ShareCode] NVARCHAR(20) NULL;
+END
+
+IF COL_LENGTH('LessonSuggestionCaches', 'SuggestedLinks') IS NULL
+BEGIN
+    ALTER TABLE [LessonSuggestionCaches] ADD [SuggestedLinks] NVARCHAR(MAX) NULL;
+END
+
+IF COL_LENGTH('Lessons', 'SuggestedPeriods') IS NULL
+BEGIN
+    ALTER TABLE [Lessons] ADD [SuggestedPeriods] INT NOT NULL DEFAULT 1;
 END
 ");
     }

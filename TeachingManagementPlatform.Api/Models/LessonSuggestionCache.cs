@@ -9,6 +9,7 @@ public class LessonSuggestionCache
     public string? SuggestedKeywords { get; set; }
     public string? SuggestedQuizTopic { get; set; }
     public string? SuggestedCrosswordTopic { get; set; }
+    public string? SuggestedLinks { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime ExpiresAt { get; set; }
 

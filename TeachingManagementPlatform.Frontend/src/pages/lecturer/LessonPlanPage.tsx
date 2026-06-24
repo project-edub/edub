@@ -7,6 +7,7 @@ import * as lessonPlanService from '../../services/lessonPlanService';
 import LessonPlanModal from '../../components/lecturer/LessonPlanModal';
 import CrudIcon from '../../components/common/CrudIcon';
 import Toast from '../../components/common/Toast';
+import Pagination, { usePagination } from '../../components/common/Pagination';
 
 interface ModalState {
   type: 'create' | 'edit' | null;
@@ -38,6 +39,8 @@ export default function LessonPlanPage() {
   const [joinCode, setJoinCode] = useState('');
   const [joinLoading, setJoinLoading] = useState(false);
   const [joinMessage, setJoinMessage] = useState('');
+
+  const { paginatedItems: paginatedPlans, currentPage, pageSize, totalItems, setCurrentPage, setPageSize } = usePagination(plans);
 
   function extractError(err: unknown): string {
     const axiosErr = err as AxiosError<ApiError>;
@@ -341,14 +344,14 @@ export default function LessonPlanPage() {
             </tr>
           </thead>
           <tbody>
-            {plans.length === 0 ? (
+            {paginatedPlans.length === 0 ? (
               <tr>
                 <td colSpan={4} style={{ textAlign: 'center', padding: 16 }}>
                   Không có giáo án nào
                 </td>
               </tr>
             ) : (
-              plans.map((plan) => (
+              paginatedPlans.map((plan) => (
                 <tr
                   key={plan.id}
                   style={{ cursor: 'pointer', backgroundColor: hoveredRowId === plan.id ? '#f5f5f5' : undefined, transition: 'background-color 0.15s' }}
@@ -383,6 +386,14 @@ export default function LessonPlanPage() {
           </tbody>
         </table>
       )}
+
+      <Pagination
+        totalItems={totalItems}
+        currentPage={currentPage}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+      />
 
       {/* Share Options Dialog */}
       {shareDialogPlan && !shareCodeResult && (

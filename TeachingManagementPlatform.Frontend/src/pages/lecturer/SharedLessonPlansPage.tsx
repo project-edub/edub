@@ -3,6 +3,7 @@ import { AxiosError } from 'axios';
 import type { SharedLessonPlan } from '../../types/lessonPlan';
 import type { ApiError } from '../../types/common';
 import * as lessonPlanService from '../../services/lessonPlanService';
+import Pagination, { usePagination } from '../../components/common/Pagination';
 
 export default function SharedLessonPlansPage() {
   const [plans, setPlans] = useState<SharedLessonPlan[]>([]);
@@ -14,6 +15,8 @@ export default function SharedLessonPlansPage() {
   // Filter state
   const [filterSubject, setFilterSubject] = useState('');
   const [filterGrade, setFilterGrade] = useState('');
+
+  const { paginatedItems: paginatedPlans, currentPage, pageSize, totalItems, setCurrentPage, setPageSize } = usePagination(plans);
 
   function extractError(err: unknown): string {
     const axiosErr = err as AxiosError<ApiError>;
@@ -110,14 +113,14 @@ export default function SharedLessonPlansPage() {
             </tr>
           </thead>
           <tbody>
-            {plans.length === 0 ? (
+            {paginatedPlans.length === 0 ? (
               <tr>
                 <td colSpan={6} style={{ textAlign: 'center', padding: 16 }}>
                   Chưa có giáo án được chia sẻ
                 </td>
               </tr>
             ) : (
-              plans.map((plan) => (
+              paginatedPlans.map((plan) => (
                 <tr key={plan.id}>
                   <td style={tdStyle}>{plan.subject}</td>
                   <td style={tdStyle}>{plan.grade}</td>
@@ -152,6 +155,14 @@ export default function SharedLessonPlansPage() {
           </tbody>
         </table>
       )}
+
+      <Pagination
+        totalItems={totalItems}
+        currentPage={currentPage}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+      />
     </div>
   );
 }

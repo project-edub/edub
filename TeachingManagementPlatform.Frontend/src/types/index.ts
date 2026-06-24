@@ -46,12 +46,10 @@ export type {
 
 // Profile
 export type {
-  ProfileOccupation,
   ProfileTeachingLocation,
   ProfileExpertise,
   ProfileExperience,
   ProfileTeachingSkill,
-  ProfileTuitionFee,
   ProfileNote,
   LecturerProfile,
   UpdateProfileRequest,

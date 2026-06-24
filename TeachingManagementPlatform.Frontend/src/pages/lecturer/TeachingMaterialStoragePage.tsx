@@ -177,6 +177,27 @@ export default function TeachingMaterialStoragePage() {
     }
   }
 
+  async function handleDownloadFolder(item: StorageItem) {
+    if (item.itemType !== ItemType.Folder) return;
+    setActionLoading(true);
+    try {
+      const blob = await storageService.downloadFolder(item.id);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${item.name}.zip`;
+      link.rel = 'noopener';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(extractError(err));
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
   function handleOpen(item: StorageItem) {
     if (item.itemType === ItemType.Folder) return;
     const url = storageService.resolveStorageFileUrl(item.fileUrl || null);
@@ -403,6 +424,9 @@ export default function TeachingMaterialStoragePage() {
                     <CrudIcon name="edit" tooltip="Đổi tên" onClick={() => startRename(item)} disabled={actionLoading} />
                     {item.itemType === ItemType.File && (
                       <CrudIcon name="download" tooltip="Tải xuống" onClick={() => handleDownload(item)} disabled={actionLoading} />
+                    )}
+                    {item.itemType === ItemType.Folder && (
+                      <CrudIcon name="download" tooltip="Tải thư mục" onClick={() => handleDownloadFolder(item)} disabled={actionLoading} />
                     )}
                     <CrudIcon name="delete" tooltip="Xóa" onClick={() => setDeleteTarget(item)} disabled={actionLoading} />
                   </td>

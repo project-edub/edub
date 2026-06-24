@@ -146,6 +146,7 @@ public class LessonPlanController : ControllerBase
         var userId = GetUserId();
         var sourcePlan = await _context.LessonPlans
             .Include(lp => lp.Lessons)
+                .ThenInclude(l => l.Documents)
             .FirstOrDefaultAsync(lp => lp.Id == sharedPlanId && lp.IsShared);
 
         if (sourcePlan == null)
@@ -165,11 +166,23 @@ public class LessonPlanController : ControllerBase
 
         foreach (var lesson in sourcePlan.Lessons)
         {
-            newPlan.Lessons.Add(new Lesson
+            var newLesson = new Lesson
             {
                 Name = lesson.Name,
                 OrderIndex = lesson.OrderIndex
-            });
+            };
+
+            foreach (var doc in lesson.Documents)
+            {
+                newLesson.Documents.Add(new LessonDocument
+                {
+                    Name = doc.Name,
+                    Link = doc.Link,
+                    PageRange = doc.PageRange
+                });
+            }
+
+            newPlan.Lessons.Add(newLesson);
         }
 
         _context.LessonPlans.Add(newPlan);
@@ -202,6 +215,7 @@ public class LessonPlanController : ControllerBase
         var userId = GetUserId();
         var sourcePlan = await _context.LessonPlans
             .Include(lp => lp.Lessons)
+                .ThenInclude(l => l.Documents)
             .FirstOrDefaultAsync(lp => lp.ShareCode == code);
 
         if (sourcePlan == null)
@@ -224,11 +238,23 @@ public class LessonPlanController : ControllerBase
 
         foreach (var lesson in sourcePlan.Lessons)
         {
-            newPlan.Lessons.Add(new Lesson
+            var newLesson = new Lesson
             {
                 Name = lesson.Name,
                 OrderIndex = lesson.OrderIndex
-            });
+            };
+
+            foreach (var doc in lesson.Documents)
+            {
+                newLesson.Documents.Add(new LessonDocument
+                {
+                    Name = doc.Name,
+                    Link = doc.Link,
+                    PageRange = doc.PageRange
+                });
+            }
+
+            newPlan.Lessons.Add(newLesson);
         }
 
         _context.LessonPlans.Add(newPlan);
