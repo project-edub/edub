@@ -1,7 +1,17 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { AxiosError } from 'axios';
-import Icon from 'react-crud-icons';
-import 'react-crud-icons/dist/css/react-crud-icons.css';
+// Inline SVG icons from react-crud-icons paths (avoids CJS/ESM interop issues)
+function CrudIcon({ name, size = 24 }: { name: 'image' | 'delete'; size?: number }) {
+  const paths: Record<string, string> = {
+    image: 'M8.5,13.5L11,16.5L14.5,12L19,18H5M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19Z',
+    delete: 'M9,3V4H4V6H5V19C5,20.1 5.9,21 7,21H17C18.1,21 19,20.1 19,19V6H20V4H15V3H9M7,6H17V19H7V6M9,8V17H11V8H9M13,8V17H15V8H13Z',
+  };
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" style={{ display: 'block' }}>
+      <path d={paths[name]} />
+    </svg>
+  );
+}
 import * as profileService from '../../services/profileService';
 
 type LecturerProfile = Awaited<ReturnType<typeof profileService.getProfile>>;
@@ -231,11 +241,11 @@ export default function OverviewPage() {
                       <input type="text" value={ex.specialty} onChange={(e) => { const u = [...expertises]; u[i] = { ...u[i], specialty: e.target.value }; setExpertises(u); }} style={{ ...inputStyle, flex: 1 }} placeholder="Chuyên ngành" />
                       <input type="text" value={ex.degree} onChange={(e) => { const u = [...expertises]; u[i] = { ...u[i], degree: e.target.value }; setExpertises(u); }} style={{ ...inputStyle, flex: 1 }} placeholder="Bằng cấp" />
                       <label style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }} title="Thêm ảnh">
-                        <Icon name="image" theme="none" size="small" />
+                        <CrudIcon name="image" size={20} />
                         <input type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={(e) => { const files = e.target.files; if (files) { Array.from(files).forEach((f) => handleExpertiseImageUpload(f, i)); } }} />
                       </label>
                       <button type="button" onClick={() => { if (expertises.length > 1) setExpertises(expertises.filter((_, j) => j !== i)); }} disabled={expertises.length <= 1} style={{ background: 'none', border: 'none', cursor: expertises.length <= 1 ? 'not-allowed' : 'pointer', opacity: expertises.length <= 1 ? 0.4 : 1, display: 'inline-flex', alignItems: 'center' }} title="Xóa">
-                        <Icon name="delete" theme="none" size="small" />
+                        <CrudIcon name="delete" size={20} />
                       </button>
                     </div>
                     {ex.certificateImageUrls.length > 0 && (
@@ -271,11 +281,11 @@ export default function OverviewPage() {
                     <div style={rowStyle}>
                       <input type="text" value={ex.description} onChange={(e) => { const u = [...experiences]; u[i] = { ...u[i], description: e.target.value }; setExperiences(u); }} style={{ ...inputStyle, flex: 1 }} placeholder="Mô tả kinh nghiệm" />
                       <label style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }} title="Thêm ảnh">
-                        <Icon name="image" theme="none" size="small" />
+                        <CrudIcon name="image" size={20} />
                         <input type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={(e) => { const files = e.target.files; if (files) { Array.from(files).forEach((f) => handleExperienceImageUpload(f, i)); } }} />
                       </label>
                       <button type="button" onClick={() => { if (experiences.length > 1) setExperiences(experiences.filter((_, j) => j !== i)); }} disabled={experiences.length <= 1} style={{ background: 'none', border: 'none', cursor: experiences.length <= 1 ? 'not-allowed' : 'pointer', opacity: experiences.length <= 1 ? 0.4 : 1, display: 'inline-flex', alignItems: 'center' }} title="Xóa">
-                        <Icon name="delete" theme="none" size="small" />
+                        <CrudIcon name="delete" size={20} />
                       </button>
                     </div>
                     {ex.imageUrls.length > 0 && (
@@ -311,11 +321,11 @@ export default function OverviewPage() {
                     <div style={rowStyle}>
                       <input type="text" value={s.description} onChange={(e) => { const u = [...skills]; u[i] = { ...u[i], description: e.target.value }; setSkills(u); }} style={{ ...inputStyle, flex: 1 }} placeholder="Mô tả kỹ năng" />
                       <label style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }} title="Thêm ảnh">
-                        <Icon name="image" theme="none" size="small" />
+                        <CrudIcon name="image" size={20} />
                         <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => { const f = e.target.files?.[0]; if (f) handleSkillImageUpload(f, i); }} />
                       </label>
                       <button type="button" onClick={() => { if (skills.length > 1) setSkills(skills.filter((_, j) => j !== i)); }} disabled={skills.length <= 1} style={{ background: 'none', border: 'none', cursor: skills.length <= 1 ? 'not-allowed' : 'pointer', opacity: skills.length <= 1 ? 0.4 : 1, display: 'inline-flex', alignItems: 'center' }} title="Xóa">
-                        <Icon name="delete" theme="none" size="small" />
+                        <CrudIcon name="delete" size={20} />
                       </button>
                     </div>
                     {s.imageUrl && (

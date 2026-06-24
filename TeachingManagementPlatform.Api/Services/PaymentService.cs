@@ -215,7 +215,7 @@ public class PaymentService : IPaymentService
             .AsNoTracking()
             .Where(item => item.UserId == userId)
             .Where(item => item.SubscriptionPackageId == null) // Only coin purchases, not subscriptions
-            .Where(item => !string.Equals(item.Status, "paid", StringComparison.OrdinalIgnoreCase))
+            .Where(item => item.Status!.ToLower() != "paid")
             .OrderByDescending(item => item.CreatedAt)
             .FirstOrDefaultAsync();
 
@@ -231,7 +231,7 @@ public class PaymentService : IPaymentService
             .AsNoTracking()
             .Where(item => item.UserId == userId)
             .Where(item => item.SubscriptionPackageId != null)
-            .Where(item => !string.Equals(item.Status, "paid", StringComparison.OrdinalIgnoreCase))
+            .Where(item => item.Status!.ToLower() != "paid")
             .OrderByDescending(item => item.CreatedAt)
             .FirstOrDefaultAsync();
 
