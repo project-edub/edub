@@ -20,6 +20,7 @@ export interface UpdateTemplateRequest {
   grade?: number;
   bookSet?: string;
   sourceNote?: string;
+  isPublic?: boolean;
 }
 
 export interface UpdateTemplateLessonsRequest {
@@ -56,6 +57,11 @@ export async function updateTemplate(id: number, request: UpdateTemplateRequest)
 
 export async function updateTemplateLessons(id: number, request: UpdateTemplateLessonsRequest): Promise<CurriculumTemplateLesson[]> {
   const response = await api.put<CurriculumTemplateLesson[]>(`/curriculum-templates/${id}/lessons`, request);
+  return response.data;
+}
+
+export async function bulkUpdateLessons(templateId: number, request: { lessons: { orderIndex: number; chapterName?: string; lessonName: string; suggestedPeriods: number }[] }): Promise<CurriculumTemplateLesson[]> {
+  const response = await api.put<CurriculumTemplateLesson[]>(`/curriculum-templates/${templateId}/lessons`, request);
   return response.data;
 }
 

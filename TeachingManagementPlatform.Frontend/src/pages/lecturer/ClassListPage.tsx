@@ -139,7 +139,7 @@ export default function ClassListPage() {
   return (
     <div style={{ padding: 24 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-        <h1 style={{ margin: 0, color: 'var(--edub-text-primary)' }}>Danh sách lớp học</h1>
+        <h1 style={{ margin: 0, color: 'var(--edub-text-primary)' }}>Danh sách lớp</h1>
         <button
           type="button"
           onClick={openCreateModal}
@@ -164,7 +164,7 @@ export default function ClassListPage() {
             <thead>
               <tr>
                 <th style={thStyle}>Tên lớp</th>
-                <th style={thStyle}>Năm học</th>
+                <th style={thStyle}>Niên khóa</th>
                 <th style={thStyle}>Số học sinh</th>
                 <th style={thStyle}>Hành động</th>
               </tr>
@@ -229,11 +229,11 @@ export default function ClassListPage() {
               </div>
 
               <div style={{ marginBottom: 16 }}>
-                <label htmlFor="modal-year" style={{ display: 'block', marginBottom: 4 }}>Năm học</label>
+                <label htmlFor="modal-year" style={{ display: 'block', marginBottom: 4 }}>Niên khóa</label>
                 <input
                   id="modal-year"
                   type="text"
-                  placeholder="Nhập năm học (vd: 2024-2025)"
+                  placeholder="Nhập niên khóa (vd: 2024-2025)"
                   value={formYear}
                   onChange={(e) => setFormYear(e.target.value)}
                   style={inputStyle}
