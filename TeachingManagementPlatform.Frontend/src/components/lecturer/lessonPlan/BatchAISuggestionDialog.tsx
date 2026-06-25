@@ -158,7 +158,7 @@ export default function BatchAISuggestionDialog({
               value={progressPercent}
               sx={{ height: 8, borderRadius: 4, mb: 1 }}
             />
-            <Typography variant="body2" color="text.secondary" textAlign="center">
+            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
               {progress}/{totalLessons} bài đã xử lý
             </Typography>
           </Box>

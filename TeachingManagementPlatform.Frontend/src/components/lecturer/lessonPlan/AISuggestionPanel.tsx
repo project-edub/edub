@@ -120,7 +120,7 @@ function SuggestionContent({
     <Box sx={{ p: 2 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
         <AutoAwesomeIcon color="primary" fontSize="small" />
-        <Typography variant="subtitle1" fontWeight={600}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
           Gợi ý AI cho: {lessonName}
         </Typography>
       </Box>

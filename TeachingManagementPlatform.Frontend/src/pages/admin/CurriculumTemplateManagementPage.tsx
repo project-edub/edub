@@ -4,7 +4,6 @@ import type { ApiError } from '../../types/common';
 import * as adminService from '../../services/adminCurriculumTemplateService';
 import type {
   CurriculumTemplate,
-  CurriculumTemplateLesson,
 } from '../../types/curriculumTemplate';
 import Pagination, { usePagination } from '../../components/common/Pagination';
 
@@ -458,7 +457,7 @@ function CurriculumTemplateDialog({ mode, template, onClose, onSaved }: DialogPr
           </div>
         </div>
 
-        {!isReadonly && mode !== 'view' && (
+        {!isReadonly && (
           <div style={{ ...footerActionsStyle, marginTop: 12, marginBottom: 16 }}>
             <button
               type="button"

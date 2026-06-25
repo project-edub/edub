@@ -209,6 +209,7 @@ export default function LessonPlanPage() {
       setToastMessage('Đã sao chép!');
     }
   }
+  void handleCopyLink; // reserved for future use
 
   async function handleJoinByCode() {
     if (!joinCode.trim()) return;

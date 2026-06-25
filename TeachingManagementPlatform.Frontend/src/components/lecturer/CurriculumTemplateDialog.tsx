@@ -49,7 +49,7 @@ export default function CurriculumTemplateDialog({
 
   // Lessons
   const [lessons, setLessons] = useState<CurriculumTemplateLesson[]>([]);
-  const [editedLessons, setEditedLessons] = useState<LessonItemDto[]>([]);
+  const [_editedLessons, setEditedLessons] = useState<LessonItemDto[]>([]);
 
   // UI state
   const [saving, setSaving] = useState(false);

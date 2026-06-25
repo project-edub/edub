@@ -40,3 +40,30 @@ export interface SaveAsTemplateRequest {
   bookSet?: string;
   sourceNote?: string;
 }
+
+export interface LessonItemDto {
+  orderIndex: number;
+  chapterName?: string;
+  lessonName: string;
+  suggestedPeriods: number;
+}
+
+export interface CreateCurriculumTemplateRequest {
+  subject: string;
+  grade: number;
+  bookSet?: string;
+  sourceNote?: string;
+  lessons?: LessonItemDto[];
+}
+
+export interface UpdateCurriculumTemplateRequest {
+  subject?: string;
+  grade?: number;
+  bookSet?: string;
+  sourceNote?: string;
+  isPublic?: boolean;
+}
+
+export interface BulkUpdateLessonsRequest {
+  lessons: LessonItemDto[];
+}

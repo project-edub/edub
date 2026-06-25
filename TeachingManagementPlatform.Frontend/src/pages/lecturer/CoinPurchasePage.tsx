@@ -8,7 +8,8 @@ import { formatCurrency } from '../../utils/formatters';
 
 export default function CoinPurchasePage() {
   const [searchParams] = useSearchParams();
-  const [wallet, setWallet] = useState<CoinWalletResponse>({ coinBalance: 0 });
+  const [wallet, setWallet] = useState<CoinWalletResponse>({ coinBalance: 0, freeEcoinBalance: 0 });
+  void wallet; // fetched for sync, will be used in future
   const [packages, setPackages] = useState<CoinPackage[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<number | null>(null);

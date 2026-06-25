@@ -123,7 +123,7 @@ export default function ClassDetailPage() {
                 <td style={valueStyle}>{classDetail.name}</td>
               </tr>
               <tr>
-                <td style={labelStyle}>Năm học</td>
+                <td style={labelStyle}>Niên khóa</td>
                 <td style={valueStyle}>{classDetail.year}</td>
               </tr>
               <tr>
