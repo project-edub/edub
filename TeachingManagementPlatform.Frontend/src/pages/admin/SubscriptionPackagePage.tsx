@@ -8,6 +8,7 @@ import type {
 import type { ApiError } from '../../types/common';
 import * as subscriptionService from '../../services/subscriptionService';
 import { formatCurrency } from '../../utils/formatters';
+import Pagination, { usePagination } from '../../components/common/Pagination';
 
 const BYTES_PER_GB = 1024 * 1024 * 1024;
 const AVAILABLE_FEATURES = [
@@ -50,6 +51,8 @@ export default function SubscriptionPackagePage() {
   const [formError, setFormError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formUpgradeDiscounts, setFormUpgradeDiscounts] = useState<Record<number, number>>({});
+
+  const { paginatedItems, currentPage, pageSize, totalItems, setCurrentPage, setPageSize } = usePagination(packages);
 
   const loadPackages = useCallback(async () => {
     setLoading(true);
@@ -274,8 +277,9 @@ export default function SubscriptionPackagePage() {
       ) : packages.length === 0 ? (
         <div style={emptyStateStyle}>Chưa có gói đăng ký nào. Tạo gói mặc định miễn phí để bắt đầu.</div>
       ) : (
-        <div style={tableShellStyle}>
-          <table style={tableStyle}>
+        <>
+          <div style={tableShellStyle}>
+            <table style={tableStyle}>
             <thead>
               <tr>
                 <th style={thStyle}>Gói</th>
@@ -287,7 +291,7 @@ export default function SubscriptionPackagePage() {
               </tr>
             </thead>
             <tbody>
-              {packages.map((pkg) => (
+              {paginatedItems.map((pkg) => (
                 <tr key={pkg.id}>
                   <td style={tdStyle}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -336,9 +340,11 @@ export default function SubscriptionPackagePage() {
                   </td>
                 </tr>
               ))}
-            </tbody>
-          </table>
-        </div>
+              </tbody>
+            </table>
+          </div>
+          <Pagination totalItems={totalItems} currentPage={currentPage} pageSize={pageSize} onPageChange={setCurrentPage} onPageSizeChange={setPageSize} />
+        </>
       )}
 
       {/* Create/Edit Modal */}

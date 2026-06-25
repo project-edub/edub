@@ -1,10 +1,3 @@
-export interface ProfileOccupation {
-  id: number;
-  profileId: number;
-  value: string;
-  sortOrder: number;
-}
-
 export interface ProfileTeachingLocation {
   id: number;
   profileId: number;
@@ -37,13 +30,6 @@ export interface ProfileTeachingSkill {
   sortOrder: number;
 }
 
-export interface ProfileTuitionFee {
-  id: number;
-  profileId: number;
-  description: string;
-  sortOrder: number;
-}
-
 export interface ProfileNote {
   id: number;
   profileId: number;
@@ -57,26 +43,35 @@ export interface LecturerProfile {
   fullName: string;
   introduction?: string | null;
   avatarUrl?: string | null;
-  occupations: ProfileOccupation[];
   teachingLocations: ProfileTeachingLocation[];
   expertises: ProfileExpertise[];
   experiences: ProfileExperience[];
   teachingSkills: ProfileTeachingSkill[];
-  tuitionFees: ProfileTuitionFee[];
   notes: ProfileNote[];
 }
 
 export interface PublicExpertise {
   specialty: string;
   degree: string;
-}
-
-export interface PublicOccupation {
-  value: string;
+  certificateImageUrl?: string | null;
 }
 
 export interface PublicTeachingLocation {
   value: string;
+}
+
+export interface PublicExperience {
+  description: string;
+  imageUrl?: string | null;
+}
+
+export interface PublicTeachingSkill {
+  description: string;
+  imageUrl?: string | null;
+}
+
+export interface PublicNote {
+  content: string;
 }
 
 export interface PublicLecturerProfile {
@@ -84,19 +79,19 @@ export interface PublicLecturerProfile {
   fullName: string;
   introduction?: string | null;
   avatarUrl?: string | null;
-  occupations: PublicOccupation[];
   teachingLocations: PublicTeachingLocation[];
   expertises: PublicExpertise[];
+  experiences?: PublicExperience[];
+  teachingSkills?: PublicTeachingSkill[];
+  notes?: PublicNote[];
 }
 
 export interface UpdateProfileRequest {
   fullName: string;
   introduction?: string | null;
-  occupations: Omit<ProfileOccupation, 'id' | 'profileId'>[];
   teachingLocations: Omit<ProfileTeachingLocation, 'id' | 'profileId'>[];
   expertises: Omit<ProfileExpertise, 'id' | 'profileId'>[];
   experiences: Omit<ProfileExperience, 'id' | 'profileId'>[];
   teachingSkills: Omit<ProfileTeachingSkill, 'id' | 'profileId'>[];
-  tuitionFees: Omit<ProfileTuitionFee, 'id' | 'profileId'>[];
   notes: Omit<ProfileNote, 'id' | 'profileId'>[];
 }

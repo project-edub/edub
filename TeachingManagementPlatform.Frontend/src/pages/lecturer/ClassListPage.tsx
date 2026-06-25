@@ -4,6 +4,8 @@ import { AxiosError } from 'axios';
 import type { ClassDetail, CreateClassRequest, UpdateClassRequest } from '../../types/class';
 import type { ApiError } from '../../types/common';
 import * as classService from '../../services/classService';
+import CrudIcon from '../../components/common/CrudIcon';
+import Pagination, { usePagination } from '../../components/common/Pagination';
 
 interface ModalState {
   type: 'create' | 'edit' | null;
@@ -18,6 +20,9 @@ export default function ClassListPage() {
   const [modal, setModal] = useState<ModalState>({ type: null });
   const [deleteTarget, setDeleteTarget] = useState<ClassDetail | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [hoveredRowId, setHoveredRowId] = useState<number | null>(null);
+
+  const { paginatedItems: paginatedClasses, currentPage, pageSize, totalItems, setCurrentPage, setPageSize } = usePagination(classes);
 
   // Form fields
   const [formName, setFormName] = useState('');
@@ -133,7 +138,17 @@ export default function ClassListPage() {
 
   return (
     <div style={{ padding: 24 }}>
-      <h1 style={{ marginBottom: 24, color: 'var(--edub-text-primary)' }}>Danh sách lớp học</h1>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+        <h1 style={{ margin: 0, color: 'var(--edub-text-primary)' }}>Danh sách lớp học</h1>
+        <button
+          type="button"
+          onClick={openCreateModal}
+          className="btn btn-add"
+          style={{ borderRadius: 8 }}
+        >
+          + Thêm lớp
+        </button>
+      </div>
 
       {error && (
         <div role="alert" style={{ color: '#d32f2f', marginBottom: 16 }}>
@@ -141,72 +156,49 @@ export default function ClassListPage() {
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={openCreateModal}
-        className="btn btn-add"
-        style={{ marginBottom: 16 }}
-      >
-        Thêm lớp
-      </button>
-
       {loading ? (
         <p>Đang tải...</p>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr>
-              <th style={thStyle}>Tên lớp</th>
-              <th style={thStyle}>Năm học</th>
-              <th style={thStyle}>Số học sinh</th>
-              <th style={thStyle}>Hành động</th>
-            </tr>
-          </thead>
-          <tbody>
-            {classes.length === 0 ? (
+        <>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
               <tr>
-                <td colSpan={4} style={{ textAlign: 'center', padding: 16 }}>
-                  Không có lớp học nào
-                </td>
+                <th style={thStyle}>Tên lớp</th>
+                <th style={thStyle}>Năm học</th>
+                <th style={thStyle}>Số học sinh</th>
+                <th style={thStyle}>Hành động</th>
               </tr>
-            ) : (
-              classes.map((cls) => (
-                <tr key={cls.id}>
-                  <td style={tdStyle}>
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/lecturer/classes/${cls.id}`)}
-                      style={{ background: 'none', border: 'none', color: 'var(--edub-link)', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
-                    >
-                      {cls.name}
-                    </button>
-                  </td>
-                  <td style={tdStyle}>{cls.year}</td>
-                  <td style={tdStyle}>{cls.studentCount}</td>
-                  <td style={tdStyle}>
-                    <button
-                      type="button"
-                      onClick={() => openEditModal(cls)}
-                      disabled={actionLoading}
-                      className="btn btn-update"
-                      style={{ marginRight: 8 }}
-                    >
-                      Sửa
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDeleteTarget(cls)}
-                      disabled={actionLoading}
-                      className="btn btn-delete"
-                    >
-                      Xóa
-                    </button>
+            </thead>
+            <tbody>
+              {classes.length === 0 ? (
+                <tr>
+                  <td colSpan={4} style={{ textAlign: 'center', padding: 16 }}>
+                    Không có lớp học nào
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                paginatedClasses.map((cls) => (
+                  <tr
+                    key={cls.id}
+                    style={{ cursor: 'pointer', backgroundColor: hoveredRowId === cls.id ? '#f5f5f5' : undefined, transition: 'background-color 0.15s' }}
+                    onMouseEnter={() => setHoveredRowId(cls.id)}
+                    onMouseLeave={() => setHoveredRowId(null)}
+                    onDoubleClick={() => navigate(`/lecturer/classes/${cls.id}`)}
+                  >
+                    <td style={tdStyle}>{cls.name}</td>
+                    <td style={tdStyle}>{cls.year}</td>
+                    <td style={tdStyle}>{cls.studentCount}</td>
+                    <td style={tdStyle}>
+                      <CrudIcon name="edit" tooltip="Sửa" onClick={() => openEditModal(cls)} disabled={actionLoading} />
+                      <CrudIcon name="delete" tooltip="Xóa" onClick={() => setDeleteTarget(cls)} disabled={actionLoading} />
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+          <Pagination totalItems={totalItems} currentPage={currentPage} pageSize={pageSize} onPageChange={setCurrentPage} onPageSizeChange={setPageSize} />
+        </>
       )}
 
       {/* Create / Edit Modal */}
@@ -338,4 +330,5 @@ const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: 8,
   boxSizing: 'border-box',
+  borderRadius: 8,
 };

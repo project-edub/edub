@@ -293,6 +293,9 @@ public class AdminController : ControllerBase
                 crosswordRegenerateMultiplier = 0.5,
                 quizCoinCostPerQuestion = 1,
                 upgradeDiscountPercent = 20,
+                freeEcoinOnRegister = 10,
+                freeEcoinMaxPerAccount = 50,
+                freeEcoinMonthlyTopUp = 5,
             });
         }
 

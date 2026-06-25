@@ -12,6 +12,9 @@ export default function QuizGeneratorPage() {
   const navigate = useNavigate();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [questionCount, setQuestionCount] = useState(10);
+  const [title, setTitle] = useState('');
+  const [titleWarning, setTitleWarning] = useState<string | null>(null);
+  const [existingTitles, setExistingTitles] = useState<string[]>([]);
   const [topic, setTopic] = useState('');
   const [difficulty, setDifficulty] = useState('trung bình');
   const [language] = useState('vi');
@@ -24,18 +27,35 @@ export default function QuizGeneratorPage() {
     void (async () => {
       try { const w = await coinService.getLecturerCoinWallet(); setWallet(w); } catch {}
     })();
+    void (async () => {
+      try {
+        const list = await quizService.getQuizList();
+        setExistingTitles(list.map((q) => q.title.toLowerCase().trim()));
+      } catch {}
+    })();
   }, []);
 
+  useEffect(() => {
+    if (title.trim() && existingTitles.includes(title.toLowerCase().trim())) {
+      setTitleWarning('Tên này đã tồn tại trong kho quiz của bạn.');
+    } else {
+      setTitleWarning(null);
+    }
+  }, [title, existingTitles]);
+
   const estimatedCost = Math.max(1, questionCount);
-  const hasEnoughCoin = wallet.coinBalance >= estimatedCost;
+  const totalBalance = (wallet.freeEcoinBalance ?? 0) + wallet.coinBalance;
+  const hasEnoughCoin = totalBalance >= estimatedCost;
 
   const handleGenerate = useCallback(async () => {
     if (selectedFiles.length === 0) return;
+    if (!title.trim()) { setError('Vui lòng nhập tên cho quiz.'); return; }
     setLoading(true); setError(null);
     try {
       const fd = new FormData();
       for (const f of selectedFiles) fd.append('files', f);
       fd.append('questionCount', String(questionCount));
+      fd.append('title', title.trim());
       fd.append('topic', topic);
       fd.append('difficulty', difficulty);
       fd.append('language', language);
@@ -48,7 +68,7 @@ export default function QuizGeneratorPage() {
     } finally {
       setLoading(false);
     }
-  }, [selectedFiles, questionCount, topic, difficulty, language, prompt, navigate]);
+  }, [selectedFiles, questionCount, title, topic, difficulty, language, prompt, navigate]);
 
   return (
     <div style={{ padding: 24, maxWidth: 900, margin: '0 auto' }}>
@@ -94,6 +114,13 @@ export default function QuizGeneratorPage() {
       {/* Config */}
       <section style={{ ...cardStyle, marginTop: 16 }}>
         <h2 style={sectionTitle}>2. Cấu hình</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16, marginBottom: 16 }}>
+          <label style={fieldStyle}>
+            <span style={{ fontWeight: 600 }}>Tên quiz <span style={{ color: '#dc2626' }}>*</span></span>
+            <input type="text" value={title} onChange={e => setTitle(e.target.value)} style={inputStyle} placeholder="VD: Quiz Hóa học chương 3" />
+            {titleWarning && <span style={{ color: '#d97706', fontSize: 13 }}>⚠️ {titleWarning}</span>}
+          </label>
+        </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
           <label style={fieldStyle}>
             <span style={{ fontWeight: 600 }}>Số câu hỏi</span>
@@ -120,10 +147,10 @@ export default function QuizGeneratorPage() {
 
       {/* Action */}
       <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
-        <button type="button" className="btn btn-add" disabled={selectedFiles.length === 0 || loading || !hasEnoughCoin} onClick={() => void handleGenerate()}>
+        <button type="button" className="btn btn-add" disabled={selectedFiles.length === 0 || !title.trim() || loading || !hasEnoughCoin} onClick={() => void handleGenerate()}>
           {loading ? 'Đang tạo...' : `Tạo quiz (${estimatedCost} ECoin)`}
         </button>
-        <span style={{ color: '#64748b', fontSize: 13 }}>Số dư: {wallet.coinBalance} ECoin</span>
+        <span style={{ color: '#64748b', fontSize: 13 }}>Số dư: {totalBalance} ECoin</span>
         {!hasEnoughCoin && <span style={{ color: '#dc2626', fontSize: 13 }}>Không đủ ECoin</span>}
       </div>
     </div>

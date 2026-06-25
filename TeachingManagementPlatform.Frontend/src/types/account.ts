@@ -24,7 +24,9 @@ export interface UpdateAccountRequest {
   password?: string;
   fullName?: string;
   coinBalance?: number;
+  freeEcoinBalance?: number;
   subscriptionPackageId?: number | null;
+  subscriptionExpiresAt?: string | null;
 }
 
 export interface UpdateAccountStatusRequest {
@@ -38,7 +40,9 @@ export interface AccountResponse {
   role: Role;
   status: AccountStatus;
   coinBalance: number;
+  freeEcoinBalance?: number;
   subscriptionPackageId: number | null;
+  subscriptionExpiresAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }

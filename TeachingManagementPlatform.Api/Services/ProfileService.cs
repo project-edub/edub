@@ -17,12 +17,10 @@ public class ProfileService : IProfileService
     public async Task<ProfileResponse> GetProfileAsync(int userId)
     {
         var profile = await _context.LecturerProfiles
-            .Include(p => p.Occupations.OrderBy(o => o.SortOrder))
             .Include(p => p.TeachingLocations.OrderBy(t => t.SortOrder))
             .Include(p => p.Expertises.OrderBy(e => e.SortOrder))
             .Include(p => p.Experiences.OrderBy(e => e.SortOrder))
             .Include(p => p.TeachingSkills.OrderBy(s => s.SortOrder))
-            .Include(p => p.TuitionFees.OrderBy(f => f.SortOrder))
             .Include(p => p.Notes.OrderBy(n => n.SortOrder))
             .FirstOrDefaultAsync(p => p.UserId == userId);
 
@@ -46,12 +44,10 @@ public class ProfileService : IProfileService
     public async Task<ProfileResponse> UpdateProfileAsync(int userId, UpdateProfileRequest request)
     {
         var profile = await _context.LecturerProfiles
-            .Include(p => p.Occupations)
             .Include(p => p.TeachingLocations)
             .Include(p => p.Expertises)
             .Include(p => p.Experiences)
             .Include(p => p.TeachingSkills)
-            .Include(p => p.TuitionFees)
             .Include(p => p.Notes)
             .FirstOrDefaultAsync(p => p.UserId == userId);
 
@@ -76,17 +72,6 @@ public class ProfileService : IProfileService
             profile.Introduction = request.Introduction;
 
         // Replace multi-entry collections
-        if (request.Occupations != null)
-        {
-            _context.ProfileOccupations.RemoveRange(profile.Occupations);
-            profile.Occupations = request.Occupations.Select((o, i) => new ProfileOccupation
-            {
-                ProfileId = profile.Id,
-                Value = o.Value,
-                SortOrder = i
-            }).ToList();
-        }
-
         if (request.TeachingLocations != null)
         {
             _context.ProfileTeachingLocations.RemoveRange(profile.TeachingLocations);
@@ -135,17 +120,6 @@ public class ProfileService : IProfileService
             }).ToList();
         }
 
-        if (request.TuitionFees != null)
-        {
-            _context.ProfileTuitionFees.RemoveRange(profile.TuitionFees);
-            profile.TuitionFees = request.TuitionFees.Select((f, i) => new ProfileTuitionFee
-            {
-                ProfileId = profile.Id,
-                Description = f.Description,
-                SortOrder = i
-            }).ToList();
-        }
-
         if (request.Notes != null)
         {
             _context.ProfileNotes.RemoveRange(profile.Notes);
@@ -161,12 +135,10 @@ public class ProfileService : IProfileService
 
         // Re-fetch with ordering
         var updated = await _context.LecturerProfiles
-            .Include(p => p.Occupations.OrderBy(o => o.SortOrder))
             .Include(p => p.TeachingLocations.OrderBy(t => t.SortOrder))
             .Include(p => p.Expertises.OrderBy(e => e.SortOrder))
             .Include(p => p.Experiences.OrderBy(e => e.SortOrder))
             .Include(p => p.TeachingSkills.OrderBy(s => s.SortOrder))
-            .Include(p => p.TuitionFees.OrderBy(f => f.SortOrder))
             .Include(p => p.Notes.OrderBy(n => n.SortOrder))
             .FirstAsync(p => p.Id == profile.Id);
 
@@ -193,9 +165,11 @@ public class ProfileService : IProfileService
     public async Task<List<PublicLecturerProfile>> SearchLecturersAsync(string? search, string? location, string? subject, string? experience, string? rating)
     {
         var query = _context.LecturerProfiles
-            .Include(p => p.Occupations)
             .Include(p => p.TeachingLocations)
             .Include(p => p.Expertises)
+            .Include(p => p.Experiences)
+            .Include(p => p.TeachingSkills)
+            .Include(p => p.Notes)
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(search))
@@ -224,12 +198,26 @@ public class ProfileService : IProfileService
             FullName = p.FullName,
             Introduction = p.Introduction,
             AvatarUrl = p.AvatarUrl,
-            Occupations = p.Occupations.OrderBy(o => o.SortOrder).Select(o => new PublicOccupation { Value = o.Value }).ToList(),
             TeachingLocations = p.TeachingLocations.OrderBy(t => t.SortOrder).Select(t => new PublicTeachingLocation { Value = t.Value }).ToList(),
             Expertises = p.Expertises.OrderBy(e => e.SortOrder).Select(e => new PublicExpertise
             {
                 Specialty = e.Specialty,
-                Degree = e.Degree
+                Degree = e.Degree,
+                CertificateImageUrl = e.CertificateImageUrl
+            }).ToList(),
+            Experiences = p.Experiences.OrderBy(e => e.SortOrder).Select(e => new PublicExperience
+            {
+                Description = e.Description,
+                ImageUrl = e.ImageUrl
+            }).ToList(),
+            TeachingSkills = p.TeachingSkills.OrderBy(s => s.SortOrder).Select(s => new PublicTeachingSkill
+            {
+                Description = s.Description,
+                ImageUrl = s.ImageUrl
+            }).ToList(),
+            Notes = p.Notes.OrderBy(n => n.SortOrder).Select(n => new PublicNote
+            {
+                Content = n.Content
             }).ToList()
         }).ToList();
     }
@@ -243,7 +231,6 @@ public class ProfileService : IProfileService
             FullName = profile.FullName,
             Introduction = profile.Introduction,
             AvatarUrl = profile.AvatarUrl,
-            Occupations = profile.Occupations.Select(o => new OccupationDto { Value = o.Value }).ToList(),
             TeachingLocations = profile.TeachingLocations.Select(t => new TeachingLocationDto { Value = t.Value }).ToList(),
             Expertises = profile.Expertises.Select(e => new ExpertiseDto
             {
@@ -260,10 +247,6 @@ public class ProfileService : IProfileService
             {
                 Description = s.Description,
                 ImageUrl = s.ImageUrl
-            }).ToList(),
-            TuitionFees = profile.TuitionFees.Select(f => new TuitionFeeDto
-            {
-                Description = f.Description
             }).ToList(),
             Notes = profile.Notes.Select(n => new NoteDto
             {

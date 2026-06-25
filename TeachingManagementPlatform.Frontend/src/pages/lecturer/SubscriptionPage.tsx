@@ -5,6 +5,7 @@ import type { CoinWalletResponse } from '../../types/coin';
 import * as subscriptionService from '../../services/subscriptionService';
 import * as coinService from '../../services/coinService';
 import { formatCurrency } from '../../utils/formatters';
+import CrudIcon from '../../components/common/CrudIcon';
 
 export default function SubscriptionPage() {
   const [searchParams] = useSearchParams();
@@ -163,14 +164,14 @@ export default function SubscriptionPage() {
               <ul style={featureListStyle}>
                 {pkg.unlockedFeatures.includes('quiz_generator') && (
                   <>
-                    <li>✅ Tạo câu hỏi từ tài liệu</li>
+                    <li><CrudIcon name="check" size={16} /> Tạo câu hỏi từ tài liệu</li>
                     <li style={limitStyle}>• {pkg.maxFilesPerQuizGeneration} file / lần tạo quiz</li>
                     <li style={limitStyle}>• {pkg.maxQuestionsPerQuiz} câu hỏi tối đa</li>
                   </>
                 )}
                 {pkg.unlockedFeatures.includes('crossword_generator') && (
                   <>
-                    <li>✅ Tạo ô chữ từ tài liệu</li>
+                    <li><CrudIcon name="check" size={16} /> Tạo ô chữ từ tài liệu</li>
                     <li style={limitStyle}>• {pkg.maxCrosswordFilesPerGeneration} file / lần tạo ô chữ</li>
                     <li style={limitStyle}>• {pkg.maxCrosswordWordsPerGeneration} từ / ô chữ</li>
                     <li style={limitStyle}>• {pkg.maxCrosswordGenerationsPerDay} lần tạo / ngày</li>
@@ -183,16 +184,7 @@ export default function SubscriptionPage() {
 
               {isCurrentPlan ? (
                 <p style={freeNote}>Đang sử dụng gói này</p>
-              ) : isDowngrade ? (
-                <button
-                  type="button"
-                  className="btn btn-neutral"
-                  style={{ width: '100%', marginTop: 12, opacity: 0.6, cursor: 'not-allowed' }}
-                  disabled
-                >
-                  Không thể hạ gói
-                </button>
-              ) : pkg.price > 0 ? (
+              ) : isDowngrade ? null : pkg.price > 0 ? (
                 <button
                   type="button"
                   className="btn btn-add"

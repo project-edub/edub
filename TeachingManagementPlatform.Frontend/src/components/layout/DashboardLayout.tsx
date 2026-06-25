@@ -27,6 +27,7 @@ const lecturerMenuItems = [
   { to: '/lecturer/overview', label: 'Thông tin cá nhân' },
   { to: '/lecturer/classes', label: 'Danh sách lớp' },
   { to: '/lecturer/lesson-plans', label: 'Giáo án' },
+  { to: '/lecturer/shared-plans', label: 'Giáo án cộng đồng' },
   { to: '/lecturer/storage', label: 'Kho tài liệu' },
   { to: '/lecturer/quiz-generator', label: 'Quiz' },
   { to: '/lecturer/crossword', label: 'Tạo Crossword' },
@@ -39,8 +40,9 @@ const adminMenuItems = [
   { to: '/admin/accounts', label: 'Quản lý tài khoản' },
   { to: '/admin/subscriptions', label: 'Gói đăng ký' },
   { to: '/admin/coin-packages', label: 'Gói ECoin' },
-  { to: '/admin/game-ecoin-config', label: 'Cấu hình ECoin trò chơi' },
+  { to: '/admin/game-ecoin-config', label: 'Cấu hình chung' },
   { to: '/admin/score-templates', label: 'Template điểm' },
+  { to: '/admin/curriculum-templates', label: 'Mẫu giáo án' },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -53,6 +55,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [subName, setSubName] = useState<string | null>(null);
   const [subExpires, setSubExpires] = useState<string | null>(null);
   const [coinBalance, setCoinBalance] = useState<number | null>(null);
+  const [freeEcoinBalance, setFreeEcoinBalance] = useState<number | null>(null);
 
   useEffect(() => {
     if (role !== Role.Admin) {
@@ -65,6 +68,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           setSubName(wallet.subscriptionPackageName ?? null);
           setSubExpires(wallet.subscriptionExpiresAt ?? null);
           setCoinBalance(wallet.coinBalance);
+          setFreeEcoinBalance(wallet.freeEcoinBalance ?? 0);
         } catch {}
       })();
     }
@@ -209,9 +213,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {role !== Role.Admin && (
             <Box sx={{ mt: 2, p: 1.5, borderRadius: 2, bgcolor: 'action.hover' }}>
               {coinBalance !== null && (
-                <Typography variant="body2" sx={{ fontWeight: 700, mb: 1 }}>
-                  🪙 {coinBalance.toLocaleString('vi-VN')} ECoin
-                </Typography>
+                <Box sx={{ mb: 1 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                    🪙 {((freeEcoinBalance ?? 0) + coinBalance).toLocaleString('vi-VN')} ECoin
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {(freeEcoinBalance ?? 0).toLocaleString('vi-VN')} miễn phí + {coinBalance.toLocaleString('vi-VN')} mua
+                  </Typography>
+                </Box>
               )}
               {subName ? (
                 <>
@@ -221,11 +230,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     size="small"
                     sx={{ fontWeight: 600, mb: 0.5 }}
                   />
-                  {daysRemaining !== null && (
-                    <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: daysRemaining <= 5 ? 'error.main' : 'text.secondary' }}>
-                      {daysRemaining > 0 ? `Còn ${daysRemaining} ngày` : 'Đã hết hạn'}
-                    </Typography>
-                  )}
+                  <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: daysRemaining !== null && daysRemaining <= 5 ? 'error.main' : 'text.secondary' }}>
+                    {daysRemaining !== null
+                      ? (daysRemaining > 0 ? `Còn ${daysRemaining} ngày` : 'Đã hết hạn')
+                      : 'Chưa xác định thời hạn'}
+                  </Typography>
                 </>
               ) : (
                 <Typography variant="caption" sx={{ color: 'text.secondary' }}>

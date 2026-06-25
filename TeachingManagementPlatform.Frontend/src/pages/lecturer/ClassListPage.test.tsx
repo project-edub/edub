@@ -80,10 +80,10 @@ describe('ClassListPage', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('Thêm lớp')).toBeInTheDocument();
+      expect(screen.getByText(/Thêm lớp/)).toBeInTheDocument();
     });
 
-    await user.click(screen.getByText('Thêm lớp'));
+    await user.click(screen.getByText(/Thêm lớp/));
     expect(screen.getByText('Thêm lớp học')).toBeInTheDocument();
 
     await user.type(screen.getByLabelText('Tên lớp'), 'Lớp Mới');
@@ -101,10 +101,10 @@ describe('ClassListPage', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('Thêm lớp')).toBeInTheDocument();
+      expect(screen.getByText(/Thêm lớp/)).toBeInTheDocument();
     });
 
-    await user.click(screen.getByText('Thêm lớp'));
+    await user.click(screen.getByText(/Thêm lớp/));
     await user.click(screen.getByText('Lưu'));
 
     expect(screen.getByRole('alert')).toHaveTextContent('Vui lòng nhập đầy đủ thông tin');
@@ -130,18 +130,17 @@ describe('ClassListPage', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getAllByText('Xóa')[0]).toBeInTheDocument();
+      expect(screen.getAllByTitle('Xóa')[0]).toBeInTheDocument();
     });
 
-    await user.click(screen.getAllByText('Xóa')[0]);
+    await user.click(screen.getAllByTitle('Xóa')[0]);
     expect(screen.getByText('Xác nhận xóa')).toBeInTheDocument();
 
-    // The confirm delete button is the one with red color style inside the modal
-    const deleteButtons = screen.getAllByText('Xóa');
-    const confirmDeleteBtn = deleteButtons.find(
-      (btn) => (btn as HTMLElement).style?.color === 'rgb(211, 47, 47)'
+    // The confirm delete button is the one with btn-delete class inside the modal
+    const deleteButtons = screen.getAllByRole('button').filter(
+      (btn) => btn.textContent === 'Xóa' && btn.classList.contains('btn-delete'),
     );
-    await user.click(confirmDeleteBtn!);
+    await user.click(deleteButtons[0]);
 
     await waitFor(() => {
       expect(classService.remove).toHaveBeenCalledWith(1);
@@ -154,10 +153,10 @@ describe('ClassListPage', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getAllByText('Sửa')[0]).toBeInTheDocument();
+      expect(screen.getAllByTitle('Sửa')[0]).toBeInTheDocument();
     });
 
-    await user.click(screen.getAllByText('Sửa')[0]);
+    await user.click(screen.getAllByTitle('Sửa')[0]);
     expect(screen.getByText('Sửa lớp học')).toBeInTheDocument();
     expect(screen.getByLabelText('Tên lớp')).toHaveValue('Lớp 10A1');
     expect(screen.getByLabelText('Năm học')).toHaveValue('2024-2025');

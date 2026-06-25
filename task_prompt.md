@@ -1,1 +1,0 @@
-1. Để trang Trang chủ dùng chung menu dashboard với trang Tìm giáo viên phù hợp với đầy đủ các option Trang chủ, Tìm giáo viên, Bảng điều khiển, Sáng/Tối, Avatar Icon, tên mail (điều chỉnh để nằm trong 1 dòng), Đăng xuất 

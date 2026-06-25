@@ -206,7 +206,7 @@ export default function CrosswordEditorPage() {
 
         // Set ecoin balance from wallet
         if (wallet) {
-          setEcoinBalance(wallet.coinBalance);
+          setEcoinBalance((wallet.freeEcoinBalance ?? 0) + wallet.coinBalance);
         }
       } catch (err: unknown) {
         if (cancelled) return;
@@ -286,7 +286,7 @@ export default function CrosswordEditorPage() {
 
       // Update ecoin balance
       const wallet = await coinService.getLecturerCoinWallet().catch(() => null);
-      if (wallet) setEcoinBalance(wallet.coinBalance);
+      if (wallet) setEcoinBalance((wallet.freeEcoinBalance ?? 0) + wallet.coinBalance);
     } catch (err: unknown) {
       const message =
         err && typeof err === 'object' && 'message' in err

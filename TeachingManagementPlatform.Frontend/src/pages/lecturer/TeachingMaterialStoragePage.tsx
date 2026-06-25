@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { AxiosError } from 'axios';
-import { useNavigate } from 'react-router-dom';
 import type { StorageItem, StorageFilter, StorageQuota } from '../../types/storage';
 import type { ApiError } from '../../types/common';
 import { ItemType } from '../../types/common';
 import * as storageService from '../../services/storageService';
 import { formatDate } from '../../utils/formatters';
+import CrudIcon from '../../components/common/CrudIcon';
 
 interface BreadcrumbEntry {
   id: number | null;
@@ -13,7 +13,6 @@ interface BreadcrumbEntry {
 }
 
 export default function TeachingMaterialStoragePage() {
-  const navigate = useNavigate();
   const [items, setItems] = useState<StorageItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -32,13 +31,14 @@ export default function TeachingMaterialStoragePage() {
   const [foldersFirst, setFoldersFirst] = useState(true);
 
   // Actions
-  const [showCreateFolder, setShowCreateFolder] = useState(false);
+  const [showCreateFolderModal, setShowCreateFolderModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [renameTarget, setRenameTarget] = useState<StorageItem | null>(null);
   const [renameName, setRenameName] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<StorageItem | null>(null);
   const [quota, setQuota] = useState<StorageQuota | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [hoveredRowId, setHoveredRowId] = useState<number | null>(null);
 
   function extractError(err: unknown): string {
     const axiosErr = err as AxiosError<ApiError>;
@@ -97,7 +97,7 @@ export default function TeachingMaterialStoragePage() {
     try {
       await storageService.createFolder({ name: newFolderName.trim(), parentFolderId: currentFolderId });
       setNewFolderName('');
-      setShowCreateFolder(false);
+      setShowCreateFolderModal(false);
       await loadItems();
     } catch (err) {
       setError(extractError(err));
@@ -177,6 +177,27 @@ export default function TeachingMaterialStoragePage() {
     }
   }
 
+  async function handleDownloadFolder(item: StorageItem) {
+    if (item.itemType !== ItemType.Folder) return;
+    setActionLoading(true);
+    try {
+      const blob = await storageService.downloadFolder(item.id);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${item.name}.zip`;
+      link.rel = 'noopener';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(extractError(err));
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
   function handleOpen(item: StorageItem) {
     if (item.itemType === ItemType.Folder) return;
     const url = storageService.resolveStorageFileUrl(item.fileUrl || null);
@@ -184,11 +205,9 @@ export default function TeachingMaterialStoragePage() {
 
     const ext = item.name.split('.').pop()?.toLowerCase() ?? '';
     if (['docx', 'xlsx', 'pptx', 'doc', 'xls', 'ppt'].includes(ext)) {
-      // Use Google Docs Viewer for Office documents
       const googleViewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
       window.open(googleViewerUrl, '_blank', 'noopener,noreferrer');
     } else {
-      // PDF and other files open directly (browser renders PDFs natively)
       window.open(url, '_blank', 'noopener,noreferrer');
     }
   }
@@ -279,19 +298,19 @@ export default function TeachingMaterialStoragePage() {
       <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
         <button
           type="button"
-          onClick={() => setShowCreateFolder(true)}
+          onClick={() => setShowCreateFolderModal(true)}
           disabled={actionLoading}
           className="btn btn-add"
         >
-          Tạo thư mục
+          + Tạo thư mục
         </button>
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={actionLoading}
-          className="btn btn-add"
+          className="btn btn-neutral"
         >
-          Tải lên
+          ⬆ Tải lên
         </button>
         <input
           ref={fileInputRef}
@@ -300,29 +319,21 @@ export default function TeachingMaterialStoragePage() {
           style={{ display: 'none' }}
           data-testid="file-upload-input"
         />
-        <button
-          type="button"
-          onClick={() => navigate('/lecturer/quiz-generator')}
-          disabled={actionLoading}
-          className="btn btn-update"
-        >
-          Tạo quiz từ tài liệu
-        </button>
         <input
           type="text"
           placeholder="Tìm kiếm"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           aria-label="Tìm kiếm"
-          style={{ padding: 8, width: 180 }}
+          style={{ padding: 8, width: 180, borderRadius: 8 }}
         />
         <select
           value={fileTypeFilter}
           onChange={(e) => setFileTypeFilter(e.target.value)}
           aria-label="Loại tệp"
-          style={{ padding: 8 }}
+          style={{ padding: 8, borderRadius: 8 }}
         >
-          <option value="">Tất cả</option>
+          <option value="">Tất cả file</option>
           <option value="word">Word</option>
           <option value="excel">Excel</option>
           <option value="powerpoint">PowerPoint</option>
@@ -333,9 +344,9 @@ export default function TeachingMaterialStoragePage() {
           value={dateRangeFilter}
           onChange={(e) => setDateRangeFilter(e.target.value)}
           aria-label="Thời gian"
-          style={{ padding: 8 }}
+          style={{ padding: 8, borderRadius: 8 }}
         >
-          <option value="">Tất cả</option>
+          <option value="">Tất cả ngày</option>
           <option value="today">Hôm nay</option>
           <option value="last3days">3 ngày qua</option>
           <option value="last7days">7 ngày qua</option>
@@ -346,14 +357,14 @@ export default function TeachingMaterialStoragePage() {
           value={getSortValue()}
           onChange={(e) => handleSortChange(e.target.value)}
           aria-label="Sắp xếp"
-          style={{ padding: 8 }}
+          style={{ padding: 8, borderRadius: 8 }}
         >
           <option value="name-asc">Tên A-Z</option>
           <option value="name-desc">Tên Z-A</option>
           <option value="date-desc">Mới nhất</option>
           <option value="date-asc">Cũ nhất</option>
         </select>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', borderRadius: 8, padding: '6px 10px', border: '1px solid #ccc' }}>
           <input
             type="checkbox"
             checked={foldersFirst}
@@ -362,27 +373,6 @@ export default function TeachingMaterialStoragePage() {
           Thư mục trước
         </label>
       </div>
-
-      {/* Create folder inline */}
-      {showCreateFolder && (
-        <div style={{ display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center' }}>
-          <input
-            type="text"
-            placeholder="Tên thư mục"
-            value={newFolderName}
-            onChange={(e) => setNewFolderName(e.target.value)}
-            aria-label="Tên thư mục mới"
-            style={{ padding: 8, width: 240 }}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleCreateFolder(); }}
-          />
-          <button type="button" onClick={handleCreateFolder} disabled={actionLoading} className="btn btn-update" style={{ marginRight: 4 }}>
-            Tạo
-          </button>
-          <button type="button" onClick={() => { setShowCreateFolder(false); setNewFolderName(''); }} className="btn btn-neutral">
-            Hủy
-          </button>
-        </div>
-      )}
 
       {/* File/folder table */}
       {loading ? (
@@ -406,7 +396,13 @@ export default function TeachingMaterialStoragePage() {
               </tr>
             ) : (
               items.map((item) => (
-                <tr key={item.id}>
+                <tr
+                  key={item.id}
+                  style={{ cursor: 'pointer', backgroundColor: hoveredRowId === item.id ? '#f5f5f5' : undefined, transition: 'background-color 0.15s' }}
+                  onMouseEnter={() => setHoveredRowId(item.id)}
+                  onMouseLeave={() => setHoveredRowId(null)}
+                  onDoubleClick={item.itemType === ItemType.Folder ? () => openFolder(item) : item.itemType === ItemType.File ? () => handleOpen(item) : undefined}
+                >
                   <td style={tdStyle}>
                     {item.itemType === ItemType.Folder ? (
                       <button
@@ -425,51 +421,46 @@ export default function TeachingMaterialStoragePage() {
                     {item.itemType === ItemType.Folder ? '—' : formatFileSize(item.fileSize)}
                   </td>
                   <td style={tdStyle}>
-                    <button
-                      type="button"
-                      onClick={() => startRename(item)}
-                      disabled={actionLoading}
-                      className="btn btn-update"
-                      style={{ marginRight: 8 }}
-                    >
-                      Đổi tên
-                    </button>
+                    <CrudIcon name="edit" tooltip="Đổi tên" onClick={() => startRename(item)} disabled={actionLoading} />
                     {item.itemType === ItemType.File && (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => handleOpen(item)}
-                          disabled={actionLoading || !item.fileUrl}
-                          className="btn btn-view"
-                          style={{ marginRight: 8 }}
-                        >
-                          Mở
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDownload(item)}
-                          disabled={actionLoading}
-                          className="btn btn-add"
-                          style={{ marginRight: 8 }}
-                        >
-                          Tải xuống
-                        </button>
-                      </>
+                      <CrudIcon name="download" tooltip="Tải xuống" onClick={() => handleDownload(item)} disabled={actionLoading} />
                     )}
-                    <button
-                      type="button"
-                      onClick={() => setDeleteTarget(item)}
-                      disabled={actionLoading}
-                      className="btn btn-delete"
-                    >
-                      Xóa
-                    </button>
+                    {item.itemType === ItemType.Folder && (
+                      <CrudIcon name="download" tooltip="Tải thư mục" onClick={() => handleDownloadFolder(item)} disabled={actionLoading} />
+                    )}
+                    <CrudIcon name="delete" tooltip="Xóa" onClick={() => setDeleteTarget(item)} disabled={actionLoading} />
                   </td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
+      )}
+
+      {/* Create folder modal */}
+      {showCreateFolderModal && (
+        <div style={overlayStyle}>
+          <div style={modalStyle}>
+            <h2 style={{ marginBottom: 16 }}>Tạo thư mục mới</h2>
+            <input
+              type="text"
+              placeholder="Tên thư mục"
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              aria-label="Tên thư mục mới"
+              style={{ padding: 8, width: '100%', marginBottom: 16, boxSizing: 'border-box' }}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleCreateFolder(); }}
+            />
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button type="button" onClick={() => { setShowCreateFolderModal(false); setNewFolderName(''); }} disabled={actionLoading} className="btn btn-neutral">
+                Hủy
+              </button>
+              <button type="button" onClick={handleCreateFolder} disabled={actionLoading} className="btn btn-update">
+                {actionLoading ? 'Đang xử lý...' : 'Tạo'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Rename modal */}

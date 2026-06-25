@@ -19,6 +19,7 @@
     "@mui/material": "^9.0.1",
     "axios": "^1.13.6",
     "react": "^19.2.4",
+    "react-crud-icons": "^1.2.3",
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.13.1",
     "xlsx": "^0.18.5"

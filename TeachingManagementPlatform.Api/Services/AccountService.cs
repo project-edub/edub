@@ -79,8 +79,14 @@ public class AccountService : IAccountService
         if (request.CoinBalance.HasValue)
             user.CoinBalance = request.CoinBalance.Value;
 
+        if (request.FreeEcoinBalance.HasValue)
+            user.FreeEcoinBalance = request.FreeEcoinBalance.Value;
+
         if (request.SubscriptionPackageId.HasValue)
             user.SubscriptionPackageId = request.SubscriptionPackageId.Value == 0 ? null : request.SubscriptionPackageId.Value;
+
+        if (request.SubscriptionExpiresAt.HasValue)
+            user.SubscriptionExpiresAt = request.SubscriptionExpiresAt.Value;
 
         user.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
@@ -121,7 +127,9 @@ public class AccountService : IAccountService
             Role = user.Role,
             Status = user.Status,
             CoinBalance = user.CoinBalance,
+            FreeEcoinBalance = user.FreeEcoinBalance,
             SubscriptionPackageId = user.SubscriptionPackageId,
+            SubscriptionExpiresAt = user.SubscriptionExpiresAt,
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt
         };

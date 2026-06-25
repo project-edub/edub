@@ -183,8 +183,26 @@ builder.Services.AddScoped<IQuizMappingService, QuizMappingService>();
 // Register crossword service
 builder.Services.AddScoped<ICrosswordService, CrosswordService>();
 
+// Register curriculum template service
+builder.Services.AddScoped<ICurriculumTemplateService, CurriculumTemplateService>();
+
+// Register teaching schedule service
+builder.Services.AddScoped<ITeachingScheduleService, TeachingScheduleService>();
+
+// Register lesson suggestion service (AI content suggestions with embedding matching)
+builder.Services.AddHttpClient<ILessonSuggestionService, LessonSuggestionService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
 // Register crossword background cleanup service (clears SourceDocumentContent after 24h)
 builder.Services.AddHostedService<CrosswordCleanupService>();
+
+// Register storage embedding background service (pre-computes embeddings for new files)
+builder.Services.AddHostedService<StorageEmbeddingBackgroundService>();
+
+// Register subscription expiry background service (resets expired subscriptions to free plan)
+builder.Services.AddHostedService<SubscriptionExpiryBackgroundService>();
 
 var app = builder.Build();
 var r2PublicBaseUrl = builder.Configuration["R2:PublicBaseUrl"];
@@ -277,6 +295,29 @@ BEGIN
         CONSTRAINT [FK_CoinPurchaseTransactions_Users_UserId] FOREIGN KEY ([UserId]) REFERENCES [Users]([Id]) ON DELETE CASCADE,
         CONSTRAINT [FK_CoinPurchaseTransactions_CoinPackages_CoinPackageId] FOREIGN KEY ([CoinPackageId]) REFERENCES [CoinPackages]([Id])
     );
+END
+");
+
+        await dbContext.Database.ExecuteSqlRawAsync(@"
+IF COL_LENGTH('LessonPlans', 'IsShared') IS NULL
+BEGIN
+    ALTER TABLE [LessonPlans] ADD [IsShared] BIT NOT NULL
+        CONSTRAINT [DF_LessonPlans_IsShared] DEFAULT CAST(0 AS bit);
+END
+
+IF COL_LENGTH('LessonPlans', 'ShareCode') IS NULL
+BEGIN
+    ALTER TABLE [LessonPlans] ADD [ShareCode] NVARCHAR(20) NULL;
+END
+
+IF COL_LENGTH('LessonSuggestionCaches', 'SuggestedLinks') IS NULL
+BEGIN
+    ALTER TABLE [LessonSuggestionCaches] ADD [SuggestedLinks] NVARCHAR(MAX) NULL;
+END
+
+IF COL_LENGTH('Lessons', 'SuggestedPeriods') IS NULL
+BEGIN
+    ALTER TABLE [Lessons] ADD [SuggestedPeriods] INT NOT NULL DEFAULT 1;
 END
 ");
     }
@@ -471,6 +512,26 @@ async Task SeedDefaultCoinPackagesAsync(ApplicationDbContext context)
     await context.SaveChangesAsync();
 }
 
+async Task SeedCurriculumTemplatesAsync(ApplicationDbContext context)
+{
+    if (await context.CurriculumTemplates.AnyAsync())
+        return; // Already seeded
+
+    var templates = CurriculumTemplateSeedData.GetSeedTemplates();
+    await context.CurriculumTemplates.AddRangeAsync(templates);
+    await context.SaveChangesAsync();
+}
+
+async Task SeedSchoolYearCalendarAsync(ApplicationDbContext context)
+{
+    if (await context.SchoolYearCalendars.AnyAsync())
+        return; // Already seeded
+
+    var calendar = SchoolYearCalendarSeedData.GetDefaultCalendar();
+    await context.SchoolYearCalendars.AddAsync(calendar);
+    await context.SaveChangesAsync();
+}
+
 // Seed sample data before starting the server
 try
 {
@@ -482,6 +543,8 @@ try
         await SeedDefaultSubscriptionPackageAsync(context);
         await AssignDefaultSubscriptionPackageToLecturersAsync(context);
         await SeedDefaultCoinPackagesAsync(context);
+        await SeedCurriculumTemplatesAsync(context);
+        await SeedSchoolYearCalendarAsync(context);
     }
 }
 catch (Exception ex)
@@ -508,6 +571,8 @@ using (var scope = app.Services.CreateScope())
         db.Database.ExecuteSqlRaw(@"
             IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'Users') AND name = 'SubscriptionExpiresAt')
                 ALTER TABLE [Users] ADD [SubscriptionExpiresAt] datetime2 NULL;
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'Users') AND name = 'FreeEcoinBalance')
+                ALTER TABLE [Users] ADD [FreeEcoinBalance] int NOT NULL DEFAULT 0;
             IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'SubscriptionPackages') AND name = 'UpgradeDiscounts')
                 ALTER TABLE [SubscriptionPackages] ADD [UpgradeDiscounts] nvarchar(max) NOT NULL DEFAULT '{}';
             IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'SubscriptionPackages') AND name = 'UpgradeDiscounts')

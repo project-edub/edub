@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { AxiosError } from 'axios';
 import type { ApiError } from '../../types/common';
 import type { CoinPackage, CoinWalletResponse } from '../../types/coin';
@@ -7,7 +7,6 @@ import * as coinService from '../../services/coinService';
 import { formatCurrency } from '../../utils/formatters';
 
 export default function CoinPurchasePage() {
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [wallet, setWallet] = useState<CoinWalletResponse>({ coinBalance: 0 });
   const [packages, setPackages] = useState<CoinPackage[]>([]);
@@ -162,14 +161,6 @@ export default function CoinPurchasePage() {
             Gói này dùng để trừ lượt khi tạo quiz bằng AI. Khi bấm mua, bạn sẽ được chuyển sang cổng thanh toán PayOS.
           </p>
         </div>
-
-        <div style={walletCardStyle}>
-          <span style={walletLabelStyle}>Số dư hiện tại</span>
-          <span style={walletValueStyle}>{wallet.coinBalance.toLocaleString('vi-VN')} ECoin</span>
-          <button type="button" className="btn btn-neutral" onClick={() => navigate('/lecturer/quiz-generator')}>
-            Quay lại tạo quiz
-          </button>
-        </div>
       </div>
 
       {error && (
@@ -190,19 +181,15 @@ export default function CoinPurchasePage() {
         <div style={emptyStateStyle}>Chưa có gói ECoin nào khả dụng.</div>
       ) : (
         <div style={gridStyle}>
-          {packages.map((pkg) => (
+          {[...packages].sort((a, b) => a.price - b.price).map((pkg) => (
             <article key={pkg.id} style={cardStyle}>
               <div style={cardHeaderStyle}>
                 <div>
                   <h2 style={cardTitleStyle}>{pkg.name}</h2>
+                  <strong style={priceValueStyle}>{formatCurrency(pkg.price)}</strong>
                   <p style={cardSubtitleStyle}>{pkg.description || 'Gói nạp coin cho AI quiz.'}</p>
                 </div>
                 <span style={coinBadgeStyle}>{pkg.coinAmount.toLocaleString('vi-VN')} ECoin</span>
-              </div>
-
-              <div style={priceRowStyle}>
-                <strong style={priceValueStyle}>{formatCurrency(pkg.price)}</strong>
-                <span style={priceHintStyle}>Thanh toán thật sẽ được bổ sung sau</span>
               </div>
 
               <button
@@ -210,7 +197,7 @@ export default function CoinPurchasePage() {
                 className="btn btn-add"
                 disabled={actionLoading === pkg.id || !pkg.isActive}
                 onClick={() => void purchasePackage(pkg)}
-                style={{ width: '100%', marginTop: 16 }}
+                style={{ width: '100%', marginTop: 'auto' }}
               >
                 {actionLoading === pkg.id ? 'Đang nạp...' : pkg.isActive ? 'Mua ngay' : 'Tạm ẩn'}
               </button>
@@ -218,10 +205,6 @@ export default function CoinPurchasePage() {
           ))}
         </div>
       )}
-
-      <div style={noteStyle}>
-        <strong>Lưu ý:</strong> mỗi lần tạo quiz sẽ trừ ECoin theo số câu hỏi yêu cầu. Nếu không đủ coin, hệ thống sẽ chặn trước khi gọi AI.
-      </div>
     </div>
   );
 }
@@ -234,7 +217,6 @@ const heroStyle: React.CSSProperties = {
   display: 'flex',
   justifyContent: 'space-between',
   gap: 24,
-  alignItems: 'stretch',
   marginBottom: 20,
   padding: 24,
   borderRadius: 20,
@@ -260,28 +242,6 @@ const subtitleStyle: React.CSSProperties = {
   maxWidth: 760,
   lineHeight: 1.6,
   color: 'rgba(255,255,255,0.8)',
-};
-
-const walletCardStyle: React.CSSProperties = {
-  minWidth: 240,
-  padding: 20,
-  borderRadius: 18,
-  backgroundColor: 'rgba(255,255,255,0.08)',
-  border: '1px solid rgba(255,255,255,0.12)',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 12,
-  justifyContent: 'center',
-};
-
-const walletLabelStyle: React.CSSProperties = {
-  fontSize: 13,
-  color: 'rgba(255,255,255,0.72)',
-};
-
-const walletValueStyle: React.CSSProperties = {
-  fontSize: 28,
-  fontWeight: 700,
 };
 
 const alertStyle: React.CSSProperties = {
@@ -323,6 +283,8 @@ const cardStyle: React.CSSProperties = {
   backgroundColor: '#fff',
   border: '1px solid #e2e8f0',
   boxShadow: '0 10px 30px rgba(15, 23, 42, 0.06)',
+  display: 'flex',
+  flexDirection: 'column',
 };
 
 const cardHeaderStyle: React.CSSProperties = {
@@ -352,27 +314,6 @@ const coinBadgeStyle: React.CSSProperties = {
   whiteSpace: 'nowrap',
 };
 
-const priceRowStyle: React.CSSProperties = {
-  marginTop: 16,
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 4,
-};
-
 const priceValueStyle: React.CSSProperties = {
   fontSize: 20,
-};
-
-const priceHintStyle: React.CSSProperties = {
-  color: '#64748b',
-  fontSize: 13,
-};
-
-const noteStyle: React.CSSProperties = {
-  marginTop: 20,
-  padding: 16,
-  borderRadius: 16,
-  backgroundColor: '#f8fafc',
-  border: '1px solid #e2e8f0',
-  color: '#334155',
 };

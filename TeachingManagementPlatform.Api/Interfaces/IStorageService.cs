@@ -12,4 +12,5 @@ public interface IStorageService
     Task<StorageItemResponse> UploadFileAsync(int lecturerId, int? parentFolderId, Stream fileStream, string fileName, long fileSize);
     Task<StorageItemResponse> RenameAsync(int id, int lecturerId, RenameItemRequest request);
     Task DeleteAsync(int id, int lecturerId);
+    Task<StorageFolderDownloadResponse> DownloadFolderAsync(int folderId, int lecturerId);
 }
