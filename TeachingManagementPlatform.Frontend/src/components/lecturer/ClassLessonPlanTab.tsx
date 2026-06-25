@@ -365,7 +365,7 @@ interface LessonRowProps {
   onPlayGame: (gameId: number) => void;
 }
 
-function LessonRow({ lesson, expanded, onToggle, onDateChange, onStatusChange, }: LessonRowProps) {
+function LessonRow({ lesson, expanded, onToggle, onDateChange, onStatusChange, onPlayGame }: LessonRowProps) {
   const dateValue = lesson.scheduledDate ? lesson.scheduledDate.split('T')[0] : '';
 
   // Req 4: Status-based background color
