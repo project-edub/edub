@@ -238,14 +238,6 @@ export default function CrosswordListPage() {
                           <Button
                             size="small"
                             variant="outlined"
-                            startIcon={<EditIcon />}
-                            onClick={() => navigate(`/lecturer/crossword/${item.id}/edit`)}
-                          >
-                            Chỉnh sửa
-                          </Button>
-                          <Button
-                            size="small"
-                            variant="outlined"
                             color="error"
                             startIcon={<DeleteIcon />}
                             onClick={() => setDeleteTarget(item)}

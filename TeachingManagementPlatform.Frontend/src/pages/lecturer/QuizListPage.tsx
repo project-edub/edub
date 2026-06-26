@@ -145,9 +145,6 @@ export default function QuizListPage() {
                             {copiedId === item.id ? 'Đã copy!' : 'Copy link'}
                           </Button>
                         )}
-                        <Button size="small" variant="outlined" startIcon={<EditIcon />} onClick={() => navigate(`/lecturer/quiz/${item.id}/edit`)}>
-                          Quản lý
-                        </Button>
                         <Button size="small" variant="outlined" color="error" startIcon={<DeleteIcon />} onClick={() => setDeleteTarget(item)}>
                           Xóa
                         </Button>
