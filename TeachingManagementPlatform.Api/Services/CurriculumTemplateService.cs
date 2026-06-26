@@ -83,7 +83,8 @@ public class CurriculumTemplateService : ICurriculumTemplateService
         {
             LessonPlanId = lessonPlanId,
             Name = tl.LessonName,
-            OrderIndex = tl.OrderIndex
+            OrderIndex = tl.OrderIndex,
+            SuggestedPeriods = tl.SuggestedPeriods
         }).ToList();
 
         _context.Lessons.AddRange(lessons);

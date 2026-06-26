@@ -15,7 +15,7 @@ export default function TemplateLessonEditor({ lessons, onChange, readOnly }: Te
           {lessons.map((l, i) => (
             <li key={l.id || i}>
               {l.chapterName && <strong>{l.chapterName}: </strong>}
-              {l.lessonName} ({l.suggestedPeriods} tiết)
+              {l.lessonName}
             </li>
           ))}
         </ol>
@@ -58,13 +58,6 @@ export default function TemplateLessonEditor({ lessons, onChange, readOnly }: Te
             onChange={(e) => handleChange(i, 'lessonName', e.target.value)}
             placeholder="Tên bài"
             style={{ flex: 1, padding: 4 }}
-          />
-          <input
-            type="number"
-            value={l.suggestedPeriods}
-            onChange={(e) => handleChange(i, 'suggestedPeriods', Number(e.target.value))}
-            min={1}
-            style={{ width: 60, padding: 4 }}
           />
           <button type="button" onClick={() => handleRemove(i)}>✕</button>
         </div>

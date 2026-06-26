@@ -493,7 +493,6 @@ function CurriculumTemplateDialog({ mode, template, onClose, onSaved }: DialogPr
                     <th style={thStyle}>#</th>
                     <th style={thStyle}>Chương</th>
                     <th style={thStyle}>Tên bài</th>
-                    <th style={thStyle}>Số tiết</th>
                     {!isReadonly && <th style={thStyle}></th>}
                   </tr>
                 </thead>
@@ -524,20 +523,6 @@ function CurriculumTemplateDialog({ mode, template, onClose, onSaved }: DialogPr
                             onChange={(e) => updateLessonRow(idx, 'lessonName', e.target.value)}
                             style={{ ...inputStyle, width: '100%', minWidth: 150 }}
                             placeholder="Tên bài *"
-                          />
-                        )}
-                      </td>
-                      <td style={tdStyle}>
-                        {isReadonly ? (
-                          row.suggestedPeriods
-                        ) : (
-                          <input
-                            type="number"
-                            min={1}
-                            max={10}
-                            value={row.suggestedPeriods}
-                            onChange={(e) => updateLessonRow(idx, 'suggestedPeriods', Number(e.target.value) || 1)}
-                            style={{ ...inputStyle, width: 60 }}
                           />
                         )}
                       </td>

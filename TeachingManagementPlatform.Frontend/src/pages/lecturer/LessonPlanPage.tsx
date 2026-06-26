@@ -358,7 +358,7 @@ export default function LessonPlanPage() {
                   style={{ cursor: 'pointer', backgroundColor: hoveredRowId === plan.id ? '#f5f5f5' : undefined, transition: 'background-color 0.15s' }}
                   onMouseEnter={() => setHoveredRowId(plan.id)}
                   onMouseLeave={() => setHoveredRowId(null)}
-                  onDoubleClick={() => navigate(`/lecturer/lesson-plans/${plan.id}/lessons`)}
+                  onClick={() => navigate(`/lecturer/lesson-plans/${plan.id}/lessons`)}
                 >
                   <td style={tdStyle}>{plan.subject}</td>
                   <td style={tdStyle}>{plan.grade}</td>

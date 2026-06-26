@@ -22,17 +22,17 @@ type ProfileTeachingSkill = NonNullable<LecturerProfile['teachingSkills']>[numbe
 
 type ExpertiseRow = { specialty: string; degree: string; certificateImageUrls: string[]; sortOrder: number };
 type ExperienceRow = { description: string; imageUrls: string[]; sortOrder: number };
-type SkillRow = { description: string; imageUrl: string; sortOrder: number };
+type SkillRow = { description: string; imageUrls: string[]; sortOrder: number };
 type NoteRow = { content: string; sortOrder: number };
 
 function toExpertiseRows(items: ProfileExpertise[]): ExpertiseRow[] {
-  return items.map((e) => ({ specialty: e.specialty, degree: e.degree, certificateImageUrls: e.certificateImageUrl ? [e.certificateImageUrl] : [], sortOrder: e.sortOrder }));
+  return items.map((e) => ({ specialty: e.specialty, degree: e.degree, certificateImageUrls: e.certificateImageUrl ? e.certificateImageUrl.split('|').filter(Boolean) : [], sortOrder: e.sortOrder }));
 }
 function toExperienceRows(items: ProfileExperience[]): ExperienceRow[] {
-  return items.map((e) => ({ description: e.description, imageUrls: e.imageUrl ? [e.imageUrl] : [], sortOrder: e.sortOrder }));
+  return items.map((e) => ({ description: e.description, imageUrls: e.imageUrl ? e.imageUrl.split('|').filter(Boolean) : [], sortOrder: e.sortOrder }));
 }
 function toSkillRows(items: ProfileTeachingSkill[]): SkillRow[] {
-  return items.map((e) => ({ description: e.description, imageUrl: e.imageUrl || '', sortOrder: e.sortOrder }));
+  return items.map((e) => ({ description: e.description, imageUrls: e.imageUrl ? e.imageUrl.split('|').filter(Boolean) : [], sortOrder: e.sortOrder }));
 }
 
 export default function OverviewPage() {
@@ -78,7 +78,7 @@ export default function OverviewPage() {
     setLocation(profile.teachingLocations.length > 0 ? profile.teachingLocations.map((l) => l.value).join(', ') : '');
     setExpertises(profile.expertises.length > 0 ? toExpertiseRows(profile.expertises) : [{ specialty: '', degree: '', certificateImageUrls: [], sortOrder: 0 }]);
     setExperiences(profile.experiences.length > 0 ? toExperienceRows(profile.experiences) : [{ description: '', imageUrls: [], sortOrder: 0 }]);
-    setSkills(profile.teachingSkills.length > 0 ? toSkillRows(profile.teachingSkills) : [{ description: '', imageUrl: '', sortOrder: 0 }]);
+    setSkills(profile.teachingSkills.length > 0 ? toSkillRows(profile.teachingSkills) : [{ description: '', imageUrls: [], sortOrder: 0 }]);
     setNotes(profile.notes.length > 0 ? profile.notes.map((n) => ({ content: n.content, sortOrder: n.sortOrder })) : [{ content: '', sortOrder: 0 }]);
     setEditError('');
     setEditing(true);
@@ -102,30 +102,45 @@ export default function OverviewPage() {
     }
   }
 
-  async function handleExpertiseImageUpload(file: File, idx: number) {
+  async function handleExpertiseImageUpload(files: FileList, idx: number) {
     try {
-      const imageUrl = await profileService.uploadProfileImage(file);
-      const u = [...expertises]; u[idx] = { ...u[idx], certificateImageUrls: [...u[idx].certificateImageUrls, imageUrl] }; setExpertises(u);
+      const uploadPromises = Array.from(files).map((f) => profileService.uploadProfileImage(f));
+      const imageUrls = await Promise.all(uploadPromises);
+      setExpertises((prev) => {
+        const u = [...prev];
+        u[idx] = { ...u[idx], certificateImageUrls: [...u[idx].certificateImageUrls, ...imageUrls] };
+        return u;
+      });
     } catch (err) {
       const axiosErr = err as AxiosError<{ error?: { message?: string } }>;
       setEditError(axiosErr.response?.data?.error?.message || 'Lỗi tải ảnh.');
     }
   }
 
-  async function handleExperienceImageUpload(file: File, idx: number) {
+  async function handleExperienceImageUpload(files: FileList, idx: number) {
     try {
-      const imageUrl = await profileService.uploadProfileImage(file);
-      const u = [...experiences]; u[idx] = { ...u[idx], imageUrls: [...u[idx].imageUrls, imageUrl] }; setExperiences(u);
+      const uploadPromises = Array.from(files).map((f) => profileService.uploadProfileImage(f));
+      const imageUrls = await Promise.all(uploadPromises);
+      setExperiences((prev) => {
+        const u = [...prev];
+        u[idx] = { ...u[idx], imageUrls: [...u[idx].imageUrls, ...imageUrls] };
+        return u;
+      });
     } catch (err) {
       const axiosErr = err as AxiosError<{ error?: { message?: string } }>;
       setEditError(axiosErr.response?.data?.error?.message || 'Lỗi tải ảnh.');
     }
   }
 
-  async function handleSkillImageUpload(file: File, idx: number) {
+  async function handleSkillImageUpload(files: FileList, idx: number) {
     try {
-      const imageUrl = await profileService.uploadProfileImage(file);
-      const u = [...skills]; u[idx] = { ...u[idx], imageUrl }; setSkills(u);
+      const uploadPromises = Array.from(files).map((f) => profileService.uploadProfileImage(f));
+      const imageUrls = await Promise.all(uploadPromises);
+      setSkills((prev) => {
+        const u = [...prev];
+        u[idx] = { ...u[idx], imageUrls: [...u[idx].imageUrls, ...imageUrls] };
+        return u;
+      });
     } catch (err) {
       const axiosErr = err as AxiosError<{ error?: { message?: string } }>;
       setEditError(axiosErr.response?.data?.error?.message || 'Lỗi tải ảnh.');
@@ -139,9 +154,9 @@ export default function OverviewPage() {
       fullName: fullName.trim(),
       introduction: introduction.trim() || null,
       teachingLocations: location.trim() ? [{ value: location.trim(), sortOrder: 0 }] : [],
-      expertises: expertises.filter((e) => e.specialty.trim() || e.degree.trim()).map((e, i) => ({ specialty: e.specialty.trim(), degree: e.degree.trim(), certificateImageUrl: e.certificateImageUrls[0]?.trim() || null, sortOrder: i })),
-      experiences: experiences.filter((e) => e.description.trim()).map((e, i) => ({ description: e.description.trim(), imageUrl: e.imageUrls[0]?.trim() || null, sortOrder: i })),
-      teachingSkills: skills.filter((s) => s.description.trim()).map((s, i) => ({ description: s.description.trim(), imageUrl: s.imageUrl.trim() || null, sortOrder: i })),
+      expertises: expertises.filter((e) => e.specialty.trim() || e.degree.trim()).map((e, i) => ({ specialty: e.specialty.trim(), degree: e.degree.trim(), certificateImageUrl: e.certificateImageUrls.filter(Boolean).join('|') || null, sortOrder: i })),
+      experiences: experiences.filter((e) => e.description.trim()).map((e, i) => ({ description: e.description.trim(), imageUrl: e.imageUrls.filter(Boolean).join('|') || null, sortOrder: i })),
+      teachingSkills: skills.filter((s) => s.description.trim()).map((s, i) => ({ description: s.description.trim(), imageUrl: s.imageUrls.filter(Boolean).join('|') || null, sortOrder: i })),
       notes: notes.filter((n) => n.content.trim()).map((n, i) => ({ content: n.content.trim(), sortOrder: i })),
     };
     try {
@@ -242,7 +257,7 @@ export default function OverviewPage() {
                       <input type="text" value={ex.degree} onChange={(e) => { const u = [...expertises]; u[i] = { ...u[i], degree: e.target.value }; setExpertises(u); }} style={{ ...inputStyle, flex: 1 }} placeholder="Bằng cấp" />
                       <label style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }} title="Thêm ảnh">
                         <CrudIcon name="image" size={20} />
-                        <input type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={(e) => { const files = e.target.files; if (files) { Array.from(files).forEach((f) => handleExpertiseImageUpload(f, i)); } }} />
+                        <input type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={(e) => { const files = e.target.files; if (files && files.length > 0) handleExpertiseImageUpload(files, i); }} />
                       </label>
                       <button type="button" onClick={() => { if (expertises.length > 1) setExpertises(expertises.filter((_, j) => j !== i)); }} disabled={expertises.length <= 1} style={{ background: 'none', border: 'none', cursor: expertises.length <= 1 ? 'not-allowed' : 'pointer', opacity: expertises.length <= 1 ? 0.4 : 1, display: 'inline-flex', alignItems: 'center' }} title="Xóa">
                         <CrudIcon name="delete" size={20} />
@@ -266,7 +281,13 @@ export default function OverviewPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead><tr><th style={thStyle}>Chuyên ngành</th><th style={thStyle}>Bằng cấp</th><th style={thStyle}>Ảnh đính kèm</th></tr></thead>
                 <tbody>{profile.expertises.map((e, i) => (
-                  <tr key={`${e.id}-${i}`}><td style={tdStyle}>{e.specialty}</td><td style={tdStyle}>{e.degree}</td><td style={tdStyle}>{e.certificateImageUrl ? <img src={profileService.getImageUrl(e.certificateImageUrl)} alt="Chứng chỉ" style={{ maxWidth: 120, maxHeight: 80, cursor: 'pointer', borderRadius: 4 }} onClick={() => setExpandedImage(profileService.getImageUrl(e.certificateImageUrl!))} /> : '—'}</td></tr>
+                  <tr key={`${e.id}-${i}`}><td style={tdStyle}>{e.specialty}</td><td style={tdStyle}>{e.degree}</td><td style={tdStyle}>{e.certificateImageUrl ? (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                      {e.certificateImageUrl.split('|').filter(Boolean).map((url, imgIdx) => (
+                        <img key={`cert-view-${i}-${imgIdx}`} src={profileService.getImageUrl(url)} alt="Chứng chỉ" style={{ maxWidth: 120, maxHeight: 80, cursor: 'pointer', borderRadius: 4 }} onClick={() => setExpandedImage(profileService.getImageUrl(url))} />
+                      ))}
+                    </div>
+                  ) : '—'}</td></tr>
                 ))}</tbody>
               </table>
             ) : <p style={plainTextStyle}>—</p>}
@@ -282,7 +303,7 @@ export default function OverviewPage() {
                       <input type="text" value={ex.description} onChange={(e) => { const u = [...experiences]; u[i] = { ...u[i], description: e.target.value }; setExperiences(u); }} style={{ ...inputStyle, flex: 1 }} placeholder="Mô tả kinh nghiệm" />
                       <label style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }} title="Thêm ảnh">
                         <CrudIcon name="image" size={20} />
-                        <input type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={(e) => { const files = e.target.files; if (files) { Array.from(files).forEach((f) => handleExperienceImageUpload(f, i)); } }} />
+                        <input type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={(e) => { const files = e.target.files; if (files && files.length > 0) handleExperienceImageUpload(files, i); }} />
                       </label>
                       <button type="button" onClick={() => { if (experiences.length > 1) setExperiences(experiences.filter((_, j) => j !== i)); }} disabled={experiences.length <= 1} style={{ background: 'none', border: 'none', cursor: experiences.length <= 1 ? 'not-allowed' : 'pointer', opacity: experiences.length <= 1 ? 0.4 : 1, display: 'inline-flex', alignItems: 'center' }} title="Xóa">
                         <CrudIcon name="delete" size={20} />
@@ -306,14 +327,20 @@ export default function OverviewPage() {
               <div>{profile.experiences.map((e, i) => (
                 <div key={`${e.id}-${i}`} style={{ marginBottom: 8, padding: 8, border: '1px solid #eee', borderRadius: 4 }}>
                   <p style={plainTextStyle}>{e.description}</p>
-                  {e.imageUrl && <img src={profileService.getImageUrl(e.imageUrl)} alt="Kinh nghiệm" style={{ maxWidth: 200, maxHeight: 120, marginTop: 4, cursor: 'pointer', borderRadius: 4 }} onClick={() => setExpandedImage(profileService.getImageUrl(e.imageUrl!))} />}
+                  {e.imageUrl && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+                      {e.imageUrl.split('|').filter(Boolean).map((url, imgIdx) => (
+                        <img key={`exp-view-${i}-${imgIdx}`} src={profileService.getImageUrl(url)} alt="Kinh nghiệm" style={{ maxWidth: 200, maxHeight: 120, cursor: 'pointer', borderRadius: 4 }} onClick={() => setExpandedImage(profileService.getImageUrl(url))} />
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}</div>
             ) : <p style={plainTextStyle}>—</p>}
           </Section>
 
           {/* Kỹ năng giảng dạy */}
-          <Section label="Kỹ năng giảng dạy khác">
+          <Section label="Kỹ năng">
             {editing ? (
               <>
                 {skills.map((s, i) => (
@@ -322,26 +349,37 @@ export default function OverviewPage() {
                       <input type="text" value={s.description} onChange={(e) => { const u = [...skills]; u[i] = { ...u[i], description: e.target.value }; setSkills(u); }} style={{ ...inputStyle, flex: 1 }} placeholder="Mô tả kỹ năng" />
                       <label style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }} title="Thêm ảnh">
                         <CrudIcon name="image" size={20} />
-                        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => { const f = e.target.files?.[0]; if (f) handleSkillImageUpload(f, i); }} />
+                        <input type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={(e) => { const files = e.target.files; if (files && files.length > 0) handleSkillImageUpload(files, i); }} />
                       </label>
                       <button type="button" onClick={() => { if (skills.length > 1) setSkills(skills.filter((_, j) => j !== i)); }} disabled={skills.length <= 1} style={{ background: 'none', border: 'none', cursor: skills.length <= 1 ? 'not-allowed' : 'pointer', opacity: skills.length <= 1 ? 0.4 : 1, display: 'inline-flex', alignItems: 'center' }} title="Xóa">
                         <CrudIcon name="delete" size={20} />
                       </button>
                     </div>
-                    {s.imageUrl && (
-                      <div style={{ marginTop: 8 }}>
-                        <img src={profileService.getImageUrl(s.imageUrl)} alt="Kỹ năng" style={{ ...thumbStyle, cursor: 'pointer' }} onClick={() => setExpandedImage(profileService.getImageUrl(s.imageUrl))} />
+                    {s.imageUrls.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
+                        {s.imageUrls.map((url, imgIdx) => (
+                          <div key={`skill-img-${i}-${imgIdx}`} style={{ position: 'relative', display: 'inline-block' }}>
+                            <img src={profileService.getImageUrl(url)} alt={`Kỹ năng ${imgIdx + 1}`} style={{ ...thumbStyle, cursor: 'pointer' }} onClick={() => setExpandedImage(profileService.getImageUrl(url))} />
+                            <button type="button" onClick={() => { const u = [...skills]; u[i] = { ...u[i], imageUrls: u[i].imageUrls.filter((_, k) => k !== imgIdx) }; setSkills(u); }} style={imgRemoveBtn} title="Xóa ảnh">✕</button>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
                 ))}
-                <button type="button" onClick={() => setSkills([...skills, { description: '', imageUrl: '', sortOrder: skills.length }])} style={addBtn}>+ Thêm kỹ năng</button>
+                <button type="button" onClick={() => setSkills([...skills, { description: '', imageUrls: [], sortOrder: skills.length }])} style={addBtn}>+ Thêm kỹ năng</button>
               </>
             ) : profile.teachingSkills.length > 0 ? (
               <div>{profile.teachingSkills.map((s, i) => (
                 <div key={`${s.id}-${i}`} style={{ marginBottom: 8, padding: 8, border: '1px solid #eee', borderRadius: 4 }}>
                   <p style={plainTextStyle}>{s.description}</p>
-                  {s.imageUrl && <img src={profileService.getImageUrl(s.imageUrl)} alt="Kỹ năng" style={{ maxWidth: 200, maxHeight: 120, marginTop: 4, cursor: 'pointer', borderRadius: 4 }} onClick={() => setExpandedImage(profileService.getImageUrl(s.imageUrl!))} />}
+                  {s.imageUrl && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+                      {s.imageUrl.split('|').filter(Boolean).map((url, imgIdx) => (
+                        <img key={`skill-view-${i}-${imgIdx}`} src={profileService.getImageUrl(url)} alt="Kỹ năng" style={{ maxWidth: 200, maxHeight: 120, cursor: 'pointer', borderRadius: 4 }} onClick={() => setExpandedImage(profileService.getImageUrl(url))} />
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}</div>
             ) : <p style={plainTextStyle}>—</p>}

@@ -13,6 +13,7 @@ type ApiLesson = {
   id: number;
   name: string;
   sortOrder: number;
+  suggestedPeriods?: number;
 };
 
 type ApiLessonPlan = Omit<LessonPlan, 'lessons'> & {
@@ -23,6 +24,7 @@ type ApiLessonRequest = {
   id?: number;
   name: string;
   sortOrder: number;
+  suggestedPeriods?: number;
 };
 
 type ApiCreateLessonPlanRequest = Omit<CreateLessonPlanRequest, 'lessons'> & {
@@ -39,6 +41,7 @@ function mapLessonsFromApi(planId: number, lessons: ApiLesson[]): Lesson[] {
     lessonPlanId: planId,
     name: lesson.name,
     orderIndex: lesson.sortOrder,
+    suggestedPeriods: lesson.suggestedPeriods ?? 1,
     documents: [],
     attachments: [],
     miniGames: [],
@@ -58,6 +61,7 @@ function mapLessonsToApi(lessons: CreateLessonPlanRequest['lessons']): ApiLesson
     id: lesson.id,
     name: lesson.name,
     sortOrder: lesson.orderIndex,
+    suggestedPeriods: lesson.suggestedPeriods,
   }));
 }
 
@@ -101,6 +105,11 @@ export async function toggleShare(id: number, isShared: boolean): Promise<{ isSh
 
 export async function getSharedPlans(subject?: string, grade?: string): Promise<SharedLessonPlan[]> {
   const response = await api.get<SharedLessonPlan[]>('/shared-lesson-plans', { params: { subject, grade } });
+  return response.data;
+}
+
+export async function getSharedPlanDetail(id: number): Promise<{ id: number; subject: string; grade: string; schoolYearStart: string; schoolYearEnd: string; lecturerName: string; lessons: { id: number; name: string; orderIndex: number }[] }> {
+  const response = await api.get(`/shared-lesson-plans/${id}`);
   return response.data;
 }
 

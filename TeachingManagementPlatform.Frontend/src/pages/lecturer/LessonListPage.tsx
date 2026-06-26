@@ -11,6 +11,7 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContentText from '@mui/material/DialogContentText';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
+import CrudIcon from '../../components/common/CrudIcon';
 import * as lessonPlanService from '../../services/lessonPlanService';
 import * as lessonSuggestionService from '../../services/lessonSuggestionService';
 import type { LessonPlan } from '../../types/lessonPlan';
@@ -32,6 +33,7 @@ export default function LessonListPage() {
   const [error, setError] = useState('');
   const [adding, setAdding] = useState(false);
   const [newLessonName, setNewLessonName] = useState('');
+  const [newLessonPeriods, setNewLessonPeriods] = useState(1);
   const [actionLoading, setActionLoading] = useState(false);
 
   // Auto-generate state
@@ -79,9 +81,10 @@ export default function LessonListPage() {
         orderIndex: l.orderIndex,
       }));
       await lessonPlanService.update(planId, {
-        lessons: [...existingLessons, { name: newLessonName.trim(), orderIndex: maxOrder + 1 }],
+        lessons: [...existingLessons, { name: newLessonName.trim(), orderIndex: maxOrder + 1, suggestedPeriods: newLessonPeriods }],
       });
       setNewLessonName('');
+      setNewLessonPeriods(1);
       setAdding(false);
       await loadPlan();
     } catch (err: any) {
@@ -135,6 +138,24 @@ export default function LessonListPage() {
     setSelectedLessonForAI(null);
   }
 
+  async function handleDeleteLesson(lessonId: number) {
+    if (!plan) return;
+    if (!window.confirm('Bạn có chắc chắn muốn xóa bài học này?')) return;
+    setActionLoading(true);
+    setError('');
+    try {
+      const remainingLessons = plan.lessons
+        .filter((l) => l.id !== lessonId)
+        .map((l) => ({ id: l.id, name: l.name, orderIndex: l.orderIndex }));
+      await lessonPlanService.update(planId, { lessons: remainingLessons });
+      await loadPlan();
+    } catch (err: any) {
+      setError(err?.message || 'Xóa bài học thất bại.');
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
   async function openBatchAI() {
     setBatchAIOpen(true);
     setBatchDescription('');
@@ -180,23 +201,6 @@ export default function LessonListPage() {
 
       {/* Add lesson button */}
       <div style={{ marginBottom: 16, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-        {adding ? (
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flex: 1 }}>
-            <input
-              type="text"
-              placeholder="Tên bài học"
-              value={newLessonName}
-              onChange={(e) => setNewLessonName(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleAddLesson(); }}
-              style={{ padding: 8, borderRadius: 6, border: '1px solid var(--edub-border)', flex: 1, maxWidth: 400 }}
-              autoFocus
-            />
-            <button className="btn btn-update" onClick={handleAddLesson} disabled={actionLoading || !newLessonName.trim()}>
-              {actionLoading ? 'Đang thêm...' : 'Lưu'}
-            </button>
-            <button className="btn btn-neutral" onClick={() => { setAdding(false); setNewLessonName(''); }}>Hủy</button>
-          </div>
-        ) : (
           <>
             <button className="btn btn-add" onClick={() => setAdding(true)}>+ Thêm bài học</button>
             <Button
@@ -218,8 +222,34 @@ export default function LessonListPage() {
               Gợi ý AI cho toàn bộ
             </Button>
           </>
-        )}
       </div>
+
+      {/* Add lesson modal */}
+      <Dialog open={adding} onClose={() => { setAdding(false); setNewLessonName(''); setNewLessonPeriods(1); }} maxWidth="xs" fullWidth>
+        <DialogTitle>Thêm bài học</DialogTitle>
+        <DialogContent>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingTop: 8 }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: 4, fontWeight: 600 }}>Tên bài học</label>
+              <input
+                type="text"
+                placeholder="Nhập tên bài học"
+                value={newLessonName}
+                onChange={(e) => setNewLessonName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && newLessonName.trim()) handleAddLesson(); }}
+                style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid var(--edub-border)', boxSizing: 'border-box' }}
+                autoFocus
+              />
+            </div>
+          </div>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => { setAdding(false); setNewLessonName(''); setNewLessonPeriods(1); }}>Hủy</Button>
+          <Button variant="contained" onClick={handleAddLesson} disabled={actionLoading || !newLessonName.trim()}>
+            {actionLoading ? 'Đang thêm...' : 'Lưu'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {plan.lessons.length === 0 ? (
         <div style={{ padding: 24, textAlign: 'center', color: 'var(--edub-text-secondary)', border: '1px dashed var(--edub-border)', borderRadius: 12 }}>
@@ -253,9 +283,6 @@ export default function LessonListPage() {
                     {idx + 1}.
                   </span>
                   <span style={{ fontWeight: 600 }}>{lesson.name}</span>
-                  <span style={{ marginLeft: 8, fontSize: 12, color: 'var(--edub-text-secondary)', background: '#f1f5f9', padding: '2px 6px', borderRadius: 4 }}>
-                    1 tiết
-                  </span>
                   <Tooltip title="Gợi ý AI">
                     <IconButton
                       size="small"
@@ -270,7 +297,11 @@ export default function LessonListPage() {
                     </IconButton>
                   </Tooltip>
                 </div>
-                <span style={{ color: 'var(--edub-text-secondary)', fontSize: 13 }}>Xem & sửa →</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span onClick={(e) => e.stopPropagation()}>
+                    <CrudIcon name="delete" tooltip="Xóa bài học" onClick={() => handleDeleteLesson(lesson.id)} disabled={actionLoading} />
+                  </span>
+                </div>
               </div>
             ))}
         </div>

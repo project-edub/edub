@@ -51,9 +51,6 @@ export default function LessonEditPage() {
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState('');
 
-  // Số tiết
-  const [periodsValue, setPeriodsValue] = useState(1);
-
   useEffect(() => {
     if (!lessonId || isNaN(lessonId)) { setError('ID không hợp lệ.'); setLoading(false); return; }
     loadLesson();
@@ -78,6 +75,17 @@ export default function LessonEditPage() {
       setEditingName(false);
       await loadLesson();
     } catch (err: any) { setError(err?.message || 'Lỗi.'); }
+    finally { setActionLoading(false); }
+  }
+
+  // ── Delete lesson ──
+  async function handleDeleteThisLesson() {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa bài học này? Tất cả đường dẫn, tệp đính kèm và mini game sẽ bị xóa.')) return;
+    setActionLoading(true);
+    try {
+      await lessonService.deleteLesson(lessonId);
+      navigate(-1);
+    } catch (err: any) { setError(err?.message || 'Xóa bài học thất bại.'); }
     finally { setActionLoading(false); }
   }
 
@@ -245,6 +253,7 @@ export default function LessonEditPage() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <button type="button" className="btn btn-neutral" onClick={() => navigate(-1)}>← Quay lại</button>
+        <CrudIcon name="delete" tooltip="Xóa bài học" onClick={handleDeleteThisLesson} disabled={actionLoading} size={24} />
       </div>
 
       {error && <div role="alert" style={{ color: '#d32f2f', marginBottom: 12 }}>{error}</div>}
@@ -264,22 +273,6 @@ export default function LessonEditPage() {
           </h1>
         )}
       </div>
-
-      {/* Số tiết */}
-      <section style={sectionStyle}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <h3 style={{ margin: 0 }}>Số tiết</h3>
-          <input
-            type="number"
-            min={1}
-            max={20}
-            value={periodsValue}
-            onChange={(e) => setPeriodsValue(Math.max(1, Number(e.target.value) || 1))}
-            style={{ ...inputStyle, width: 70, textAlign: 'center' }}
-          />
-          <span style={{ color: 'var(--edub-text-secondary)', fontSize: 14 }}>tiết</span>
-        </div>
-      </section>
 
       {/* Documents (regular only, excluding game docs) */}
       <section style={sectionStyle}>
@@ -340,8 +333,8 @@ export default function LessonEditPage() {
               <div
                 key={att.id}
                 style={{ ...itemRowStyle, cursor: 'pointer' }}
-                onDoubleClick={() => handleOpenAttachment(att)}
-                title="Nhấn đúp để mở tệp"
+                onClick={() => handleOpenAttachment(att)}
+                title="Nhấn để mở tệp"
               >
                 <span style={{ fontWeight: 600, color: '#1565c0' }}>
                   {att.fileName}

@@ -401,7 +401,7 @@ export default function TeachingMaterialStoragePage() {
                   style={{ cursor: 'pointer', backgroundColor: hoveredRowId === item.id ? '#f5f5f5' : undefined, transition: 'background-color 0.15s' }}
                   onMouseEnter={() => setHoveredRowId(item.id)}
                   onMouseLeave={() => setHoveredRowId(null)}
-                  onDoubleClick={item.itemType === ItemType.Folder ? () => openFolder(item) : item.itemType === ItemType.File ? () => handleOpen(item) : undefined}
+                  onClick={item.itemType === ItemType.Folder ? () => openFolder(item) : item.itemType === ItemType.File ? () => handleOpen(item) : undefined}
                 >
                   <td style={tdStyle}>
                     {item.itemType === ItemType.Folder ? (

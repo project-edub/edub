@@ -183,7 +183,7 @@ export default function ClassListPage() {
                     style={{ cursor: 'pointer', backgroundColor: hoveredRowId === cls.id ? '#f5f5f5' : undefined, transition: 'background-color 0.15s' }}
                     onMouseEnter={() => setHoveredRowId(cls.id)}
                     onMouseLeave={() => setHoveredRowId(null)}
-                    onDoubleClick={() => navigate(`/lecturer/classes/${cls.id}`)}
+                    onClick={() => navigate(`/lecturer/classes/${cls.id}`)}
                   >
                     <td style={tdStyle}>{cls.name}</td>
                     <td style={tdStyle}>{cls.year}</td>
