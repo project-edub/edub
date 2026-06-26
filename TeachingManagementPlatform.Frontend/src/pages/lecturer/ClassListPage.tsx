@@ -4,7 +4,7 @@ import { AxiosError } from 'axios';
 import type { ClassDetail, CreateClassRequest, UpdateClassRequest } from '../../types/class';
 import type { ApiError } from '../../types/common';
 import * as classService from '../../services/classService';
-import CrudIcon from '../../components/common/CrudIcon';
+import ActionButton from '../../components/common/ActionButton';
 import Pagination, { usePagination } from '../../components/common/Pagination';
 
 interface ModalState {
@@ -166,7 +166,7 @@ export default function ClassListPage() {
                 <th style={thStyle}>Tên lớp</th>
                 <th style={thStyle}>Niên khóa</th>
                 <th style={thStyle}>Số học sinh</th>
-                <th style={thStyle}>Hành động</th>
+                <th style={{ ...thStyle, textAlign: 'center' }}>Hành động</th>
               </tr>
             </thead>
             <tbody>
@@ -188,9 +188,11 @@ export default function ClassListPage() {
                     <td style={tdStyle}>{cls.name}</td>
                     <td style={tdStyle}>{cls.year}</td>
                     <td style={tdStyle}>{cls.studentCount}</td>
-                    <td style={tdStyle}>
-                      <CrudIcon name="edit" tooltip="Sửa" onClick={() => openEditModal(cls)} disabled={actionLoading} />
-                      <CrudIcon name="delete" tooltip="Xóa" onClick={() => setDeleteTarget(cls)} disabled={actionLoading} />
+                    <td style={{ ...tdStyle, textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                      <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
+                        <ActionButton icon="edit" label="Sửa" color="primary" onClick={() => openEditModal(cls)} disabled={actionLoading} />
+                        <ActionButton icon="delete" label="Xóa" color="error" onClick={() => setDeleteTarget(cls)} disabled={actionLoading} />
+                      </div>
                     </td>
                   </tr>
                 ))

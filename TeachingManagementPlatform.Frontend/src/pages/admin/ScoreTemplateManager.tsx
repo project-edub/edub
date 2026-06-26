@@ -269,7 +269,7 @@ export default function ScoreTemplateManager() {
                   <th style={thStyle}>Môn học</th>
                   <th style={thStyle}>Số cột</th>
                   <th style={thStyle}>Cấu hình cột</th>
-                  <th style={thStyle}>Hành động</th>
+                  <th style={{ ...thStyle, textAlign: 'center' }}>Hành động</th>
                 </tr>
               </thead>
               <tbody>

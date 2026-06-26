@@ -13,6 +13,7 @@ function CrudIcon({ name, size = 24 }: { name: 'image' | 'delete'; size?: number
   );
 }
 import * as profileService from '../../services/profileService';
+import AlertModal from '../../components/common/AlertModal';
 
 type LecturerProfile = Awaited<ReturnType<typeof profileService.getProfile>>;
 type UpdateProfileRequest = Parameters<typeof profileService.updateProfile>[0];
@@ -45,6 +46,7 @@ export default function OverviewPage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [expandedImage, setExpandedImage] = useState<string | null>(null);
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   // Editable state
   const [fullName, setFullName] = useState('');
@@ -150,6 +152,27 @@ export default function OverviewPage() {
   async function handleSave() {
     setSaving(true);
     setEditError('');
+
+    // Validate: entries with images must have a description
+    const invalidExperience = experiences.find((e) => e.imageUrls.length > 0 && !e.description.trim());
+    if (invalidExperience) {
+      setAlertMessage('Vui lòng nhập mô tả cho tất cả mục Kinh nghiệm có ảnh.');
+      setSaving(false);
+      return;
+    }
+    const invalidSkill = skills.find((s) => s.imageUrls.length > 0 && !s.description.trim());
+    if (invalidSkill) {
+      setAlertMessage('Vui lòng nhập mô tả cho tất cả mục Kỹ năng có ảnh.');
+      setSaving(false);
+      return;
+    }
+    const invalidExpertise = expertises.find((e) => e.certificateImageUrls.length > 0 && !e.specialty.trim() && !e.degree.trim());
+    if (invalidExpertise) {
+      setAlertMessage('Vui lòng nhập chuyên ngành hoặc bằng cấp cho tất cả mục Chuyên môn có ảnh.');
+      setSaving(false);
+      return;
+    }
+
     const data: UpdateProfileRequest = {
       fullName: fullName.trim(),
       introduction: introduction.trim() || null,
@@ -412,6 +435,8 @@ export default function OverviewPage() {
           <img src={expandedImage} alt="" style={lightboxImg} />
         </div>
       )}
+
+      <AlertModal open={!!alertMessage} message={alertMessage || ''} onClose={() => setAlertMessage(null)} />
     </div>
   );
 }

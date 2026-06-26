@@ -287,7 +287,7 @@ export default function SubscriptionPackagePage() {
                 <th style={thStyle}>Hạn mức</th>
                 <th style={thStyle}>Chức năng</th>
                 <th style={thStyle}>Trạng thái</th>
-                <th style={thStyle}>Hành động</th>
+                <th style={{ ...thStyle, textAlign: 'center' }}>Hành động</th>
               </tr>
             </thead>
             <tbody>

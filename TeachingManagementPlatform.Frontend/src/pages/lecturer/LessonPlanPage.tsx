@@ -5,7 +5,7 @@ import type { LessonPlanSummary, LessonPlan, CreateLessonPlanRequest } from '../
 import type { ApiError } from '../../types/common';
 import * as lessonPlanService from '../../services/lessonPlanService';
 import LessonPlanModal from '../../components/lecturer/LessonPlanModal';
-import CrudIcon from '../../components/common/CrudIcon';
+import ActionButton from '../../components/common/ActionButton';
 import Toast from '../../components/common/Toast';
 import Pagination, { usePagination } from '../../components/common/Pagination';
 
@@ -228,13 +228,6 @@ export default function LessonPlanPage() {
     }
   }
 
-  // Determine which icon to show for a plan
-  function getShareIconName(plan: LessonPlanSummary): string {
-    if (plan.isShared) return 'close'; // public shared → X to unshare
-    if (plan.shareCode) return 'link'; // private code → copy icon
-    return 'share'; // not shared → share icon
-  }
-
   function getShareTooltip(plan: LessonPlanSummary): string {
     if (plan.isShared) return 'Bỏ chia sẻ';
     if (plan.shareCode) return 'Sao chép mã';
@@ -341,7 +334,7 @@ export default function LessonPlanPage() {
               <th style={thStyle}>Môn</th>
               <th style={thStyle}>Khối</th>
               <th style={thStyle}>Niên khóa</th>
-              <th style={thStyle}>Hành động</th>
+              <th style={{ ...thStyle, textAlign: 'center' }}>Hành động</th>
             </tr>
           </thead>
           <tbody>
@@ -363,23 +356,15 @@ export default function LessonPlanPage() {
                   <td style={tdStyle}>{plan.subject}</td>
                   <td style={tdStyle}>{plan.grade}</td>
                   <td style={tdStyle}>{plan.schoolYearStart} - {plan.schoolYearEnd}</td>
-                  <td style={tdStyle}>
-                    <CrudIcon
-                      name={getShareIconName(plan)}
-                      tooltip={getShareTooltip(plan)}
-                      onClick={() => handleShareClick(plan)}
-                      disabled={actionLoading}
-                    />
-                    {!plan.isShared && plan.shareCode && (
-                      <CrudIcon
-                        name="close"
-                        tooltip="Hủy chia sẻ"
-                        onClick={() => handleCancelPrivateShare(plan)}
-                        disabled={actionLoading}
-                      />
-                    )}
-                    <CrudIcon name="edit" tooltip="Sửa" onClick={() => openEditModal(plan)} disabled={actionLoading} />
-                    <CrudIcon name="delete" tooltip="Xóa" onClick={() => setDeleteTarget(plan)} disabled={actionLoading} />
+                  <td style={{ ...tdStyle, textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                    <div style={{ display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap' }}>
+                      <ActionButton icon="share" label={getShareTooltip(plan)} color="primary" onClick={() => handleShareClick(plan)} disabled={actionLoading} />
+                      {!plan.isShared && plan.shareCode && (
+                        <ActionButton icon="close" label="Hủy chia sẻ" color="default" onClick={() => handleCancelPrivateShare(plan)} disabled={actionLoading} />
+                      )}
+                      <ActionButton icon="edit" label="Sửa" color="primary" onClick={() => openEditModal(plan)} disabled={actionLoading} />
+                      <ActionButton icon="delete" label="Xóa" color="error" onClick={() => setDeleteTarget(plan)} disabled={actionLoading} />
+                    </div>
                   </td>
                 </tr>
               ))

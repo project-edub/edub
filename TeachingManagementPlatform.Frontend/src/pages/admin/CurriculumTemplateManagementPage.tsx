@@ -180,7 +180,7 @@ export default function CurriculumTemplateManagementPage() {
                   <th style={thStyle}>Số bài học</th>
                   <th style={thStyle}>Số lần sử dụng</th>
                   <th style={thStyle}>Ngày tạo</th>
-                  <th style={thStyle}>Hành động</th>
+                  <th style={{ ...thStyle, textAlign: 'center' }}>Hành động</th>
                 </tr>
               </thead>
               <tbody>

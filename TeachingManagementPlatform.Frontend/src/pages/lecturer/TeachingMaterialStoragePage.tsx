@@ -5,7 +5,7 @@ import type { ApiError } from '../../types/common';
 import { ItemType } from '../../types/common';
 import * as storageService from '../../services/storageService';
 import { formatDate } from '../../utils/formatters';
-import CrudIcon from '../../components/common/CrudIcon';
+import ActionButton from '../../components/common/ActionButton';
 
 interface BreadcrumbEntry {
   id: number | null;
@@ -384,7 +384,7 @@ export default function TeachingMaterialStoragePage() {
               <th style={thStyle}>Tên</th>
               <th style={thStyle}>Ngày sửa đổi</th>
               <th style={thStyle}>Kích cỡ tệp</th>
-              <th style={thStyle}>Hành động</th>
+              <th style={{ ...thStyle, textAlign: 'center' }}>Hành động</th>
             </tr>
           </thead>
           <tbody>
@@ -420,15 +420,17 @@ export default function TeachingMaterialStoragePage() {
                   <td style={tdStyle}>
                     {item.itemType === ItemType.Folder ? '—' : formatFileSize(item.fileSize)}
                   </td>
-                  <td style={tdStyle}>
-                    <CrudIcon name="edit" tooltip="Đổi tên" onClick={() => startRename(item)} disabled={actionLoading} />
-                    {item.itemType === ItemType.File && (
-                      <CrudIcon name="download" tooltip="Tải xuống" onClick={() => handleDownload(item)} disabled={actionLoading} />
-                    )}
-                    {item.itemType === ItemType.Folder && (
-                      <CrudIcon name="download" tooltip="Tải thư mục" onClick={() => handleDownloadFolder(item)} disabled={actionLoading} />
-                    )}
-                    <CrudIcon name="delete" tooltip="Xóa" onClick={() => setDeleteTarget(item)} disabled={actionLoading} />
+                  <td style={{ ...tdStyle, textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                    <div style={{ display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap' }}>
+                      <ActionButton icon="edit" label="Đổi tên" color="primary" onClick={() => startRename(item)} disabled={actionLoading} />
+                      {item.itemType === ItemType.File && (
+                        <ActionButton icon="download" label="Tải" color="default" onClick={() => handleDownload(item)} disabled={actionLoading} />
+                      )}
+                      {item.itemType === ItemType.Folder && (
+                        <ActionButton icon="download" label="Tải" color="default" onClick={() => handleDownloadFolder(item)} disabled={actionLoading} />
+                      )}
+                      <ActionButton icon="delete" label="Xóa" color="error" onClick={() => setDeleteTarget(item)} disabled={actionLoading} />
+                    </div>
                   </td>
                 </tr>
               ))

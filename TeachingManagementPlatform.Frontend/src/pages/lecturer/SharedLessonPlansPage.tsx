@@ -3,7 +3,7 @@ import { AxiosError } from 'axios';
 import type { SharedLessonPlan } from '../../types/lessonPlan';
 import type { ApiError } from '../../types/common';
 import * as lessonPlanService from '../../services/lessonPlanService';
-import CrudIcon from '../../components/common/CrudIcon';
+import ActionButton from '../../components/common/ActionButton';
 import Pagination, { usePagination } from '../../components/common/Pagination';
 
 export default function SharedLessonPlansPage() {
@@ -126,7 +126,7 @@ export default function SharedLessonPlansPage() {
               <th style={thStyle}>Niên khóa</th>
               <th style={thStyle}>Số bài</th>
               <th style={thStyle}>Giảng viên</th>
-              <th style={thStyle}>Hành động</th>
+              <th style={{ ...thStyle, textAlign: 'center' }}>Hành động</th>
             </tr>
           </thead>
           <tbody>
@@ -150,11 +150,11 @@ export default function SharedLessonPlansPage() {
                   <td style={tdStyle}>{plan.schoolYearStart} - {plan.schoolYearEnd}</td>
                   <td style={tdStyle}>{plan.lessonCount}</td>
                   <td style={tdStyle}>{plan.lecturerName}</td>
-                  <td style={tdStyle}>
+                  <td style={{ ...tdStyle, textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                     {savedIds.has(plan.id) ? (
-                      <span style={{ color: 'green', fontWeight: 600 }}>Đã lưu</span>
+                      <span style={{ color: 'green', fontWeight: 600, fontSize: 12 }}>✓ Đã lưu</span>
                     ) : (
-                      <CrudIcon name="save" tooltip="Lưu về giáo án của tôi" onClick={() => handleCopy(plan.id)} disabled={savingId === plan.id} />
+                      <ActionButton icon="save" label="Lưu" color="success" onClick={() => handleCopy(plan.id)} disabled={savingId === plan.id} />
                     )}
                   </td>
                 </tr>
