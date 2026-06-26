@@ -138,13 +138,15 @@ public class LessonPlanService : ILessonPlanService
                 {
                     existingLesson.Name = lessonReq.Name;
                     existingLesson.OrderIndex = lessonReq.SortOrder;
+                    existingLesson.SuggestedPeriods = lessonReq.SuggestedPeriods;
                     continue;
                 }
 
                 plan.Lessons.Add(new Lesson
                 {
                     Name = lessonReq.Name,
-                    OrderIndex = lessonReq.SortOrder
+                    OrderIndex = lessonReq.SortOrder,
+                    SuggestedPeriods = lessonReq.SuggestedPeriods
                 });
             }
         }

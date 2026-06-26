@@ -140,6 +140,31 @@ public class LessonPlanController : ControllerBase
         return Ok(plans);
     }
 
+    [HttpGet("/api/shared-lesson-plans/{id}")]
+    [Authorize(Roles = "Lecturer,Admin")]
+    public async Task<IActionResult> GetSharedLessonPlanDetail(int id)
+    {
+        var plan = await _context.LessonPlans
+            .Where(lp => lp.Id == id && lp.IsShared)
+            .Include(lp => lp.Lecturer)
+            .Include(lp => lp.Lessons)
+            .FirstOrDefaultAsync();
+
+        if (plan == null)
+            return NotFound(new { error = new { code = "LESSON_PLAN_NOT_FOUND", message = "Không tìm thấy giáo án chia sẻ" } });
+
+        return Ok(new
+        {
+            id = plan.Id,
+            subject = plan.Subject,
+            grade = plan.Grade,
+            schoolYearStart = plan.SchoolYearStart,
+            schoolYearEnd = plan.SchoolYearEnd,
+            lecturerName = plan.Lecturer.FullName != "" ? plan.Lecturer.FullName : plan.Lecturer.Email,
+            lessons = plan.Lessons.OrderBy(l => l.OrderIndex).Select(l => new { id = l.Id, name = l.Name, orderIndex = l.OrderIndex }).ToList()
+        });
+    }
+
     [HttpPost("copy/{sharedPlanId}")]
     public async Task<IActionResult> CopySharedPlan(int sharedPlanId)
     {

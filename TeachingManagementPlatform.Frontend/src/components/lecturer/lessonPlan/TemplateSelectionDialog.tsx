@@ -315,12 +315,6 @@ export default function TemplateSelectionDialog({
                 <Typography variant="body2" sx={{ flex: 1 }}>
                   {lesson.lessonName}
                 </Typography>
-                <Chip
-                  label={`${lesson.suggestedPeriods} tiết`}
-                  size="small"
-                  variant="outlined"
-                  sx={{ fontSize: '0.75rem' }}
-                />
               </Box>
             ))}
           </Box>

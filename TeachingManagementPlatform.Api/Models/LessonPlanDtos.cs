@@ -33,6 +33,7 @@ public class UpdateLessonRequest
     [Required]
     public string Name { get; set; } = string.Empty;
     public int SortOrder { get; set; }
+    public int SuggestedPeriods { get; set; } = 1;
 }
 
 public class UpdateLessonPlanRequest

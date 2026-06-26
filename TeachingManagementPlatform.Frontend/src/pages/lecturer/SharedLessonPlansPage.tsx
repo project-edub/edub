@@ -3,6 +3,7 @@ import { AxiosError } from 'axios';
 import type { SharedLessonPlan } from '../../types/lessonPlan';
 import type { ApiError } from '../../types/common';
 import * as lessonPlanService from '../../services/lessonPlanService';
+import CrudIcon from '../../components/common/CrudIcon';
 import Pagination, { usePagination } from '../../components/common/Pagination';
 
 export default function SharedLessonPlansPage() {
@@ -11,6 +12,9 @@ export default function SharedLessonPlansPage() {
   const [error, setError] = useState('');
   const [savingId, setSavingId] = useState<number | null>(null);
   const [savedIds, setSavedIds] = useState<Set<number>>(new Set());
+  const [detailPlan, setDetailPlan] = useState<{ id: number; subject: string; grade: string; schoolYearStart: string; schoolYearEnd: string; lecturerName: string; lessons: { id: number; name: string; orderIndex: number }[] } | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [hoveredRowId, setHoveredRowId] = useState<number | null>(null);
 
   // Filter state
   const [filterSubject, setFilterSubject] = useState('');
@@ -52,6 +56,19 @@ export default function SharedLessonPlansPage() {
       setError(extractError(err));
     } finally {
       setSavingId(null);
+    }
+  }
+
+  async function handleViewDetail(planId: number) {
+    setDetailLoading(true);
+    setDetailPlan(null);
+    try {
+      const data = await lessonPlanService.getSharedPlanDetail(planId);
+      setDetailPlan(data);
+    } catch (err) {
+      setError(extractError(err));
+    } finally {
+      setDetailLoading(false);
     }
   }
 
@@ -121,7 +138,13 @@ export default function SharedLessonPlansPage() {
               </tr>
             ) : (
               paginatedPlans.map((plan) => (
-                <tr key={plan.id}>
+                <tr
+                  key={plan.id}
+                  onClick={() => handleViewDetail(plan.id)}
+                  onMouseEnter={() => setHoveredRowId(plan.id)}
+                  onMouseLeave={() => setHoveredRowId(null)}
+                  style={{ cursor: 'pointer', backgroundColor: hoveredRowId === plan.id ? 'var(--edub-hover-bg, #f1f5f9)' : undefined, transition: 'background-color 150ms ease' }}
+                >
                   <td style={tdStyle}>{plan.subject}</td>
                   <td style={tdStyle}>{plan.grade}</td>
                   <td style={tdStyle}>{plan.schoolYearStart} - {plan.schoolYearEnd}</td>
@@ -131,22 +154,7 @@ export default function SharedLessonPlansPage() {
                     {savedIds.has(plan.id) ? (
                       <span style={{ color: 'green', fontWeight: 600 }}>Đã lưu</span>
                     ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleCopy(plan.id)}
-                        disabled={savingId === plan.id}
-                        style={{
-                          padding: '6px 14px',
-                          cursor: savingId === plan.id ? 'not-allowed' : 'pointer',
-                          borderRadius: 8,
-                          backgroundColor: '#1976d2',
-                          color: 'white',
-                          border: 'none',
-                          opacity: savingId === plan.id ? 0.6 : 1,
-                        }}
-                      >
-                        {savingId === plan.id ? 'Đang lưu...' : 'Lưu'}
-                      </button>
+                      <CrudIcon name="save" tooltip="Lưu về giáo án của tôi" onClick={() => handleCopy(plan.id)} disabled={savingId === plan.id} />
                     )}
                   </td>
                 </tr>
@@ -163,6 +171,36 @@ export default function SharedLessonPlansPage() {
         onPageChange={setCurrentPage}
         onPageSizeChange={setPageSize}
       />
+
+      {/* Detail dialog */}
+      {(detailPlan || detailLoading) && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }} onClick={() => setDetailPlan(null)}>
+          <div style={{ background: 'var(--edub-surface, #fff)', borderRadius: 16, padding: 24, maxWidth: 600, width: '90%', maxHeight: '80vh', overflowY: 'auto', color: 'var(--edub-text-primary)' }} onClick={(e) => e.stopPropagation()}>
+            {detailLoading ? (
+              <p>Đang tải...</p>
+            ) : detailPlan && (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                  <h2 style={{ margin: 0 }}>Chi tiết giáo án</h2>
+                  <button type="button" onClick={() => setDetailPlan(null)} style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', color: 'var(--edub-text-primary)' }}>×</button>
+                </div>
+                <p><strong>Môn:</strong> {detailPlan.subject} | <strong>Lớp:</strong> {detailPlan.grade} | <strong>Niên khóa:</strong> {detailPlan.schoolYearStart} - {detailPlan.schoolYearEnd}</p>
+                <p><strong>Giảng viên:</strong> {detailPlan.lecturerName}</p>
+                <h3 style={{ marginTop: 16, marginBottom: 8 }}>Danh sách bài học ({detailPlan.lessons.length})</h3>
+                {detailPlan.lessons.length === 0 ? (
+                  <p style={{ color: '#94a3b8' }}>Chưa có bài học</p>
+                ) : (
+                  <ol style={{ margin: 0, paddingLeft: 20 }}>
+                    {detailPlan.lessons.map((l) => (
+                      <li key={l.id} style={{ padding: '4px 0' }}>{l.name}</li>
+                    ))}
+                  </ol>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

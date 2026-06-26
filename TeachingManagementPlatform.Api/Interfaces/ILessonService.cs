@@ -6,6 +6,8 @@ public interface ILessonService
 {
     Task<LessonDetailResponse> GetByIdAsync(int lessonId, int lecturerId);
     Task<LessonDetailResponse> UpdateNameAsync(int lessonId, int lecturerId, UpdateLessonNameRequest request);
+    Task<LessonDetailResponse> UpdatePeriodsAsync(int lessonId, int lecturerId, UpdateLessonPeriodsRequest request);
+    Task DeleteLessonAsync(int lessonId, int lecturerId);
     Task<DocumentResponse> AddDocumentAsync(int lessonId, int lecturerId, CreateDocumentRequest request);
     Task<DocumentResponse> UpdateDocumentAsync(int documentId, int lecturerId, UpdateDocumentRequest request);
     Task DeleteDocumentAsync(int documentId, int lecturerId);

@@ -26,6 +26,7 @@ const sampleLesson = {
   id: 1,
   name: 'Bài 1: Giới thiệu',
   orderIndex: 1,
+  suggestedPeriods: 1,
   scheduledDate: null,
   documents: [
     { id: 10, name: 'Sách giáo khoa', link: 'https://example.com/sgk', pageRange: '1-20' },

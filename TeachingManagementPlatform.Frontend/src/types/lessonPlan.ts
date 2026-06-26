@@ -27,6 +27,7 @@ export interface Lesson {
   lessonPlanId: number;
   name: string;
   orderIndex: number;
+  suggestedPeriods: number;
   scheduledDate?: string | null;
   documents: LessonDocument[];
   attachments: LessonAttachment[];
@@ -63,6 +64,7 @@ export interface CreateLessonRequest {
   id?: number;
   name: string;
   orderIndex: number;
+  suggestedPeriods?: number;
 }
 
 export interface CreateLessonPlanRequest {
@@ -124,6 +126,7 @@ export interface LessonDetail {
   id: number;
   name: string;
   orderIndex: number;
+  suggestedPeriods: number;
   scheduledDate?: string | null;
   documents: DocumentResponse[];
   attachments: AttachmentResponse[];

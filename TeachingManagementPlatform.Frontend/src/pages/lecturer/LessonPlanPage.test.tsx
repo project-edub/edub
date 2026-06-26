@@ -33,7 +33,7 @@ const sampleFullPlan = {
   createdAt: '2024-01-01',
   updatedAt: '2024-01-01',
   lessons: [
-    { id: 1, lessonPlanId: 1, name: 'Bài 1', orderIndex: 1, scheduledDate: null, documents: [], attachments: [], miniGames: [] },
+    { id: 1, lessonPlanId: 1, name: 'Bài 1', orderIndex: 1, suggestedPeriods: 1, scheduledDate: null, documents: [], attachments: [], miniGames: [] },
   ],
 };
 

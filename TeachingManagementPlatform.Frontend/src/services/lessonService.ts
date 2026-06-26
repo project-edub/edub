@@ -18,6 +18,15 @@ export async function updateName(id: number, name: string): Promise<LessonDetail
   return response.data;
 }
 
+export async function updatePeriods(id: number, suggestedPeriods: number): Promise<LessonDetail> {
+  const response = await api.put<LessonDetail>(`/lessons/${id}/periods`, { suggestedPeriods });
+  return response.data;
+}
+
+export async function deleteLesson(id: number): Promise<void> {
+  await api.delete(`/lessons/${id}`);
+}
+
 export async function addDocument(lessonId: number, data: AddDocumentRequest): Promise<DocumentResponse> {
   const response = await api.post<DocumentResponse>(`/lessons/${lessonId}/documents`, data);
   return response.data;
