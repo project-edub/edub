@@ -445,7 +445,11 @@ export default function HomePage() {
                             label={e.degree ? `${e.specialty} (${e.degree})` : e.specialty}
                           />
                           {e.certificateImageUrl && (
-                            <img src={resolveImageUrl(e.certificateImageUrl)} alt="" style={{ maxWidth: 200, borderRadius: 8, marginTop: 4, display: 'block', cursor: 'pointer' }} onClick={() => setExpandedImage(resolveImageUrl(e.certificateImageUrl!))} />
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                              {e.certificateImageUrl.split('|').filter(Boolean).map((url, imgIdx) => (
+                                <img key={`cert-${index}-${imgIdx}`} src={resolveImageUrl(url)} alt="" style={{ maxWidth: 200, borderRadius: 8, display: 'block', cursor: 'pointer' }} onClick={() => setExpandedImage(resolveImageUrl(url))} />
+                              ))}
+                            </div>
                           )}
                         </Box>
                       ))}
@@ -461,7 +465,11 @@ export default function HomePage() {
                         <Box key={`${selectedLecturer.id}-experience-${index}`}>
                           <Typography variant="body2">• {exp.description}</Typography>
                           {exp.imageUrl && (
-                            <img src={resolveImageUrl(exp.imageUrl)} alt="" style={{ maxWidth: 200, borderRadius: 8, marginTop: 4, cursor: 'pointer' }} onClick={() => setExpandedImage(resolveImageUrl(exp.imageUrl!))} />
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                              {exp.imageUrl.split('|').filter(Boolean).map((url, imgIdx) => (
+                                <img key={`exp-${index}-${imgIdx}`} src={resolveImageUrl(url)} alt="" style={{ maxWidth: 200, borderRadius: 8, cursor: 'pointer' }} onClick={() => setExpandedImage(resolveImageUrl(url))} />
+                              ))}
+                            </div>
                           )}
                         </Box>
                       ))}
@@ -477,7 +485,11 @@ export default function HomePage() {
                         <Box key={`${selectedLecturer.id}-skill-${index}`}>
                           <Typography variant="body2">• {skill.description}</Typography>
                           {skill.imageUrl && (
-                            <img src={resolveImageUrl(skill.imageUrl)} alt="" style={{ maxWidth: 200, borderRadius: 8, marginTop: 4, cursor: 'pointer' }} onClick={() => setExpandedImage(resolveImageUrl(skill.imageUrl!))} />
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                              {skill.imageUrl.split('|').filter(Boolean).map((url, imgIdx) => (
+                                <img key={`skill-${index}-${imgIdx}`} src={resolveImageUrl(url)} alt="" style={{ maxWidth: 200, borderRadius: 8, cursor: 'pointer' }} onClick={() => setExpandedImage(resolveImageUrl(url))} />
+                              ))}
+                            </div>
                           )}
                         </Box>
                       ))}

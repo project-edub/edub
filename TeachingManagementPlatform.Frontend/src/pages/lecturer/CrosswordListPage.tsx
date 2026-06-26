@@ -176,7 +176,7 @@ export default function CrosswordListPage() {
                   <TableCell sx={{ fontWeight: 700 }}>Ngày tạo</TableCell>
                   <TableCell sx={{ fontWeight: 700 }} align="center">Số từ</TableCell>
                   <TableCell sx={{ fontWeight: 700 }} align="center">ECoin</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }} align="right">Hành động</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }} align="center">Hành động</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -208,8 +208,8 @@ export default function CrosswordListPage() {
                       <TableCell align="center">
                         <Typography variant="body2">{item.ecoinsSpent} 🪙</Typography>
                       </TableCell>
-                      <TableCell align="right">
-                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                      <TableCell align="center">
+                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
                           {item.status === 'published' && (
                             <Button
                               size="small"

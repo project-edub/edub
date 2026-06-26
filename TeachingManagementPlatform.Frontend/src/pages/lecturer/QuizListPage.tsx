@@ -112,7 +112,7 @@ export default function QuizListPage() {
                   <TableCell sx={{ fontWeight: 700 }}>Trạng thái</TableCell>
                   <TableCell sx={{ fontWeight: 700 }} align="center">Câu hỏi</TableCell>
                   <TableCell sx={{ fontWeight: 700 }} align="center">Bài nộp</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }} align="right">Hành động</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }} align="center">Hành động</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -124,8 +124,8 @@ export default function QuizListPage() {
                     </TableCell>
                     <TableCell align="center">{item.questionCount}</TableCell>
                     <TableCell align="center">{item.submissionCount}</TableCell>
-                    <TableCell align="right">
-                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                    <TableCell align="center">
+                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
                         {item.status === 'published' && (
                           <Button size="small" variant="outlined" color="success" startIcon={<PlayArrowIcon />} onClick={() => window.open(`/quiz/${item.slug}`, '_blank')}>
                             Chơi

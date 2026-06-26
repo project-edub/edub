@@ -221,7 +221,7 @@ export default function AccountManagementPage() {
               <th style={thStyle}>ECoin</th>
               <th style={thStyle}>Còn lại</th>
               <th style={thStyle}>Trạng thái</th>
-              <th style={thStyle}>Hành động</th>
+              <th style={{ ...thStyle, textAlign: 'center' }}>Hành động</th>
             </tr>
           </thead>
           <tbody>

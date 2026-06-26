@@ -12,6 +12,7 @@ import DialogContentText from '@mui/material/DialogContentText';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import CrudIcon from '../../components/common/CrudIcon';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import * as lessonPlanService from '../../services/lessonPlanService';
 import * as lessonSuggestionService from '../../services/lessonSuggestionService';
 import type { LessonPlan } from '../../types/lessonPlan';
@@ -35,6 +36,7 @@ export default function LessonListPage() {
   const [newLessonName, setNewLessonName] = useState('');
   const [newLessonPeriods, setNewLessonPeriods] = useState(1);
   const [actionLoading, setActionLoading] = useState(false);
+  const [deleteLessonTarget, setDeleteLessonTarget] = useState<number | null>(null);
 
   // Auto-generate state
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
@@ -140,7 +142,7 @@ export default function LessonListPage() {
 
   async function handleDeleteLesson(lessonId: number) {
     if (!plan) return;
-    if (!window.confirm('Bạn có chắc chắn muốn xóa bài học này?')) return;
+    setDeleteLessonTarget(null);
     setActionLoading(true);
     setError('');
     try {
@@ -299,7 +301,7 @@ export default function LessonListPage() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span onClick={(e) => e.stopPropagation()}>
-                    <CrudIcon name="delete" tooltip="Xóa bài học" onClick={() => handleDeleteLesson(lesson.id)} disabled={actionLoading} />
+                    <CrudIcon name="delete" tooltip="Xóa bài học" onClick={() => setDeleteLessonTarget(lesson.id)} disabled={actionLoading} />
                   </span>
                 </div>
               </div>
@@ -380,6 +382,15 @@ export default function LessonListPage() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <ConfirmModal
+        open={deleteLessonTarget !== null}
+        title="Xóa bài học"
+        message="Bạn có chắc chắn muốn xóa bài học này?"
+        confirmLabel="Xóa"
+        onConfirm={() => { if (deleteLessonTarget !== null) handleDeleteLesson(deleteLessonTarget); }}
+        onCancel={() => setDeleteLessonTarget(null)}
+      />
 
     </div>
   );

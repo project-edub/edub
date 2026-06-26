@@ -100,6 +100,50 @@ public class AccountService : IAccountService
         if (user == null || user.Role != "Lecturer")
             throw new AccountNotFoundException("Không tìm thấy tài khoản");
 
+        // Delete related entities that use Restrict delete behavior
+        var classes = await _context.Classes.Where(c => c.LecturerId == id).ToListAsync();
+        if (classes.Count > 0)
+        {
+            var classIds = classes.Select(c => c.Id).ToList();
+            
+            // Delete student lists and their children
+            var studentLists = await _context.StudentLists.Where(sl => classIds.Contains(sl.ClassId)).ToListAsync();
+            var slIds = studentLists.Select(sl => sl.Id).ToList();
+            if (slIds.Count > 0)
+            {
+                _context.StudentEntries.RemoveRange(await _context.StudentEntries.Where(se => slIds.Contains(se.StudentListId)).ToListAsync());
+                _context.StudentListColumns.RemoveRange(await _context.StudentListColumns.Where(sc => slIds.Contains(sc.StudentListId)).ToListAsync());
+            }
+            _context.StudentLists.RemoveRange(studentLists);
+
+            // Delete class lesson schedules
+            _context.ClassLessonSchedules.RemoveRange(await _context.ClassLessonSchedules.Where(s => classIds.Contains(s.ClassId)).ToListAsync());
+            
+            _context.Classes.RemoveRange(classes);
+        }
+
+        // Delete lesson plans and their children
+        var lessonPlanIds = await _context.LessonPlans.Where(lp => lp.LecturerId == id).Select(lp => lp.Id).ToListAsync();
+        if (lessonPlanIds.Count > 0)
+        {
+            var lessonIds = await _context.Lessons.Where(l => lessonPlanIds.Contains(l.LessonPlanId)).Select(l => l.Id).ToListAsync();
+            if (lessonIds.Count > 0)
+            {
+                _context.LessonDocuments.RemoveRange(await _context.LessonDocuments.Where(d => lessonIds.Contains(d.LessonId)).ToListAsync());
+                _context.LessonAttachments.RemoveRange(await _context.LessonAttachments.Where(a => lessonIds.Contains(a.LessonId)).ToListAsync());
+                _context.MiniGames.RemoveRange(await _context.MiniGames.Where(g => lessonIds.Contains(g.LessonId)).ToListAsync());
+                _context.LessonSuggestionCaches.RemoveRange(await _context.LessonSuggestionCaches.Where(c => lessonIds.Contains(c.LessonId)).ToListAsync());
+                _context.Lessons.RemoveRange(await _context.Lessons.Where(l => lessonPlanIds.Contains(l.LessonPlanId)).ToListAsync());
+            }
+            _context.LessonPlans.RemoveRange(await _context.LessonPlans.Where(lp => lp.LecturerId == id).ToListAsync());
+        }
+
+        // Delete storage items
+        _context.StorageItems.RemoveRange(await _context.StorageItems.Where(si => si.LecturerId == id).ToListAsync());
+
+        // Delete coin purchase transactions
+        _context.CoinPurchaseTransactions.RemoveRange(await _context.CoinPurchaseTransactions.Where(t => t.UserId == id).ToListAsync());
+
         _context.Users.Remove(user);
         await _context.SaveChangesAsync();
     }

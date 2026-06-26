@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import * as lessonService from '../../services/lessonService';
 import * as storageService from '../../services/storageService';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import * as quizService from '../../services/quizService';
 import * as crosswordService from '../../services/crosswordService';
 import type { LessonDetail, DocumentResponse, AddDocumentRequest, AttachmentResponse } from '../../types/lessonPlan';
@@ -79,8 +80,9 @@ export default function LessonEditPage() {
   }
 
   // ── Delete lesson ──
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   async function handleDeleteThisLesson() {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa bài học này? Tất cả đường dẫn, tệp đính kèm và mini game sẽ bị xóa.')) return;
+    setConfirmDeleteOpen(false);
     setActionLoading(true);
     try {
       await lessonService.deleteLesson(lessonId);
@@ -253,7 +255,7 @@ export default function LessonEditPage() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <button type="button" className="btn btn-neutral" onClick={() => navigate(-1)}>← Quay lại</button>
-        <CrudIcon name="delete" tooltip="Xóa bài học" onClick={handleDeleteThisLesson} disabled={actionLoading} size={24} />
+        <CrudIcon name="delete" tooltip="Xóa bài học" onClick={() => setConfirmDeleteOpen(true)} disabled={actionLoading} size={24} />
       </div>
 
       {error && <div role="alert" style={{ color: '#d32f2f', marginBottom: 12 }}>{error}</div>}
@@ -493,6 +495,15 @@ export default function LessonEditPage() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        open={confirmDeleteOpen}
+        title="Xóa bài học"
+        message="Bạn có chắc chắn muốn xóa bài học này? Tất cả đường dẫn, tệp đính kèm và mini game sẽ bị xóa."
+        confirmLabel="Xóa"
+        onConfirm={handleDeleteThisLesson}
+        onCancel={() => setConfirmDeleteOpen(false)}
+      />
     </div>
   );
 }

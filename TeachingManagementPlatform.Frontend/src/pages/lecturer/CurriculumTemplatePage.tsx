@@ -205,7 +205,7 @@ export default function CurriculumTemplatePage() {
                 <th style={thStyle}>Số bài học</th>
                 <th style={thStyle}>Loại</th>
                 <th style={thStyle}>Công khai</th>
-                <th style={thStyle}>Hành động</th>
+                <th style={{ ...thStyle, textAlign: 'center' }}>Hành động</th>
               </tr>
             </thead>
             <tbody>
