@@ -156,7 +156,7 @@ export default function CoinPurchasePage() {
     <div style={pageStyle}>
       <div style={heroStyle}>
         <div>
-          <p style={eyebrowStyle}>ECoin Wallet</p>
+          <p style={eyebrowStyle}>Ví ECoin </p>
           <h1 style={titleStyle}>Mua ECoin cho tài khoản lecturer</h1>
           <p style={subtitleStyle}>
             Gói này dùng để trừ lượt khi tạo quiz bằng AI. Khi bấm mua, bạn sẽ được chuyển sang cổng thanh toán PayOS.

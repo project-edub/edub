@@ -45,7 +45,7 @@ export default function QuizEditorPage() {
         setTitle(data.title);
         setShowAnswers(data.showAnswersAfterSubmit);
       } catch (err: any) {
-        setError(err?.message || 'Không thể tải bài quiz.');
+        setError(err?.message || 'Không thể tải bài trắc nghiệm.');
       } finally { setLoading(false); }
     })();
   }, [gameId]);
@@ -144,7 +144,7 @@ export default function QuizEditorPage() {
       {/* Published link */}
       {game.status === 'published' && (
         <Box sx={{ p: 2, mb: 2, borderRadius: 2, bgcolor: '#f0fdf4', border: '1px solid #bbf7d0', display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography variant="body2" sx={{ color: '#166534', fontWeight: 600 }}>🔗 Link quiz:</Typography>
+          <Typography variant="body2" sx={{ color: '#166534', fontWeight: 600 }}>🔗 Link trắc nghiệm:</Typography>
           <Typography variant="body2" sx={{ flex: 1, color: '#166534' }}>{shareUrl}</Typography>
           <IconButton size="small" onClick={() => void handleCopy()}><ContentCopyIcon fontSize="small" /></IconButton>
           {copied && <Chip label="Đã sao chép" size="small" color="success" />}

@@ -37,7 +37,7 @@ export default function QuizGeneratorPage() {
 
   useEffect(() => {
     if (title.trim() && existingTitles.includes(title.toLowerCase().trim())) {
-      setTitleWarning('Tên này đã tồn tại trong kho quiz của bạn.');
+      setTitleWarning('Tên này đã tồn tại trong kho trắc nghiệm của bạn.');
     } else {
       setTitleWarning(null);
     }
@@ -49,7 +49,7 @@ export default function QuizGeneratorPage() {
 
   const handleGenerate = useCallback(async () => {
     if (selectedFiles.length === 0) return;
-    if (!title.trim()) { setError('Vui lòng nhập tên cho quiz.'); return; }
+    if (!title.trim()) { setError('Vui lòng nhập tên cho bài trắc nghiệm.'); return; }
     setLoading(true); setError(null);
     try {
       const fd = new FormData();
@@ -64,7 +64,7 @@ export default function QuizGeneratorPage() {
       const result = await quizService.generateQuiz(fd);
       navigate(`/lecturer/quiz/${result.gameId}/edit`);
     } catch (err: any) {
-      setError(err?.message || 'Tạo quiz thất bại.');
+      setError(err?.message || 'Tạo bài trắc nghiệm thất bại.');
     } finally {
       setLoading(false);
     }
@@ -78,7 +78,7 @@ export default function QuizGeneratorPage() {
         </button>
       </div>
 
-      <h1 style={{ marginBottom: 8 }}>Tạo quiz từ tài liệu</h1>
+      <h1 style={{ marginBottom: 8 }}>Tạo bài trắc nghiệm từ tài liệu</h1>
       <p style={{ color: '#64748b', marginBottom: 24 }}>
         Upload tài liệu, cấu hình và để AI tạo câu hỏi. Sau khi tạo xong bạn có thể chỉnh sửa và xuất bản.
       </p>
