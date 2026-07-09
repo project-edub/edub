@@ -8,6 +8,7 @@ import GenerateConfirmModal from '../../components/lecturer/crossword/GenerateCo
 import * as crosswordService from '../../services/crosswordService';
 import * as coinService from '../../services/coinService';
 import type { CrosswordFileExtractResult, GameConfig } from '../../types/crossword';
+import InlineHint from '../../components/common/InlineHint';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -368,6 +369,7 @@ export default function CrosswordCreatorPage() {
               <div style={stepPanelStyle}>
                 <h2 style={stepTitleStyle}>
                   {STEPS[2].icon} {STEPS[2].label}
+                  <InlineHint text="Chia sẻ ô chữ với học viên qua link hoặc nhúng vào web" />
                 </h2>
                 <p style={stepDescStyle}>
                   Tùy chỉnh cách AI tạo ô chữ. Số ECoin sẽ được tính theo cấu hình bên phải.

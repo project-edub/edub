@@ -75,6 +75,9 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       const res = await register(email, password, fullName);
+      // If email verification is added in the future:
+      // Show success message "Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản."
+      // and redirect to login instead of auto-login
       localStorage.setItem('token', res.token);
       navigate('/lecturer/overview', { replace: true });
     } catch (err) {

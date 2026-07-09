@@ -331,74 +331,147 @@ export default function HomePage() {
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="lg" sx={{ py: { xs: 4, md: 7 } }}>
-        <Box
-          sx={{
-            p: { xs: 2.5, md: 4 },
-            borderRadius: 8,
-            background: 'linear-gradient(140deg, #c48a10 0%, #e2b23a 100%)',
-            color: '#fff',
-            mb: 3,
-          }}
-        >
-          <Typography variant="h2" sx={{ color: '#fff', mb: 0.5 }}>Tìm giáo viên phù hợp</Typography>
-          <Typography sx={{ opacity: 0.86 }}>Khám phá giảng viên chất lượng với chuyên môn đúng nhu cầu học tập.</Typography>
-        </Box>
-
-        <Box component="form" onSubmit={handleSearch} sx={{ mb: 3 }}>
-          <Box sx={{ display: 'flex', gap: 1.5 }}>
-            <TextField
-              fullWidth
-              placeholder="Tìm theo tên, chuyên môn, địa điểm, kinh nghiệm..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <Button type="submit" variant="contained" sx={{ whiteSpace: 'nowrap', px: 4 }}>
-              Tìm kiếm
-            </Button>
+      {/* Hero Banner Section */}
+      <Box
+        component="section"
+        sx={{
+          px: { xs: 2, sm: 3, md: 4 },
+          pt: { xs: 3, sm: 4, md: 5, lg: 7 },
+          pb: { xs: 2, sm: 3, md: 4 },
+        }}
+      >
+        <Container maxWidth="lg">
+          <Box
+            sx={{
+              p: { xs: 3, sm: 4, md: 5 },
+              borderRadius: { xs: 4, sm: 6, md: 8 },
+              background: 'linear-gradient(140deg, #c48a10 0%, #e2b23a 100%)',
+              color: '#fff',
+            }}
+          >
+            <Typography
+              variant="h2"
+              sx={{
+                color: '#fff',
+                mb: 1,
+                fontSize: { xs: '1.6rem', sm: '2rem', md: '2.4rem' },
+                fontWeight: 800,
+                letterSpacing: '-0.02em',
+                lineHeight: 1.1,
+              }}
+            >
+              Tìm giáo viên phù hợp
+            </Typography>
+            <Typography
+              sx={{
+                opacity: 0.86,
+                fontSize: { xs: '0.85rem', sm: '0.95rem', md: '1.05rem' },
+                lineHeight: 1.5,
+              }}
+            >
+              Khám phá giảng viên chất lượng với chuyên môn đúng nhu cầu học tập.
+            </Typography>
           </Box>
-        </Box>
+        </Container>
+      </Box>
 
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        {loading && <LinearProgress sx={{ mb: 2, borderRadius: 3 }} />}
-
-        {!loading && (
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            {filteredLecturers.length} giáo viên được tìm thấy
-          </Typography>
-        )}
-
-        <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(3, minmax(0, 1fr))' } }}>
-          {paginatedLecturers.map((lecturer) => (
-            <Box key={lecturer.id}>
-              <LecturerCard lecturer={lecturer} onViewProfile={() => handleOpenProfile(lecturer)} />
+      {/* Search & Results Section */}
+      <Box
+        component="section"
+        sx={{
+          px: { xs: 2, sm: 3, md: 4 },
+          pb: { xs: 5, sm: 6, md: 8 },
+          bgcolor: 'background.default',
+        }}
+      >
+        <Container maxWidth="lg">
+          {/* Search Form */}
+          <Box component="form" onSubmit={handleSearch} sx={{ mb: { xs: 3, md: 4 } }}>
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1.5 }}>
+              <TextField
+                fullWidth
+                placeholder="Tìm theo tên, chuyên môn, địa điểm, kinh nghiệm..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <Button
+                type="submit"
+                variant="contained"
+                sx={{ whiteSpace: 'nowrap', px: 4, minWidth: { sm: 120 } }}
+              >
+                Tìm kiếm
+              </Button>
             </Box>
-          ))}
-        </Box>
+          </Box>
 
-        {!loading && filteredLecturers.length === 0 && (
-          <Card elevation={0} sx={{ border: '1px dashed', borderColor: 'divider', textAlign: 'center', mt: 2 }}>
-            <CardContent>
-              <Typography color="text.secondary">
-                Không tìm thấy giáo viên nào phù hợp với tiêu chí tìm kiếm.
-              </Typography>
-            </CardContent>
-          </Card>
-        )}
+          {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+          {loading && <LinearProgress sx={{ mb: 3, borderRadius: 3 }} />}
 
-        {/* Pagination */}
-        {!loading && filteredLecturers.length > 0 && (
-          <Pagination
-            totalItems={totalItems}
-            currentPage={currentPage}
-            pageSize={pageSize}
-            onPageChange={setCurrentPage}
-            onPageSizeChange={setPageSize}
-          />
-        )}
+          {/* Result Count */}
+          {!loading && (
+            <Typography
+              variant="h6"
+              sx={{
+                mb: { xs: 2.5, md: 3 },
+                fontSize: { xs: '1rem', md: '1.15rem' },
+                fontWeight: 600,
+                letterSpacing: '-0.01em',
+                pb: { xs: 1.5, md: 2 },
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+              }}
+            >
+              {filteredLecturers.length} giáo viên được tìm thấy
+            </Typography>
+          )}
 
-        {/* Teacher profile modal */}
-        <Dialog open={Boolean(selectedLecturer)} onClose={handleCloseProfile} maxWidth="sm" fullWidth>
+          {/* Results Grid */}
+          <Box
+            sx={{
+              display: 'grid',
+              gap: { xs: 2.5, sm: 3, md: 3.5 },
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'repeat(2, minmax(0, 1fr))',
+                md: 'repeat(2, minmax(0, 1fr))',
+                lg: 'repeat(3, minmax(0, 1fr))',
+              },
+            }}
+          >
+            {paginatedLecturers.map((lecturer) => (
+              <Box key={lecturer.id}>
+                <LecturerCard lecturer={lecturer} onViewProfile={() => handleOpenProfile(lecturer)} />
+              </Box>
+            ))}
+          </Box>
+
+          {!loading && filteredLecturers.length === 0 && (
+            <Card elevation={0} sx={{ border: '1px dashed', borderColor: 'divider', textAlign: 'center', mt: 3 }}>
+              <CardContent sx={{ py: { xs: 4, md: 5 } }}>
+                <Typography color="text.secondary">
+                  Không tìm thấy giáo viên nào phù hợp với tiêu chí tìm kiếm.
+                </Typography>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Pagination */}
+          {!loading && filteredLecturers.length > 0 && (
+            <Box sx={{ mt: { xs: 3, md: 4 } }}>
+              <Pagination
+                totalItems={totalItems}
+                currentPage={currentPage}
+                pageSize={pageSize}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+              />
+            </Box>
+          )}
+        </Container>
+      </Box>
+
+      {/* Teacher profile modal */}
+      <Dialog open={Boolean(selectedLecturer)} onClose={handleCloseProfile} maxWidth="sm" fullWidth>
           <DialogTitle>Thông tin giáo viên</DialogTitle>
           <DialogContent dividers>
             {selectedLecturer && (
@@ -521,7 +594,6 @@ export default function HomePage() {
             )}
           </DialogContent>
         </Dialog>
-      </Container>
     </Box>
   );
 }
@@ -535,42 +607,68 @@ function LecturerCard({ lecturer, onViewProfile }: LecturerCardProps) {
   const locationText = lecturer.teachingLocations.map((l) => l.value).join(', ');
 
   return (
-    <Card elevation={0} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <CardContent sx={{ pb: 1.2 }}>
-        <Stack direction="row" spacing={1.4} sx={{ mb: 1.3, alignItems: 'center' }}>
+    <Card elevation={0} sx={{ height: '100%', display: 'flex', flexDirection: 'column', border: '1px solid', borderColor: 'divider' }}>
+      <CardContent sx={{ pb: 1.5, pt: { xs: 2.5, md: 3 }, px: { xs: 2, md: 2.5 } }}>
+        <Stack direction="row" spacing={1.5} sx={{ mb: 1.5, alignItems: 'center' }}>
           <Avatar src={lecturer.avatarUrl || undefined} sx={{ width: 48, height: 48, bgcolor: 'secondary.main' }}>
             <PersonRoundedIcon />
           </Avatar>
           <Box>
-            <Typography variant="h6" sx={{ fontSize: '1.05rem', lineHeight: 1.2 }}>{lecturer.fullName}</Typography>
+            <Typography
+              variant="h6"
+              sx={{
+                fontSize: '1.05rem',
+                lineHeight: 1.3,
+                fontWeight: 600,
+                letterSpacing: '-0.01em',
+              }}
+            >
+              {lecturer.fullName}
+            </Typography>
           </Box>
         </Stack>
 
         {lecturer.introduction && (
           <Typography
+            variant="body2"
             color="text.secondary"
             sx={{
-              mb: 1.2,
+              mb: 1.5,
               display: '-webkit-box',
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
+              lineHeight: 1.5,
             }}
           >
             {lecturer.introduction}
           </Typography>
         )}
 
-        <Typography variant="caption" color="text.secondary">ĐỊA ĐIỂM</Typography>
-        <Typography variant="body2" sx={{ mb: 1.2 }}>{locationText || 'Chưa cập nhật'}</Typography>
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ fontWeight: 600, letterSpacing: '0.05em' }}
+        >
+          ĐỊA ĐIỂM
+        </Typography>
+        <Typography variant="body2" sx={{ mb: 1.5, lineHeight: 1.5 }}>
+          {locationText || 'Chưa cập nhật'}
+        </Typography>
 
-        <Typography variant="caption" color="text.secondary">CHUYÊN MÔN</Typography>
-        <Typography variant="body2">
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ fontWeight: 600, letterSpacing: '0.05em' }}
+        >
+          CHUYÊN MÔN
+        </Typography>
+        <Typography variant="body2" sx={{ lineHeight: 1.5 }}>
           {lecturer.expertises.map((e) => (e.degree ? `${e.specialty} (${e.degree})` : e.specialty)).join(', ') || 'Chưa cập nhật'}
         </Typography>
       </CardContent>
 
-      <CardActions sx={{ mt: 'auto', pt: 0, px: 2, pb: 2 }}>
+      <CardActions sx={{ mt: 'auto', pt: 0, px: 2.5, pb: 2.5 }}>
         <Button variant="contained" fullWidth onClick={onViewProfile}>Xem hồ sơ</Button>
       </CardActions>
     </Card>

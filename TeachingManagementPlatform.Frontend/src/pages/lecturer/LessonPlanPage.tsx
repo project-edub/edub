@@ -8,6 +8,7 @@ import LessonPlanModal from '../../components/lecturer/LessonPlanModal';
 import ActionButton from '../../components/common/ActionButton';
 import Toast from '../../components/common/Toast';
 import Pagination, { usePagination } from '../../components/common/Pagination';
+import InlineHint from '../../components/common/InlineHint';
 
 interface ModalState {
   type: 'create' | 'edit' | null;
@@ -236,7 +237,10 @@ export default function LessonPlanPage() {
 
   return (
     <div style={{ padding: 24, backgroundColor: 'var(--edub-surface)', color: 'var(--edub-text-primary)', border: '1px solid var(--edub-border)', borderRadius: 16 }}>
-      <h1 style={{ marginBottom: 24, color: 'var(--edub-text-primary)' }}>Giáo án</h1>
+      <h1 style={{ marginBottom: 24, color: 'var(--edub-text-primary)' }}>
+        Giáo án
+        <InlineHint text="Tạo giáo án mới hoặc sử dụng mẫu có sẵn từ cộng đồng" />
+      </h1>
 
       {error && (
         <div role="alert" style={{ color: '#d32f2f', marginBottom: 16 }}>
@@ -385,7 +389,10 @@ export default function LessonPlanPage() {
       {shareDialogPlan && !shareCodeResult && (
         <div style={overlayStyle}>
           <div style={deleteModalStyle}>
-            <h2 style={{ marginBottom: 16 }}>Chia sẻ giáo án</h2>
+            <h2 style={{ marginBottom: 16 }}>
+              Chia sẻ giáo án
+              <InlineHint text="Chia sẻ giáo án để đồng nghiệp có thể tham khảo" />
+            </h2>
             <p style={{ marginBottom: 16, color: 'var(--edub-text-secondary)' }}>
               Chọn hình thức chia sẻ cho giáo án <strong>{shareDialogPlan.subject}</strong>:
             </p>

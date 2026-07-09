@@ -295,7 +295,7 @@ public class AdminController : ControllerBase
                 upgradeDiscountPercent = 20,
                 freeEcoinOnRegister = 10,
                 freeEcoinMaxPerAccount = 50,
-                freeEcoinMonthlyTopUp = 5,
+                freeEcoinDailyTopUp = 5,
             });
         }
 

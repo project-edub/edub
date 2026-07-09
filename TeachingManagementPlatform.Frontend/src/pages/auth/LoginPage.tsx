@@ -16,12 +16,13 @@ import {
   Typography,
 } from '@mui/material';
 import { login } from '../../services/authService';
+import { getUserSettings } from '../../services/userSettingsService';
 import { Role } from '../../types/auth';
 import type { ApiError } from '../../types/common';
 import { AxiosError } from 'axios';
 import WestRoundedIcon from '@mui/icons-material/WestRounded';
 import { getApiRootUrl } from '../../services/apiConfig';
-import { useColorMode } from '../../theme/ColorModeContext';
+import { useColorMode, DEFAULT_PRIMARY_COLOR } from '../../theme/ColorModeContext';
 
 const API_ROOT = getApiRootUrl();
 
@@ -33,21 +34,36 @@ function redirectForRole(role: string, navigate: ReturnType<typeof useNavigate>)
   }
 }
 
+type AlertSeverity = 'error' | 'warning' | 'info';
+
+function getAlertSeverity(code: string | null): AlertSeverity {
+  switch (code) {
+    case 'ACCOUNT_PENDING_VERIFICATION':
+      return 'warning';
+    case 'GOOGLE_ONLY_ACCOUNT':
+      return 'info';
+    default:
+      return 'error';
+  }
+}
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const { mode, toggleMode } = useColorMode();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setError('');
+    setErrorMessage('');
+    setErrorCode(null);
 
     if (!email.trim() || !password.trim()) {
-      setError('Vui lòng nhập đầy đủ email và mật khẩu');
+      setErrorMessage('Vui lòng nhập đầy đủ email và mật khẩu');
       return;
     }
 
@@ -55,11 +71,26 @@ export default function LoginPage() {
     try {
       const res = await login(email, password);
       localStorage.setItem('token', res.token);
+
+      // Load theme color from user profile; fallback to default if not set or on error
+      try {
+        const settings = await getUserSettings();
+        if (settings.themeColor) {
+          localStorage.setItem('edub-primary-color', settings.themeColor);
+        } else {
+          localStorage.removeItem('edub-primary-color');
+        }
+      } catch {
+        localStorage.setItem('edub-primary-color', DEFAULT_PRIMARY_COLOR);
+      }
+
       redirectForRole(res.role, navigate);
     } catch (err) {
       const axiosErr = err as AxiosError<ApiError>;
+      const code = axiosErr.response?.data?.error?.code ?? null;
       const msg = axiosErr.response?.data?.error?.message;
-      setError(msg || 'Đăng nhập thất bại. Vui lòng thử lại.');
+      setErrorCode(code);
+      setErrorMessage(msg || 'Đăng nhập thất bại. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
@@ -109,7 +140,26 @@ export default function LoginPage() {
               Đăng nhập
             </Typography>
 
-            {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+            {errorMessage && (
+              <Alert severity={getAlertSeverity(errorCode)} sx={{ mb: 2 }}>
+                {errorCode === 'ACCOUNT_PENDING_VERIFICATION' ? (
+                  <>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                      Tài khoản chưa xác thực
+                    </Typography>
+                    <Typography variant="body2">
+                      Vui lòng kiểm tra email (bao gồm thư mục spam) để hoàn tất đăng ký trước khi đăng nhập.
+                    </Typography>
+                    {/* Placeholder: Gửi lại email xác thực button - enable when resend endpoint is available */}
+                    <Button size="small" disabled sx={{ mt: 1, p: 0, minWidth: 0, textTransform: 'none' }}>
+                      Gửi lại email xác thực
+                    </Button>
+                  </>
+                ) : (
+                  errorMessage
+                )}
+              </Alert>
+            )}
 
             <Box component="form" onSubmit={handleSubmit} noValidate>
               <Stack spacing={2}>
@@ -160,13 +210,20 @@ export default function LoginPage() {
               fullWidth
               sx={{
                 mt: 1.5,
-                bgcolor: 'background.paper',
-                color: 'primary.main',
+                bgcolor: errorCode === 'GOOGLE_ONLY_ACCOUNT' ? 'primary.main' : 'background.paper',
+                color: errorCode === 'GOOGLE_ONLY_ACCOUNT' ? 'primary.contrastText' : 'primary.main',
                 border: '1px solid',
                 borderColor: 'primary.main',
                 '&:hover': {
-                  bgcolor: 'action.hover',
+                  bgcolor: errorCode === 'GOOGLE_ONLY_ACCOUNT' ? 'primary.dark' : 'action.hover',
                 },
+                ...(errorCode === 'GOOGLE_ONLY_ACCOUNT' && {
+                  animation: 'pulse 1.5s ease-in-out 2',
+                  '@keyframes pulse': {
+                    '0%, 100%': { transform: 'scale(1)' },
+                    '50%': { transform: 'scale(1.02)' },
+                  },
+                }),
               }}
             >
               Đăng nhập bằng Google
