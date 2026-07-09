@@ -51,21 +51,21 @@ export default function AttachMinigameModal({ open, lessonId, onClose }: Props) 
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle sx={{ fontWeight: 700 }}>Gắn Minigame</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>Gắn trò chơi</DialogTitle>
       <DialogContent dividers>
         {minigames.length === 0 ? (
           <Stack spacing={2} sx={{ py: 1 }}>
             <Typography color="text.secondary">
-              Chưa có minigame nào để gắn vào bài học này.
+              Chưa có trò chơi nào để gắn vào bài học này.
             </Typography>
             <Button variant="contained" onClick={() => navigate('/minigames')} sx={{ alignSelf: 'flex-start' }}>
-              Đi tới trang Minigame
+              Đi tới trang Trò chơi
             </Button>
           </Stack>
         ) : (
           <Stack spacing={2}>
             <TextField
-              label="Tìm kiếm minigame"
+              label="Tìm kiếm trò chơi"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               fullWidth
@@ -76,7 +76,7 @@ export default function AttachMinigameModal({ open, lessonId, onClose }: Props) 
 
             <Stack spacing={1.5}>
               {filteredMinigames.length === 0 ? (
-                <Typography color="text.secondary">Không tìm thấy minigame phù hợp.</Typography>
+                <Typography color="text.secondary">Không tìm thấy trò chơi phù hợp.</Typography>
               ) : (
                 filteredMinigames.map((minigame) => {
                   const attached = lessonMinigameIds.includes(minigame.id);
