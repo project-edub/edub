@@ -22,7 +22,7 @@ export default function QuizGeneratorPage() {
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [wallet, setWallet] = useState<CoinWalletResponse>({ coinBalance: 0, freeEcoinBalance: 0 });
+  const [wallet, setWallet] = useState<CoinWalletResponse>({ coinBalance: 0, freeEcoinBalance: 0, freeEcoinMax: 50 });
 
   useEffect(() => {
     void (async () => {
