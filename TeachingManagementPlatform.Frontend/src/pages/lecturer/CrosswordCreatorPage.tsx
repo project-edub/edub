@@ -246,11 +246,8 @@ export default function CrosswordCreatorPage() {
       {/* Header */}
       <div style={heroStyle}>
         <div>
-          <p style={eyebrowStyle}>Crossword Generator</p>
-          <h1 style={titleStyle}>
-            Tạo ô chữ từ tài liệu
-            <InlineHint text="Nhập danh sách từ và gợi ý để tạo ô chữ tự động" />
-          </h1>
+          <p style={eyebrowStyle}>Công cụ tạo ô chữ</p>
+          <h1 style={titleStyle}>Tạo ô chữ từ tài liệu</h1>
           <p style={subtitleStyle}>
             Tải lên tài liệu, xem trước nội dung trích xuất, rồi cấu hình và để AI tạo ô chữ cho bạn.
           </p>
