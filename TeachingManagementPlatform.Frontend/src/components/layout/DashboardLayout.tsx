@@ -18,22 +18,25 @@ import {
   Typography,
 } from '@mui/material';
 import { useAuth } from '../../hooks/useAuth';
+import { useOnboarding } from '../../hooks/useOnboarding';
 import { Role } from '../../types/auth';
 import { useColorMode } from '../../theme/ColorModeContext';
 import * as coinService from '../../services/coinService';
 import * as subscriptionService from '../../services/subscriptionService';
+import OnboardingTour from '../common/OnboardingTour';
 
 const lecturerMenuItems = [
   { to: '/lecturer/overview', label: 'Thông tin cá nhân' },
   { to: '/lecturer/classes', label: 'Danh sách lớp' },
   { to: '/lecturer/lesson-plans', label: 'Giáo án' },
-  { to: '/lecturer/shared-plans', label: 'Giáo án cộng đồng' },
-  { to: '/lecturer/storage', label: 'Kho tài liệu' },
-  { to: '/lecturer/quiz-generator', label: 'Quiz' },
+  { to: '/lecturer/shared-plans', label: 'Giáo án cộng đồng', tourId: 'tour-shared-plans' },
+  { to: '/lecturer/storage', label: 'Kho tài liệu', tourId: 'tour-storage' },
+  { to: '/lecturer/quiz-generator', label: 'Quiz', tourId: 'tour-quiz' },
   { to: '/lecturer/crossword', label: 'Tạo Crossword' },
   { to: '/lecturer/subscription', label: 'Gói đăng ký' },
   { to: '/lecturer/coin-packages', label: 'Mua ECoin' },
   { to: '/lecturer/transactions', label: 'Lịch sử giao dịch' },
+  { to: '/lecturer/settings', label: 'Cài đặt giao diện' },
 ];
 
 const adminMenuItems = [
@@ -41,14 +44,17 @@ const adminMenuItems = [
   { to: '/admin/subscriptions', label: 'Gói đăng ký' },
   { to: '/admin/coin-packages', label: 'Gói ECoin' },
   { to: '/admin/game-ecoin-config', label: 'Cấu hình chung' },
+  { to: '/admin/freemium-quota', label: 'Hạn mức Freemium' },
   { to: '/admin/score-templates', label: 'Template điểm' },
   { to: '/admin/curriculum-templates', label: 'Mẫu giáo án' },
+  { to: '/admin/settings', label: 'Cài đặt giao diện' },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { role, email } = useAuth();
   const navigate = useNavigate();
   const { mode, toggleMode } = useColorMode();
+  const { showTour, completeTour } = useOnboarding();
   const menuItems = role === Role.Admin ? adminMenuItems : lecturerMenuItems;
 
   // Subscription status
@@ -56,6 +62,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [subExpires, setSubExpires] = useState<string | null>(null);
   const [coinBalance, setCoinBalance] = useState<number | null>(null);
   const [freeEcoinBalance, setFreeEcoinBalance] = useState<number | null>(null);
+  const [freeEcoinMax, setFreeEcoinMax] = useState<number>(50);
 
   useEffect(() => {
     if (role !== Role.Admin) {
@@ -69,6 +76,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           setSubExpires(wallet.subscriptionExpiresAt ?? null);
           setCoinBalance(wallet.coinBalance);
           setFreeEcoinBalance(wallet.freeEcoinBalance ?? 0);
+          setFreeEcoinMax(wallet.freeEcoinMax ?? 50);
         } catch {}
       })();
     }
@@ -183,6 +191,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 key={item.to}
                 component={NavLink}
                 to={item.to}
+                {...('tourId' in item && item.tourId ? { 'data-tour-id': item.tourId } : {})}
                 sx={{
                   borderRadius: 2,
                   px: { xs: 1.25, sm: 1.5 },
@@ -214,11 +223,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Box sx={{ mt: 2, p: 1.5, borderRadius: 2, bgcolor: 'action.hover' }}>
               {coinBalance !== null && (
                 <Box sx={{ mb: 1 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                    🪙 {((freeEcoinBalance ?? 0) + coinBalance).toLocaleString('vi-VN')} ECoin
+                  <Typography variant="body2" sx={{ fontWeight: 700, mb: 0.5 }}>
+                    🪙 ECoin
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {(freeEcoinBalance ?? 0).toLocaleString('vi-VN')} miễn phí + {coinBalance.toLocaleString('vi-VN')} mua
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                    Miễn phí: {(freeEcoinBalance ?? 0).toLocaleString('vi-VN')}/{freeEcoinMax.toLocaleString('vi-VN')}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                    Trả phí: {coinBalance.toLocaleString('vi-VN')}
                   </Typography>
                 </Box>
               )}
@@ -260,6 +272,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </Box>
         </Paper>
       </Box>
+
+      {/* Onboarding tour for non-admin users */}
+      {role !== Role.Admin && (
+        <OnboardingTour
+          open={showTour}
+          onComplete={completeTour}
+          onSkip={completeTour}
+        />
+      )}
     </Box>
   );
 }

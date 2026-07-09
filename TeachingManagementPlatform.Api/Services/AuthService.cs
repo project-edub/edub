@@ -35,24 +35,53 @@ public class AuthService : IAuthService
         _httpClientFactory = httpClientFactory;
     }
 
+    /// <summary>
+    /// Authenticates a user with email and password.
+    /// Error handling order: email not found → Google-only account → status checks → password verification.
+    /// Security note: "email not found" returns a generic credentials error to avoid email enumeration.
+    /// </summary>
     public async Task<AuthResponse> LoginAsync(LoginRequest request)
     {
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
 
-        if (user == null || user.PasswordHash == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+        // Email not found - generic message to prevent email enumeration
+        if (user == null)
         {
-            throw new UnauthorizedAccessException("Tên đăng nhập hoặc mật khẩu không đúng");
+            throw new UnauthorizedAccessException("Sai email hoặc mật khẩu");
         }
 
+        // Google-only account (no password set) - specific message to guide user
+        if (user.PasswordHash == null)
+        {
+            throw new GoogleOnlyAccountException("Tài khoản này được đăng ký qua Google. Vui lòng đăng nhập bằng Google.");
+        }
+
+        // Check account status BEFORE password verification
         if (user.Status == "Inactive")
         {
-            throw new AccountInactiveException("Tài khoản đã bị vô hiệu hóa");
+            throw new AccountInactiveException("Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.");
+        }
+
+        if (user.Status == "PendingVerification")
+        {
+            throw new AccountPendingVerificationException("Tài khoản chưa xác thực. Vui lòng kiểm tra email để hoàn tất đăng ký.");
+        }
+
+        // Wrong password - specific message
+        if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+        {
+            throw new UnauthorizedAccessException("Sai mật khẩu");
         }
 
         var token = GenerateJwtToken(user);
         return new AuthResponse { Token = token, Role = user.Role };
     }
 
+    /// <summary>
+    /// Registers a new user account.
+    /// Flow: Register → Status = "Active" → Token returned → User can login immediately.
+    /// No email verification step currently; account is active upon creation.
+    /// </summary>
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request)
     {
         var emailExists = await _context.Users.AnyAsync(u => u.Email == request.Email);
@@ -367,6 +396,16 @@ public class GoogleTokenExchangeResponse
 public class AccountInactiveException : Exception
 {
     public AccountInactiveException(string message) : base(message) { }
+}
+
+public class AccountPendingVerificationException : Exception
+{
+    public AccountPendingVerificationException(string message) : base(message) { }
+}
+
+public class GoogleOnlyAccountException : Exception
+{
+    public GoogleOnlyAccountException(string message) : base(message) { }
 }
 
 public class EmailAlreadyExistsException : Exception

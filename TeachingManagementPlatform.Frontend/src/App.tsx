@@ -10,6 +10,8 @@ import CoinPackagePage from './pages/admin/CoinPackagePage';
 import ScoreTemplateManager from './pages/admin/ScoreTemplateManager';
 import GameEcoinConfigPage from './pages/admin/GameEcoinConfigPage';
 import CurriculumTemplateManagementPage from './pages/admin/CurriculumTemplateManagementPage';
+import FreemiumQuotaConfigPage from './pages/admin/FreemiumQuotaConfigPage';
+import AdminSettingsPage from './pages/admin/AdminSettingsPage';
 import OverviewPage from './pages/lecturer/OverviewPage';
 import ClassListPage from './pages/lecturer/ClassListPage';
 import ClassDetailPage from './pages/lecturer/ClassDetailPage';
@@ -27,6 +29,7 @@ import CrosswordListPage from './pages/lecturer/CrosswordListPage';
 import CrosswordCreatorPage from './pages/lecturer/CrosswordCreatorPage';
 import CrosswordEditorPage from './pages/lecturer/CrosswordEditorPage';
 import SharedLessonPlansPage from './pages/lecturer/SharedLessonPlansPage';
+import SettingsPage from './pages/lecturer/SettingsPage';
 import CrosswordPlayerPage from './pages/CrosswordPlayerPage';
 import QuizPlayerPage from './pages/QuizPlayerPage';
 import AdminRoute from './components/common/AdminRoute';
@@ -56,7 +59,9 @@ export default function App() {
           <Route path="/admin/coin-packages" element={<CoinPackagePage />} />
           <Route path="/admin/score-templates" element={<ScoreTemplateManager />} />
           <Route path="/admin/game-ecoin-config" element={<GameEcoinConfigPage />} />
+          <Route path="/admin/freemium-quota" element={<FreemiumQuotaConfigPage />} />
           <Route path="/admin/curriculum-templates" element={<CurriculumTemplateManagementPage />} />
+          <Route path="/admin/settings" element={<AdminSettingsPage />} />
         </Route>
 
         {/* Lecturer routes */}
@@ -78,6 +83,7 @@ export default function App() {
           <Route path="/lecturer/crossword/new" element={<CrosswordCreatorPage />} />
           <Route path="/lecturer/crossword/:id/edit" element={<CrosswordEditorPage />} />
           <Route path="/lecturer/shared-plans" element={<SharedLessonPlansPage />} />
+          <Route path="/lecturer/settings" element={<SettingsPage />} />
         </Route>
 
         {/* Default redirect */}

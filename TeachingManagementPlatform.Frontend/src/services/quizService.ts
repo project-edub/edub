@@ -154,6 +154,15 @@ export async function deleteQuiz(id: number): Promise<void> {
   }
 }
 
+export async function duplicateQuiz(id: number): Promise<{ gameId: number; slug: string }> {
+  try {
+    const response = await api.post<{ gameId: number; slug: string }>(`/quiz-game/${id}/duplicate`);
+    return response.data;
+  } catch (err: any) {
+    normalizeError(err);
+  }
+}
+
 export async function addQuestion(gameId: number): Promise<QuizQuestionDetail> {
   try {
     const response = await api.post<QuizQuestionDetail>(`/quiz-game/${gameId}/questions`);

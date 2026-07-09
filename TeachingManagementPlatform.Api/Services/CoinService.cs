@@ -37,6 +37,7 @@ public class CoinService : ICoinService
         {
             CoinBalance = user.CoinBalance,
             FreeEcoinBalance = user.FreeEcoinBalance,
+            FreeEcoinMax = LoadFreeEcoinMax(),
             SubscriptionPackageName = user.SubscriptionPackage?.Name,
             SubscriptionPackagePrice = user.SubscriptionPackage?.Price,
             SubscriptionExpiresAt = user.SubscriptionExpiresAt,
@@ -115,6 +116,24 @@ public class CoinService : ICoinService
             throw new UserNotFoundException("Không tìm thấy tài khoản");
 
         return user;
+    }
+
+    private static readonly string EcoinConfigPath = Path.Combine(AppContext.BaseDirectory, "game-ecoin-config.json");
+
+    private int LoadFreeEcoinMax()
+    {
+        if (System.IO.File.Exists(EcoinConfigPath))
+        {
+            try
+            {
+                var json = System.IO.File.ReadAllText(EcoinConfigPath);
+                using var doc = System.Text.Json.JsonDocument.Parse(json);
+                if (doc.RootElement.TryGetProperty("freeEcoinMaxPerAccount", out var prop))
+                    return prop.GetInt32();
+            }
+            catch { }
+        }
+        return 50; // default
     }
 }
 

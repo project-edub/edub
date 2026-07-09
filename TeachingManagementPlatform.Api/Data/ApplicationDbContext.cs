@@ -62,6 +62,7 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(u => u.GoogleId).IsUnique().HasFilter("[GoogleId] IS NOT NULL");
             entity.Property(u => u.Role).HasMaxLength(20);
             entity.Property(u => u.Status).HasMaxLength(20);
+            entity.Property(u => u.ThemeColor).HasMaxLength(10);
         });
 
         // ── LecturerProfile ──

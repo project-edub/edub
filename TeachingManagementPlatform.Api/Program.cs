@@ -204,6 +204,9 @@ builder.Services.AddHostedService<StorageEmbeddingBackgroundService>();
 // Register subscription expiry background service (resets expired subscriptions to free plan)
 builder.Services.AddHostedService<SubscriptionExpiryBackgroundService>();
 
+// Register daily free ECoin top-up background service
+builder.Services.AddHostedService<FreeEcoinDailyTopUpService>();
+
 var app = builder.Build();
 var r2PublicBaseUrl = builder.Configuration["R2:PublicBaseUrl"];
 var useR2Storage = !string.IsNullOrWhiteSpace(builder.Configuration["R2:AccountId"])

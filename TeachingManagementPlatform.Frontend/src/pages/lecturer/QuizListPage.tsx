@@ -12,6 +12,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CreateIcon from '@mui/icons-material/Create';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import FileCopyOutlinedIcon from '@mui/icons-material/FileCopyOutlined';
 import * as quizService from '../../services/quizService';
 import type { QuizListItem } from '../../services/quizService';
 import Pagination, { usePagination } from '../../components/common/Pagination';
@@ -30,6 +31,7 @@ export default function QuizListPage() {
   const [manualTitle, setManualTitle] = useState('');
   const [creating, setCreating] = useState(false);
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [duplicating, setDuplicating] = useState<number | null>(null);
 
   const { paginatedItems, currentPage, pageSize, totalItems, setCurrentPage, setPageSize } = usePagination(items);
 
@@ -78,6 +80,18 @@ export default function QuizListPage() {
       setCreating(false);
     }
   }, [manualTitle, navigate]);
+
+  const handleDuplicate = useCallback(async (quizId: number) => {
+    setDuplicating(quizId);
+    try {
+      await quizService.duplicateQuiz(quizId);
+      await loadList();
+    } catch (err: any) {
+      setError(err?.message || 'Nhân bản thất bại.');
+    } finally {
+      setDuplicating(null);
+    }
+  }, [loadList]);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -147,6 +161,15 @@ export default function QuizListPage() {
                         )}
                         <Button size="small" variant="outlined" startIcon={<EditIcon />} onClick={() => navigate(`/lecturer/quiz/${item.id}/edit`)}>
                           Quản lý
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          startIcon={<FileCopyOutlinedIcon />}
+                          onClick={() => void handleDuplicate(item.id)}
+                          disabled={duplicating === item.id}
+                        >
+                          {duplicating === item.id ? 'Đang nhân bản...' : 'Nhân bản'}
                         </Button>
                         <Button size="small" variant="outlined" color="error" startIcon={<DeleteIcon />} onClick={() => setDeleteTarget(item)}>
                           Xóa

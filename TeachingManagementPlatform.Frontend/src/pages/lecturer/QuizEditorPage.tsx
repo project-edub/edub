@@ -102,6 +102,33 @@ export default function QuizEditorPage() {
     setQuestions(prev => prev.filter(q => q.id !== qId).map((q, idx) => ({ ...q, number: idx + 1 })));
   }, []);
 
+  const handleDuplicateQuestion = useCallback(async (sourceQuestion: QuizQuestionDetail) => {
+    if (!game) return;
+    try {
+      // Create a new question on the server to get a valid ID
+      const newQuestion = await quizService.addQuestion(game.id);
+      // Copy content from source into the new question, insert after source
+      setQuestions(prev => {
+        const sourceIndex = prev.findIndex(q => q.id === sourceQuestion.id);
+        const duplicated: QuizQuestionDetail = {
+          ...newQuestion,
+          questionText: sourceQuestion.questionText,
+          optionsJson: sourceQuestion.optionsJson,
+          correctAnswerIndex: sourceQuestion.correctAnswerIndex,
+          correctAnswerText: sourceQuestion.correctAnswerText,
+          explanation: sourceQuestion.explanation,
+          difficulty: sourceQuestion.difficulty,
+        };
+        const updated = [...prev];
+        updated.splice(sourceIndex + 1, 0, duplicated);
+        // Re-number
+        return updated.map((q, idx) => ({ ...q, number: idx + 1 }));
+      });
+    } catch (err: any) {
+      setError(err?.message || 'Nhân bản câu hỏi thất bại.');
+    }
+  }, [game]);
+
   const handleAddQuestion = useCallback(async () => {
     if (!game) return;
     try {
@@ -165,9 +192,14 @@ export default function QuizEditorPage() {
             const options: string[] = JSON.parse(q.optionsJson);
             return (
               <Box key={q.id} sx={{ p: 2, borderRadius: 2, border: '1px solid', borderColor: 'divider', position: 'relative' }}>
-                <IconButton size="small" sx={{ position: 'absolute', top: 8, right: 8 }} onClick={() => handleDeleteQuestion(q.id)}>
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
+                <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.5 }}>
+                  <IconButton size="small" onClick={() => void handleDuplicateQuestion(q)} title="Nhân bản câu hỏi">
+                    <ContentCopyIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton size="small" onClick={() => handleDeleteQuestion(q.id)} title="Xóa câu hỏi">
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Box>
                 <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>Câu {idx + 1}</Typography>
                 <TextField
                   fullWidth size="small" value={q.questionText}

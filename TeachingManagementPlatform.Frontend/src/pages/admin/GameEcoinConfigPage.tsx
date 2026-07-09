@@ -15,7 +15,7 @@ interface EcoinConfig {
   quizCoinCostPerQuestion: number;
   freeEcoinOnRegister: number;
   freeEcoinMaxPerAccount: number;
-  freeEcoinMonthlyTopUp: number;
+  freeEcoinDailyTopUp: number;
   subscriptionDurationDays: number;
 }
 
@@ -33,7 +33,7 @@ const DEFAULT_CONFIG: EcoinConfig = {
   quizCoinCostPerQuestion: 1,
   freeEcoinOnRegister: 10,
   freeEcoinMaxPerAccount: 50,
-  freeEcoinMonthlyTopUp: 5,
+  freeEcoinDailyTopUp: 5,
   subscriptionDurationDays: 30,
 };
 
@@ -253,12 +253,12 @@ export default function GameEcoinConfigPage() {
             <Typography variant="body2" color="text.secondary">ECoin</Typography>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography sx={{ minWidth: 220 }}>Cộng thêm đầu mỗi tháng:</Typography>
+            <Typography sx={{ minWidth: 220 }}>Cộng thêm mỗi ngày:</Typography>
             <TextField
               type="number"
               size="small"
-              value={config.freeEcoinMonthlyTopUp}
-              onChange={(e) => setConfig(prev => ({ ...prev, freeEcoinMonthlyTopUp: Number(e.target.value) }))}
+              value={config.freeEcoinDailyTopUp}
+              onChange={(e) => setConfig(prev => ({ ...prev, freeEcoinDailyTopUp: Number(e.target.value) }))}
               sx={{ width: 100 }}
               slotProps={{ input: { inputProps: { min: 0 } } }}
             />

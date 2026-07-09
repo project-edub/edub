@@ -13,6 +13,8 @@ public class User
     public int FreeEcoinBalance { get; set; }
     public int? SubscriptionPackageId { get; set; }
     public DateTime? SubscriptionExpiresAt { get; set; }
+    public string? ThemeColor { get; set; }
+    public bool OnboardingCompleted { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 

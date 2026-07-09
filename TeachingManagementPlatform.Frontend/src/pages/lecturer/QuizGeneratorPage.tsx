@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import * as quizService from '../../services/quizService';
 import * as coinService from '../../services/coinService';
 import type { CoinWalletResponse } from '../../types/coin';
+import InlineHint from '../../components/common/InlineHint';
 
 const ACCEPTED_EXTENSIONS = ['.docx', '.xlsx', '.pdf', '.pptx'];
 const MAX_FILES = 5;
@@ -78,7 +79,10 @@ export default function QuizGeneratorPage() {
         </button>
       </div>
 
-      <h1 style={{ marginBottom: 8 }}>Tạo quiz từ tài liệu</h1>
+      <h1 style={{ marginBottom: 8 }}>
+        Tạo quiz từ tài liệu
+        <InlineHint text="Upload file Word, PDF, hoặc dán text để AI tạo câu hỏi trắc nghiệm tự động" />
+      </h1>
       <p style={{ color: '#64748b', marginBottom: 24 }}>
         Upload tài liệu, cấu hình và để AI tạo câu hỏi. Sau khi tạo xong bạn có thể chỉnh sửa và xuất bản.
       </p>
@@ -113,7 +117,10 @@ export default function QuizGeneratorPage() {
 
       {/* Config */}
       <section style={{ ...cardStyle, marginTop: 16 }}>
-        <h2 style={sectionTitle}>2. Cấu hình</h2>
+        <h2 style={sectionTitle}>
+          2. Cấu hình
+          <InlineHint text="Chọn số lượng câu hỏi và độ khó mong muốn" />
+        </h2>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16, marginBottom: 16 }}>
           <label style={fieldStyle}>
             <span style={{ fontWeight: 600 }}>Tên quiz <span style={{ color: '#dc2626' }}>*</span></span>
@@ -150,7 +157,7 @@ export default function QuizGeneratorPage() {
         <button type="button" className="btn btn-add" disabled={selectedFiles.length === 0 || !title.trim() || loading || !hasEnoughCoin} onClick={() => void handleGenerate()}>
           {loading ? 'Đang tạo...' : `Tạo quiz (${estimatedCost} ECoin)`}
         </button>
-        <span style={{ color: '#64748b', fontSize: 13 }}>Số dư: {totalBalance} ECoin</span>
+        <span style={{ color: '#64748b', fontSize: 13 }}>Miễn phí: {wallet.freeEcoinBalance ?? 0} · Trả phí: {wallet.coinBalance}</span>
         {!hasEnoughCoin && <span style={{ color: '#dc2626', fontSize: 13 }}>Không đủ ECoin</span>}
       </div>
     </div>
