@@ -10,7 +10,6 @@ import CoinPackagePage from './pages/admin/CoinPackagePage';
 import ScoreTemplateManager from './pages/admin/ScoreTemplateManager';
 import GameEcoinConfigPage from './pages/admin/GameEcoinConfigPage';
 import CurriculumTemplateManagementPage from './pages/admin/CurriculumTemplateManagementPage';
-import FreemiumQuotaConfigPage from './pages/admin/FreemiumQuotaConfigPage';
 import AdminSettingsPage from './pages/admin/AdminSettingsPage';
 import OverviewPage from './pages/lecturer/OverviewPage';
 import ClassListPage from './pages/lecturer/ClassListPage';
@@ -59,7 +58,6 @@ export default function App() {
           <Route path="/admin/coin-packages" element={<CoinPackagePage />} />
           <Route path="/admin/score-templates" element={<ScoreTemplateManager />} />
           <Route path="/admin/game-ecoin-config" element={<GameEcoinConfigPage />} />
-          <Route path="/admin/freemium-quota" element={<FreemiumQuotaConfigPage />} />
           <Route path="/admin/curriculum-templates" element={<CurriculumTemplateManagementPage />} />
           <Route path="/admin/settings" element={<AdminSettingsPage />} />
         </Route>
