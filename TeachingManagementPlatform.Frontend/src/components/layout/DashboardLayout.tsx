@@ -44,7 +44,6 @@ const adminMenuItems = [
   { to: '/admin/subscriptions', label: 'Gói đăng ký' },
   { to: '/admin/coin-packages', label: 'Gói ECoin' },
   { to: '/admin/game-ecoin-config', label: 'Cấu hình chung' },
-  { to: '/admin/freemium-quota', label: 'Hạn mức Freemium' },
   { to: '/admin/score-templates', label: 'Template điểm' },
   { to: '/admin/curriculum-templates', label: 'Mẫu giáo án' },
   { to: '/admin/settings', label: 'Cài đặt giao diện' },

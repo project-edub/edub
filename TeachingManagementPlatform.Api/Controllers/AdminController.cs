@@ -296,6 +296,7 @@ public class AdminController : ControllerBase
                 freeEcoinOnRegister = 10,
                 freeEcoinMaxPerAccount = 50,
                 freeEcoinDailyTopUp = 5,
+                subscriptionDurationDays = 30,
             });
         }
 

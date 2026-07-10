@@ -50,8 +50,13 @@ export default function GameEcoinConfigPage() {
     setLoading(true);
     setError('');
     try {
-      const response = await api.get<EcoinConfig>('/admin/game-ecoin-config');
-      setConfig(response.data);
+      const response = await api.get<EcoinConfig & { freeEcoinMonthlyTopUp?: number }>('/admin/game-ecoin-config');
+      const data = response.data;
+      // Backward compat: old configs may have freeEcoinMonthlyTopUp instead of freeEcoinDailyTopUp
+      if (data.freeEcoinDailyTopUp == null && data.freeEcoinMonthlyTopUp != null) {
+        data.freeEcoinDailyTopUp = data.freeEcoinMonthlyTopUp;
+      }
+      setConfig({ ...DEFAULT_CONFIG, ...data });
     } catch {
       // If not found, use defaults
       setConfig(DEFAULT_CONFIG);
