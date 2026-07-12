@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
+  Card,
+  CardContent,
   Chip,
   CircularProgress,
   Dialog,
@@ -90,7 +92,7 @@ export default function CrosswordListPage() {
   }, [deleteTarget, loadList]);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, p: { xs: 1.5, md: 2 } }}>
       {/* Header */}
       <Box
         sx={{
@@ -114,6 +116,7 @@ export default function CrosswordListPage() {
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => navigate('/lecturer/crossword/new')}
+          sx={{ minHeight: 44, minWidth: 44, whiteSpace: 'nowrap' }}
         >
           Tạo ô chữ mới
         </Button>
@@ -121,7 +124,7 @@ export default function CrosswordListPage() {
 
       {/* Error */}
       {error && (
-        <Typography role="alert" color="error">
+        <Typography role="alert" color="error" sx={{ p: 2, bgcolor: 'error.lighter', borderRadius: 1 }}>
           {error}
         </Typography>
       )}
@@ -140,7 +143,7 @@ export default function CrosswordListPage() {
             border: '1px dashed',
             borderColor: 'divider',
             borderRadius: 3,
-            p: 4,
+            p: { xs: 2, md: 4 },
             textAlign: 'center',
             bgcolor: 'action.hover',
           }}
@@ -155,15 +158,125 @@ export default function CrosswordListPage() {
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => navigate('/lecturer/crossword/new')}
+            sx={{ minHeight: 44 }}
           >
             Tạo ô chữ mới
           </Button>
         </Box>
       )}
 
-      {/* Table */}
+      {/* Mobile Card View */}
       {!loading && items.length > 0 && (
-        <TableContainer component={Paper} variant="outlined">
+        <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 2 }}>
+          {items.map((item) => {
+            const statusCfg = STATUS_CONFIG[item.status] ?? STATUS_CONFIG[GameStatusEnum.Draft];
+            return (
+              <Card key={item.id} sx={{ borderRadius: 2 }}>
+                <CardContent sx={{ p: 2 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                    {item.title}
+                  </Typography>
+
+                  <Box sx={{ display: 'flex', gap: 1, mb: 1.5, flexWrap: 'wrap' }}>
+                    <Chip
+                      label={statusCfg.label}
+                      color={statusCfg.color}
+                      size="small"
+                      variant="outlined"
+                    />
+                  </Box>
+
+                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 1, mb: 2, fontSize: { xs: 0.875, sm: 1 } }}>
+                    <Box>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                        Ngày tạo
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        {formatDate(item.createdAt)}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                        Số từ
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        {item.wordCount}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                        ECoin
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        {item.ecoinsSpent} 🪙
+                      </Typography>
+                    </Box>
+                  </Box>
+
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    {item.status === 'published' && (
+                      <>
+                        <Button
+                          fullWidth
+                          size="small"
+                          variant="outlined"
+                          color="success"
+                          startIcon={<PlayArrowIcon />}
+                          onClick={() => window.open(`/play/${item.slug}`, '_blank')}
+                          sx={{ minHeight: 44 }}
+                        >
+                          Chơi
+                        </Button>
+                        <Button
+                          fullWidth
+                          size="small"
+                          variant="outlined"
+                          startIcon={<ContentCopyIcon />}
+                          onClick={async () => {
+                            await navigator.clipboard.writeText(`${window.location.origin}/play/${item.slug}`);
+                            setCopiedId(item.id);
+                            setTimeout(() => setCopiedId(null), 2000);
+                          }}
+                          sx={{ minHeight: 44 }}
+                        >
+                          {copiedId === item.id ? 'Đã copy!' : 'Copy link'}
+                        </Button>
+                      </>
+                    )}
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Button
+                        fullWidth
+                        size="small"
+                        variant="outlined"
+                        startIcon={<EditIcon />}
+                        onClick={() => navigate(`/lecturer/crossword/${item.id}/edit`)}
+                        sx={{ minHeight: 44 }}
+                      >
+                        Chỉnh sửa
+                      </Button>
+                      <Button
+                        fullWidth
+                        size="small"
+                        variant="outlined"
+                        color="error"
+                        startIcon={<DeleteIcon />}
+                        onClick={() => setDeleteTarget(item)}
+                        sx={{ minHeight: 44 }}
+                      >
+                        Xóa
+                      </Button>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </Box>
+      )}
+
+      {/* Desktop Table View */}
+      {!loading && items.length > 0 && (
+        <TableContainer component={Paper} variant="outlined" sx={{ display: { xs: 'none', md: 'block' }, overflowX: 'auto' }}>
           <Table>
             <TableHead>
               <TableRow>
@@ -205,7 +318,7 @@ export default function CrosswordListPage() {
                       <Typography variant="body2">{item.ecoinsSpent} 🪙</Typography>
                     </TableCell>
                     <TableCell align="right">
-                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                         {item.status === 'published' && (
                           <Button
                             size="small"
@@ -213,6 +326,7 @@ export default function CrosswordListPage() {
                             color="success"
                             startIcon={<PlayArrowIcon />}
                             onClick={() => window.open(`/play/${item.slug}`, '_blank')}
+                            sx={{ minHeight: 44 }}
                           >
                             Chơi
                           </Button>
@@ -227,6 +341,7 @@ export default function CrosswordListPage() {
                               setCopiedId(item.id);
                               setTimeout(() => setCopiedId(null), 2000);
                             }}
+                            sx={{ minHeight: 44 }}
                           >
                             {copiedId === item.id ? 'Đã copy!' : 'Copy link'}
                           </Button>
@@ -236,6 +351,7 @@ export default function CrosswordListPage() {
                           variant="outlined"
                           startIcon={<EditIcon />}
                           onClick={() => navigate(`/lecturer/crossword/${item.id}/edit`)}
+                          sx={{ minHeight: 44 }}
                         >
                           Chỉnh sửa
                         </Button>
@@ -245,6 +361,7 @@ export default function CrosswordListPage() {
                           color="error"
                           startIcon={<DeleteIcon />}
                           onClick={() => setDeleteTarget(item)}
+                          sx={{ minHeight: 44 }}
                         >
                           Xóa
                         </Button>
@@ -263,6 +380,8 @@ export default function CrosswordListPage() {
         open={deleteTarget != null}
         onClose={() => setDeleteTarget(null)}
         aria-labelledby="delete-dialog-title"
+        maxWidth="sm"
+        fullWidth
       >
         <DialogTitle id="delete-dialog-title">Xác nhận xóa</DialogTitle>
         <DialogContent>

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Box } from '@mui/material';
 import FileUploadZone from '../../components/lecturer/crossword/FileUploadZone';
 import DocumentPreview from '../../components/lecturer/crossword/DocumentPreview';
 import GameConfigForm from '../../components/lecturer/crossword/GameConfigForm';
@@ -217,9 +218,9 @@ export default function CrosswordCreatorPage() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div style={pageStyle}>
+    <Box sx={{ ...pageStyle, p: { xs: 1.5, md: 3 } }}>
       {/* Header */}
-      <div style={heroStyle}>
+      <Box sx={{ ...heroStyle, flexDirection: { xs: 'column', md: 'row' }, p: { xs: 2, md: 3 }, gap: { xs: 2, md: 3 } }}>
         <div>
           <p style={eyebrowStyle}>Crossword Generator</p>
           <h1 style={titleStyle}>Tạo ô chữ từ tài liệu</h1>
@@ -227,23 +228,23 @@ export default function CrosswordCreatorPage() {
             Tải lên tài liệu, xem trước nội dung trích xuất, rồi cấu hình và để AI tạo ô chữ cho bạn.
           </p>
         </div>
-        <div style={heroActionsStyle}>
+        <Box sx={{ ...heroActionsStyle, width: { xs: '100%', md: 'auto' }, flexDirection: { xs: 'column', sm: 'row', md: 'column' } }}>
           <button
             type="button"
             className="btn btn-neutral"
             onClick={() => navigate('/lecturer/crossword')}
-          >
+            style={{ minHeight: 44 }}>
             ← Danh sách ô chữ
           </button>
           <button
             type="button"
             className="btn btn-neutral"
             onClick={() => navigate('/lecturer/coin-packages')}
-          >
+            style={{ minHeight: 44 }}>
             Mua ECoin
           </button>
-        </div>
-      </div>
+        </Box>
+      </Box>
 
       {/* Step indicator */}
       <StepIndicator currentStep={currentStep} />
@@ -270,7 +271,7 @@ export default function CrosswordCreatorPage() {
       </div>
 
       {/* Step content */}
-      <div style={contentStyle}>
+      <Box sx={{ ...contentStyle, '& > div': { maxWidth: '100%' } }}>
         {/* ── Step 1: Upload ── */}
         {currentStep === 1 && (
           <div style={stepPanelStyle}>
@@ -338,7 +339,7 @@ export default function CrosswordCreatorPage() {
 
         {/* ── Step 3: Config ── */}
         {currentStep === 3 && (
-          <div style={step3LayoutStyle}>
+          <Box sx={{ ...step3LayoutStyle, gridTemplateColumns: { xs: '1fr', md: '1fr 300px' }, gap: { xs: 2, md: 3 } }}>
             {/* Left: config form */}
             <div style={step3FormColStyle}>
               <div style={stepPanelStyle}>
@@ -380,9 +381,9 @@ export default function CrosswordCreatorPage() {
                 isGenerating={isGenerating}
               />
             </div>
-          </div>
+          </Box>
         )}
-      </div>
+      </Box>
 
       {/* Confirm modal */}
       {showConfirmModal && (
@@ -401,7 +402,7 @@ export default function CrosswordCreatorPage() {
           statusMessage={STATUS_MESSAGES[statusMessageIndex]}
         />
       )}
-    </div>
+    </Box>
   );
 }
 
@@ -495,7 +496,6 @@ function GeneratingOverlay({ progress, statusMessage }: GeneratingOverlayProps) 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const pageStyle: React.CSSProperties = {
-  padding: 24,
   maxWidth: 1100,
   margin: '0 auto',
 };

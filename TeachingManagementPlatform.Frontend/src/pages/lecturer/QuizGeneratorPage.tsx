@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Box } from '@mui/material';
 import * as quizService from '../../services/quizService';
 import * as coinService from '../../services/coinService';
 import type { CoinWalletResponse } from '../../types/coin';
@@ -51,9 +52,9 @@ export default function QuizGeneratorPage() {
   }, [selectedFiles, questionCount, topic, difficulty, language, prompt, navigate]);
 
   return (
-    <div style={{ padding: 24, maxWidth: 900, margin: '0 auto' }}>
+    <Box sx={{ p: { xs: 1.5, md: 3 }, maxWidth: 900, mx: 'auto' }}>
       <div style={{ marginBottom: 24 }}>
-        <button type="button" className="btn btn-neutral" onClick={() => navigate('/lecturer/quiz-generator')}>
+        <button type="button" className="btn btn-neutral" onClick={() => navigate('/lecturer/quiz-generator')} style={{ minHeight: 44 }}>
           ← Quay lại danh sách
         </button>
       </div>
@@ -119,14 +120,14 @@ export default function QuizGeneratorPage() {
       </section>
 
       {/* Action */}
-      <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
-        <button type="button" className="btn btn-add" disabled={selectedFiles.length === 0 || loading || !hasEnoughCoin} onClick={() => void handleGenerate()}>
+      <Box sx={{ mt: 3, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'stretch', sm: 'center' }, gap: 2 }}>
+        <button type="button" className="btn btn-add" disabled={selectedFiles.length === 0 || loading || !hasEnoughCoin} onClick={() => void handleGenerate()} style={{ minHeight: 44 }}>
           {loading ? 'Đang tạo...' : `Tạo quiz (${estimatedCost} ECoin)`}
         </button>
         <span style={{ color: '#64748b', fontSize: 13 }}>Số dư: {wallet.coinBalance} ECoin</span>
         {!hasEnoughCoin && <span style={{ color: '#dc2626', fontSize: 13 }}>Không đủ ECoin</span>}
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 }
 

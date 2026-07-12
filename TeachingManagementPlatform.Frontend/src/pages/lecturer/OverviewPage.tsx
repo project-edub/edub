@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { Box } from '@mui/material';
 import { AxiosError } from 'axios';
 import * as profileService from '../../services/profileService';
 
@@ -163,35 +164,47 @@ export default function OverviewPage() {
     setter(list.filter((_, i) => i !== idx));
   }
 
-  if (loading) return <div style={{ padding: 24 }}>Đang tải...</div>;
-  if (error) return <div style={{ padding: 24 }}><div role="alert" style={{ color: '#d32f2f' }}>{error}</div></div>;
+  if (loading) return <Box sx={{ p: { xs: 1.5, md: 2 } }}>Đang tải...</Box>;
+  if (error) return <Box sx={{ p: { xs: 1.5, md: 2 } }}><Box role="alert" sx={{ color: '#d32f2f' }}>{error}</Box></Box>;
   if (!profile) return null;
 
   const avatarSrc = profile.avatarUrl ? profileService.getImageUrl(profile.avatarUrl) : null;
 
   return (
-    <div
-      style={{
-        padding: 24,
+    <Box
+      sx={{
+        p: { xs: 1.5, md: 2 },
         maxHeight: 'calc(100vh - 220px)',
         overflowY: 'auto',
         overflowX: 'hidden',
       }}
     >
 
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 24, position: 'relative' }}>
-        <h1 style={{ color: 'var(--edub-text-primary)' }}>Thông tin cá nhân</h1>
-        <div style={{ position: 'absolute', right: 0 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          justifyContent: 'center',
+          alignItems: { xs: 'stretch', md: 'center' },
+          gap: 2,
+          mb: 3,
+          position: 'relative',
+        }}
+      >
+        <Box component="h1" sx={{ color: 'var(--edub-text-primary)', m: 0, textAlign: { xs: 'left', md: 'center' } }}>
+          Thông tin cá nhân
+        </Box>
+        <Box sx={{ display: 'flex', justifyContent: { xs: 'stretch', md: 'flex-end' }, position: { md: 'absolute' }, right: { md: 0 } }}>
         {!editing ? (
-          <button type="button" className="btn btn-update" onClick={startEditing} >Chỉnh sửa</button>
+          <button type="button" className="btn btn-update" onClick={startEditing} style={{ minHeight: 44, width: '100%' }}>Chỉnh sửa</button>
         ) : (
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button type="button" className="btn btn-cancel" onClick={cancelEditing} disabled={saving} >Hủy</button>
-            <button type="button" className="btn btn-save" onClick={handleSave} disabled={saving || !fullName.trim()} >{saving ? 'Đang lưu...' : 'Lưu'}</button>
-          </div>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1, width: '100%' }}>
+            <button type="button" className="btn btn-cancel" onClick={cancelEditing} disabled={saving} style={{ minHeight: 44, flex: 1 }}>Hủy</button>
+            <button type="button" className="btn btn-save" onClick={handleSave} disabled={saving || !fullName.trim()} style={{ minHeight: 44, flex: 1 }}>{saving ? 'Đang lưu...' : 'Lưu'}</button>
+          </Box>
         )}
-        </div>
-      </div>
+        </Box>
+      </Box>
       {editError && <div role="alert" style={{ color: '#d32f2f', marginBottom: 12 }}>{editError}</div>}
 
       {/* Avatar */}
@@ -206,14 +219,47 @@ export default function OverviewPage() {
         {editing && (
           <>
             <input ref={avatarInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} style={{ display: 'none' }} />
-            <button type="button" className="btn btn-update" onClick={() => avatarInputRef.current?.click()} disabled={uploadingAvatar}>
+            <button type="button" className="btn btn-update" onClick={() => avatarInputRef.current?.click()} disabled={uploadingAvatar} style={{ minHeight: 44 }}>
               {uploadingAvatar ? 'Đang tải...' : 'Đổi ảnh đại diện'}
             </button>
           </>
         )}
       </div>
 
-      <table style={infoTableStyle}>
+      <Box
+        component="table"
+        sx={{
+          width: '100%',
+          borderCollapse: 'collapse',
+          tableLayout: 'fixed',
+          mb: 2.5,
+          '& tr': {
+            display: { xs: 'block', md: 'table-row' },
+            mb: { xs: 2, md: 0 },
+            borderBottom: { xs: '1px solid var(--edub-border)', md: 'none' },
+            pb: { xs: 2, md: 0 },
+          },
+          '& th': {
+            display: { xs: 'block', md: 'table-cell' },
+            width: { xs: '100%', md: '25%' },
+            p: { xs: '0 0 8px', md: '12px 16px' },
+            textAlign: 'left',
+            verticalAlign: 'top',
+            borderBottom: { md: '1px solid var(--edub-border)' },
+            color: 'var(--edub-text-primary)',
+            fontSize: { xs: 16, md: 20 },
+            fontWeight: 700,
+          },
+          '& td': {
+            display: { xs: 'block', md: 'table-cell' },
+            width: { xs: '100%', md: '75%' },
+            p: { xs: 0, md: '12px 16px' },
+            verticalAlign: 'top',
+            borderBottom: { md: '1px solid var(--edub-border)' },
+            color: 'var(--edub-text-primary)',
+          },
+        }}
+      >
         <tbody>
           {/* Họ và tên */}
           <Section label="Họ và tên">
@@ -265,10 +311,10 @@ export default function OverviewPage() {
               <>
                 {expertises.map((ex, i) => (
                   <div key={`expertise-${i}`} style={{ marginBottom: 8, padding: 8, border: '1px solid #ddd', borderRadius: 8 }}>
-                    <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1, mb: 0.5 }}>
                       <input type="text" value={ex.specialty} onChange={(e) => { const u = [...expertises]; u[i] = { ...u[i], specialty: e.target.value }; setExpertises(u); }} style={{ ...inputStyle, flex: 1 }} placeholder="Chuyên ngành" />
                       <input type="text" value={ex.degree} onChange={(e) => { const u = [...expertises]; u[i] = { ...u[i], degree: e.target.value }; setExpertises(u); }} style={{ ...inputStyle, flex: 1 }} placeholder="Bằng cấp" />
-                    </div>
+                    </Box>
                     <div style={rowStyle}>
                       <label style={fileLabelStyle}>
                         Chọn ảnh chứng chỉ
@@ -282,12 +328,54 @@ export default function OverviewPage() {
                 <button type="button" className="btn btn-add" onClick={() => setExpertises([...expertises, { specialty: '', degree: '', certificateImageUrl: '', sortOrder: expertises.length }])} style={addBtn}>+ Thêm chuyên môn</button>
               </>
             ) : profile.expertises.length > 0 ? (
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead><tr><th style={thStyle}>Chuyên ngành</th><th style={thStyle}>Bằng cấp</th><th style={thStyle}>Ảnh đính kèm</th></tr></thead>
-                <tbody>{profile.expertises.map((e, i) => (
-                  <tr key={`${e.id}-${i}`}><td style={tdStyle}>{e.specialty}</td><td style={tdStyle}>{e.degree}</td><td style={tdStyle}>{e.certificateImageUrl ? <img src={profileService.getImageUrl(e.certificateImageUrl)} alt="Chứng chỉ" style={{ maxWidth: 120, maxHeight: 80 }} /> : '—'}</td></tr>
-                ))}</tbody>
-              </table>
+              <>
+                <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 1.5 }}>
+                  {profile.expertises.map((e, i) => (
+                    <Box key={`${e.id}-${i}-mobile`} sx={{ p: 1.5, border: '1px solid #eee', borderRadius: 1 }}>
+                      <Box sx={{ mb: 1 }}>
+                        <Box component="span" sx={{ fontSize: 12, color: 'text.secondary', fontWeight: 600 }}>Chuyên ngành: </Box>
+                        {e.specialty}
+                      </Box>
+                      <Box sx={{ mb: 1 }}>
+                        <Box component="span" sx={{ fontSize: 12, color: 'text.secondary', fontWeight: 600 }}>Bằng cấp: </Box>
+                        {e.degree}
+                      </Box>
+                      {e.certificateImageUrl ? (
+                        <img src={profileService.getImageUrl(e.certificateImageUrl)} alt="Chứng chỉ" style={{ maxWidth: '100%', maxHeight: 80 }} />
+                      ) : (
+                        <Box component="span" sx={{ color: 'text.secondary' }}>—</Box>
+                      )}
+                    </Box>
+                  ))}
+                </Box>
+                <Box
+                  component="table"
+                  sx={{
+                    width: '100%',
+                    borderCollapse: 'collapse',
+                    display: { xs: 'none', md: 'table' },
+                  }}
+                >
+                  <Box component="thead">
+                    <Box component="tr">
+                      <Box component="th" sx={{ textAlign: 'left', p: '8px 12px', borderBottom: '2px solid var(--edub-border)' }}>Chuyên ngành</Box>
+                      <Box component="th" sx={{ textAlign: 'left', p: '8px 12px', borderBottom: '2px solid var(--edub-border)' }}>Bằng cấp</Box>
+                      <Box component="th" sx={{ textAlign: 'left', p: '8px 12px', borderBottom: '2px solid var(--edub-border)' }}>Ảnh đính kèm</Box>
+                    </Box>
+                  </Box>
+                  <Box component="tbody">
+                    {profile.expertises.map((e, i) => (
+                      <Box component="tr" key={`${e.id}-${i}`}>
+                        <Box component="td" sx={{ p: '8px 12px', borderBottom: '1px solid var(--edub-border)' }}>{e.specialty}</Box>
+                        <Box component="td" sx={{ p: '8px 12px', borderBottom: '1px solid var(--edub-border)' }}>{e.degree}</Box>
+                        <Box component="td" sx={{ p: '8px 12px', borderBottom: '1px solid var(--edub-border)' }}>
+                          {e.certificateImageUrl ? <img src={profileService.getImageUrl(e.certificateImageUrl)} alt="Chứng chỉ" style={{ maxWidth: 120, maxHeight: 80 }} /> : '—'}
+                        </Box>
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              </>
             ) : <p style={plainTextStyle}>—</p>}
           </Section>
 
@@ -383,31 +471,26 @@ export default function OverviewPage() {
             ) : <p style={plainTextStyle}>—</p>}
           </Section>
         </tbody>
-      </table>
-    </div>
+      </Box>
+    </Box>
   );
 }
 
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <tr>
-      <th scope="row" style={infoLabelStyle}>{label}</th>
-      <td style={infoValueStyle}>{children}</td>
+      <th scope="row">{label}</th>
+      <td>{children}</td>
     </tr>
   );
 }
 
-const infoTableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', marginBottom: 20 };
-const infoLabelStyle: React.CSSProperties = { width: '25%', padding: '12px 16px', textAlign: 'left', verticalAlign: 'top', borderBottom: '1px solid var(--edub-border)', color: 'var(--edub-text-primary)', fontSize: 20, fontWeight: 700 };
-const infoValueStyle: React.CSSProperties = { width: '75%', padding: '12px 16px', verticalAlign: 'top', borderBottom: '1px solid var(--edub-border)', color: 'var(--edub-text-primary)' };
 const plainTextStyle: React.CSSProperties = { margin: 0 };
 const inputStyle: React.CSSProperties = { width: '100%', padding: 8, boxSizing: 'border-box', backgroundColor: 'var(--edub-input-bg)', border: '1px solid var(--edub-input-border)', color: 'var(--edub-text-primary)', borderRadius: 8};
 const rowStyle: React.CSSProperties = { display: 'flex', gap: 8, marginBottom: 4, alignItems: 'center' };
 const listStyle: React.CSSProperties = { margin: 0, paddingLeft: 20 };
-const thStyle: React.CSSProperties = { textAlign: 'left', padding: '8px 12px', borderBottom: '2px solid var(--edub-border)' };
-const tdStyle: React.CSSProperties = { padding: '8px 12px', borderBottom: '1px solid var(--edub-border)' };
-const addBtn: React.CSSProperties = { padding: '4px 12px', cursor: 'pointer', marginTop: 4, backgroundColor: '#2e7d32', color: '#fff', border: '1px solid #2e7d32', borderRadius: 8 };
-const delBtn: React.CSSProperties = { padding: '4px 10px', cursor: 'pointer', backgroundColor: '#dc2626', color: '#fff', border: 'none', borderRadius: 8 };
+const addBtn: React.CSSProperties = { padding: '4px 12px', cursor: 'pointer', marginTop: 4, backgroundColor: '#2e7d32', color: '#fff', border: '1px solid #2e7d32', borderRadius: 8, minHeight: 44 };
+const delBtn: React.CSSProperties = { padding: '4px 10px', cursor: 'pointer', backgroundColor: '#dc2626', color: '#fff', border: 'none', borderRadius: 8, minHeight: 44 };
 const delBtnDisabled: React.CSSProperties = { ...delBtn, backgroundColor: '#9ca3af', cursor: 'not-allowed' };
 const fileLabelStyle: React.CSSProperties = { padding: '4px 12px', cursor: 'pointer', backgroundColor: '#d49a00', color: '#201a11', border: '1px solid #d49a00', borderRadius: 8, fontSize: 14, display: 'inline-block' };
 const thumbStyle: React.CSSProperties = { maxWidth: 80, maxHeight: 60, borderRadius: 4, objectFit: 'cover' };

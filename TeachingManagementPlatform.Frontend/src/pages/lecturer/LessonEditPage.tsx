@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Box } from '@mui/material';
 import * as lessonService from '../../services/lessonService';
 import * as storageService from '../../services/storageService';
 import * as quizService from '../../services/quizService';
@@ -178,27 +179,27 @@ export default function LessonEditPage() {
   }
 
   // ── Render ──
-  if (loading) return <div style={pageStyle}><p>Đang tải...</p></div>;
-  if (error && !lesson) return <div style={pageStyle}><p style={{ color: '#d32f2f' }}>{error}</p><button className="btn btn-neutral" onClick={() => navigate(-1)}>← Quay lại</button></div>;
+  if (loading) return <Box sx={{ ...pageStyle, p: { xs: 1.5, md: 3 } }}><p>Đang tải...</p></Box>;
+  if (error && !lesson) return <Box sx={{ ...pageStyle, p: { xs: 1.5, md: 3 } }}><p style={{ color: '#d32f2f' }}>{error}</p><button className="btn btn-neutral" onClick={() => navigate(-1)} style={{ minHeight: 44 }}>← Quay lại</button></Box>;
   if (!lesson) return null;
 
   return (
-    <div style={pageStyle}>
+    <Box sx={{ ...pageStyle, p: { xs: 1.5, md: 3 } }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <button type="button" className="btn btn-neutral" onClick={() => navigate(-1)}>← Quay lại</button>
-      </div>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
+        <button type="button" className="btn btn-neutral" onClick={() => navigate(-1)} style={{ minHeight: 44 }}>← Quay lại</button>
+      </Box>
 
       {error && <div role="alert" style={{ color: '#d32f2f', marginBottom: 12 }}>{error}</div>}
 
       {/* Lesson name */}
       <div style={{ marginBottom: 24 }}>
         {editingName ? (
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1, alignItems: { xs: 'stretch', sm: 'center' } }}>
             <input type="text" value={nameValue} onChange={(e) => setNameValue(e.target.value)} style={inputStyle} />
             <button className="btn btn-update" onClick={handleSaveName} disabled={actionLoading}>Lưu</button>
             <button className="btn btn-neutral" onClick={() => { setEditingName(false); setNameValue(lesson.name); }}>Hủy</button>
-          </div>
+          </Box>
         ) : (
           <h1 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
             {lesson.name}
@@ -348,11 +349,11 @@ export default function LessonEditPage() {
           </div>
         </div>
       )}
-    </div>
+    </Box>
   );
 }
 
-const pageStyle: React.CSSProperties = { padding: 24, maxWidth: 900, margin: '0 auto' };
+const pageStyle: React.CSSProperties = { maxWidth: 900, margin: '0 auto' };
 const sectionStyle: React.CSSProperties = { marginBottom: 24, padding: 16, borderRadius: 12, border: '1px solid var(--edub-border)', background: 'var(--edub-surface)' };
 const sectionHeaderStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 };
 const formBoxStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 8, padding: 12, border: '1px solid #ccc', borderRadius: 8, marginBottom: 12 };

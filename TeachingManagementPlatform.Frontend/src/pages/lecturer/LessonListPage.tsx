@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Box, Button, Card, CardContent, CircularProgress, TextField, Typography } from '@mui/material';
 import * as lessonPlanService from '../../services/lessonPlanService';
 import type { LessonPlan } from '../../types/lessonPlan';
 
@@ -58,86 +59,151 @@ export default function LessonListPage() {
     }
   }
 
-  if (loading) return <div style={pageStyle}><p>Đang tải...</p></div>;
-  if (error && !plan) return <div style={pageStyle}><p style={{ color: '#d32f2f' }}>{error}</p><button className="btn btn-neutral" onClick={() => navigate('/lecturer/lesson-plans')}>← Quay lại</button></div>;
+  if (loading) {
+    return (
+      <Box sx={{ p: { xs: 1.5, md: 2 }, maxWidth: 900, mx: 'auto', display: 'flex', justifyContent: 'center', py: 6 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error && !plan) {
+    return (
+      <Box sx={{ p: { xs: 1.5, md: 2 }, maxWidth: 900, mx: 'auto' }}>
+        <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>
+        <Button variant="outlined" onClick={() => navigate('/lecturer/lesson-plans')} sx={{ minHeight: 44 }}>
+          ← Quay lại
+        </Button>
+      </Box>
+    );
+  }
+
   if (!plan) return null;
 
   return (
-    <div style={pageStyle}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <button type="button" className="btn btn-neutral" onClick={() => navigate('/lecturer/lesson-plans')}>← Quay lại danh sách giáo án</button>
-      </div>
+    <Box sx={{ p: { xs: 1.5, md: 2 }, maxWidth: 900, mx: 'auto' }}>
+      <Button
+        variant="outlined"
+        onClick={() => navigate('/lecturer/lesson-plans')}
+        sx={{ mb: 2.5, minHeight: 44 }}
+      >
+        ← Quay lại danh sách giáo án
+      </Button>
 
-      {error && <div role="alert" style={{ color: '#d32f2f', marginBottom: 12 }}>{error}</div>}
+      {error && (
+        <Typography role="alert" color="error" sx={{ mb: 1.5 }}>
+          {error}
+        </Typography>
+      )}
 
-      <h1 style={{ marginBottom: 4 }}>{plan.subject}</h1>
-      <p style={{ color: 'var(--edub-text-secondary)', marginBottom: 20 }}>
+      <Typography variant="h4" sx={{ fontWeight: 800, mb: 0.5 }}>
+        {plan.subject}
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5 }}>
         Khối {plan.grade} · Niên khóa {plan.schoolYearStart} – {plan.schoolYearEnd} · {plan.lessons.length} bài học
-      </p>
+      </Typography>
 
-      {/* Add lesson button */}
-      <div style={{ marginBottom: 16 }}>
+      <Box sx={{ mb: 2 }}>
         {adding ? (
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <input
-              type="text"
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              gap: 1,
+              alignItems: { xs: 'stretch', sm: 'center' },
+            }}
+          >
+            <TextField
               placeholder="Tên bài học"
               value={newLessonName}
               onChange={(e) => setNewLessonName(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') handleAddLesson(); }}
-              style={{ padding: 8, borderRadius: 6, border: '1px solid var(--edub-border)', flex: 1, maxWidth: 400 }}
+              size="small"
               autoFocus
+              fullWidth
+              sx={{ maxWidth: { sm: 400 } }}
             />
-            <button className="btn btn-update" onClick={handleAddLesson} disabled={actionLoading || !newLessonName.trim()}>
-              {actionLoading ? 'Đang thêm...' : 'Lưu'}
-            </button>
-            <button className="btn btn-neutral" onClick={() => { setAdding(false); setNewLessonName(''); }}>Hủy</button>
-          </div>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                variant="contained"
+                onClick={handleAddLesson}
+                disabled={actionLoading || !newLessonName.trim()}
+                sx={{ minHeight: 44, flex: { xs: 1, sm: 'none' } }}
+              >
+                {actionLoading ? 'Đang thêm...' : 'Lưu'}
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={() => { setAdding(false); setNewLessonName(''); }}
+                sx={{ minHeight: 44, flex: { xs: 1, sm: 'none' } }}
+              >
+                Hủy
+              </Button>
+            </Box>
+          </Box>
         ) : (
-          <button className="btn btn-add" onClick={() => setAdding(true)}>+ Thêm bài học</button>
+          <Button variant="contained" onClick={() => setAdding(true)} sx={{ minHeight: 44 }}>
+            + Thêm bài học
+          </Button>
         )}
-      </div>
+      </Box>
 
       {plan.lessons.length === 0 ? (
-        <div style={{ padding: 24, textAlign: 'center', color: 'var(--edub-text-secondary)', border: '1px dashed var(--edub-border)', borderRadius: 12 }}>
+        <Box
+          sx={{
+            p: 3,
+            textAlign: 'center',
+            color: 'var(--edub-text-secondary)',
+            border: '1px dashed var(--edub-border)',
+            borderRadius: 2,
+          }}
+        >
           Chưa có bài học nào. Nhấn "+ Thêm bài học" để bắt đầu.
-        </div>
+        </Box>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           {plan.lessons
             .slice()
             .sort((a, b) => a.orderIndex - b.orderIndex)
             .map((lesson, idx) => (
-              <div
+              <Card
                 key={lesson.id}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '12px 16px',
-                  borderRadius: 10,
-                  border: '1px solid var(--edub-border)',
-                  background: 'var(--edub-surface)',
+                variant="outlined"
+                sx={{
+                  borderRadius: 2,
                   cursor: 'pointer',
                   transition: 'box-shadow 150ms ease',
+                  '&:hover': { boxShadow: 2 },
                 }}
                 onClick={() => navigate(`/lecturer/lessons/${lesson.id}/edit`)}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = 'none'; }}
               >
-                <div>
-                  <span style={{ fontWeight: 700, marginRight: 8, color: 'var(--edub-text-secondary)' }}>
-                    {idx + 1}.
-                  </span>
-                  <span style={{ fontWeight: 600 }}>{lesson.name}</span>
-                </div>
-                <span style={{ color: 'var(--edub-text-secondary)', fontSize: 13 }}>Xem & sửa →</span>
-              </div>
+                <CardContent
+                  sx={{
+                    p: 2,
+                    display: 'flex',
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    justifyContent: 'space-between',
+                    alignItems: { xs: 'flex-start', sm: 'center' },
+                    gap: 1,
+                    '&:last-child': { pb: 2 },
+                  }}
+                >
+                  <Box>
+                    <Typography component="span" sx={{ fontWeight: 700, mr: 1, color: 'var(--edub-text-secondary)' }}>
+                      {idx + 1}.
+                    </Typography>
+                    <Typography component="span" sx={{ fontWeight: 600 }}>
+                      {lesson.name}
+                    </Typography>
+                  </Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Xem & sửa →
+                  </Typography>
+                </CardContent>
+              </Card>
             ))}
-        </div>
+        </Box>
       )}
-    </div>
+    </Box>
   );
 }
-
-const pageStyle: React.CSSProperties = { padding: 24, maxWidth: 900, margin: '0 auto' };

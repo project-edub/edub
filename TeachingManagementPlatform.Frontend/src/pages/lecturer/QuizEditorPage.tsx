@@ -125,15 +125,15 @@ export default function QuizEditorPage() {
   if (!game) return null;
 
   return (
-    <Box sx={{ p: 3, maxWidth: 1000, mx: 'auto' }}>
+    <Box sx={{ p: { xs: 1.5, md: 3 }, maxWidth: 1000, mx: 'auto' }}>
       {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
-        <Button variant="text" onClick={() => navigate('/lecturer/quiz-generator')}>← Quay lại</Button>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button variant="outlined" onClick={() => void handleSave()} disabled={saving}>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'stretch', md: 'center' }, mb: 3, gap: 2 }}>
+        <Button variant="text" onClick={() => navigate('/lecturer/quiz-generator')} sx={{ minHeight: 44, alignSelf: { xs: 'flex-start', md: 'auto' } }}>← Quay lại</Button>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1 }}>
+          <Button variant="outlined" onClick={() => void handleSave()} disabled={saving} sx={{ minHeight: 44, flex: 1 }}>
             {saving ? 'Đang lưu...' : 'Lưu'}
           </Button>
-          <Button variant="contained" onClick={() => void handlePublish()} disabled={publishing}>
+          <Button variant="contained" onClick={() => void handlePublish()} disabled={publishing} sx={{ minHeight: 44, flex: 1 }}>
             {publishing ? 'Đang xuất bản...' : game.status === 'published' ? 'Tái xuất bản' : 'Xuất bản'}
           </Button>
         </Box>
@@ -143,16 +143,16 @@ export default function QuizEditorPage() {
 
       {/* Published link */}
       {game.status === 'published' && (
-        <Box sx={{ p: 2, mb: 2, borderRadius: 2, bgcolor: '#f0fdf4', border: '1px solid #bbf7d0', display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box sx={{ p: 2, mb: 2, borderRadius: 2, bgcolor: '#f0fdf4', border: '1px solid #bbf7d0', display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'stretch', sm: 'center' }, gap: 1 }}>
           <Typography variant="body2" sx={{ color: '#166534', fontWeight: 600 }}>🔗 Link quiz:</Typography>
-          <Typography variant="body2" sx={{ flex: 1, color: '#166534' }}>{shareUrl}</Typography>
-          <IconButton size="small" onClick={() => void handleCopy()}><ContentCopyIcon fontSize="small" /></IconButton>
+          <Typography variant="body2" sx={{ flex: 1, color: '#166534', overflowWrap: 'anywhere' }}>{shareUrl}</Typography>
+          <IconButton size="small" onClick={() => void handleCopy()} sx={{ minWidth: 44, minHeight: 44, alignSelf: { xs: 'flex-end', sm: 'auto' } }}><ContentCopyIcon fontSize="small" /></IconButton>
           {copied && <Chip label="Đã sao chép" size="small" color="success" />}
         </Box>
       )}
 
       {/* Tabs */}
-      <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} sx={{ mb: 3 }}>
+      <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} variant="scrollable" allowScrollButtonsMobile sx={{ mb: 3 }}>
         <Tab label={`Câu hỏi (${questions.length})`} />
         <Tab label={`Bài nộp (${game.status === 'published' ? submissions.length || '...' : 0})`} />
         <Tab label="Cài đặt" />
@@ -164,8 +164,8 @@ export default function QuizEditorPage() {
           {questions.map((q, idx) => {
             const options: string[] = JSON.parse(q.optionsJson);
             return (
-              <Box key={q.id} sx={{ p: 2, borderRadius: 2, border: '1px solid', borderColor: 'divider', position: 'relative' }}>
-                <IconButton size="small" sx={{ position: 'absolute', top: 8, right: 8 }} onClick={() => handleDeleteQuestion(q.id)}>
+              <Box key={q.id} sx={{ p: { xs: 1.5, md: 2 }, borderRadius: 2, border: '1px solid', borderColor: 'divider', position: 'relative' }}>
+                <IconButton size="small" sx={{ position: 'absolute', top: 8, right: 8, minWidth: 44, minHeight: 44 }} onClick={() => handleDeleteQuestion(q.id)}>
                   <DeleteIcon fontSize="small" />
                 </IconButton>
                 <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>Câu {idx + 1}</Typography>
@@ -218,7 +218,20 @@ export default function QuizEditorPage() {
           ) : submissions.length === 0 ? (
             <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>Chưa có bài nộp nào.</Typography>
           ) : (
-            <TableContainer component={Paper} variant="outlined">
+            <>
+            <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 1.5 }}>
+              {submissions.map(s => (
+                <Box key={s.id} sx={{ p: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+                  <Typography sx={{ fontWeight: 600, mb: 1 }}>{s.studentName}</Typography>
+                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
+                    <Typography variant="body2">Đúng: {s.correctCount}/{s.totalQuestions}</Typography>
+                    <Chip label={`${s.scorePercent.toFixed(0)}%`} size="small" color={s.scorePercent >= 80 ? 'success' : s.scorePercent >= 50 ? 'warning' : 'error'} sx={{ justifySelf: 'start' }} />
+                  </Box>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>{new Date(s.submittedAt).toLocaleString('vi-VN')}</Typography>
+                </Box>
+              ))}
+            </Box>
+            <TableContainer component={Paper} variant="outlined" sx={{ display: { xs: 'none', md: 'block' } }}>
               <Table>
                 <TableHead>
                   <TableRow>
@@ -244,6 +257,7 @@ export default function QuizEditorPage() {
                 </TableBody>
               </Table>
             </TableContainer>
+            </>
           )}
         </Box>
       )}
@@ -269,11 +283,11 @@ export default function QuizEditorPage() {
           <Typography variant="body2" sx={{ mb: 2 }}>Chia sẻ link này cho học sinh:</Typography>
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
             <TextField value={shareUrl} fullWidth size="small" slotProps={{ input: { readOnly: true } }} />
-            <IconButton onClick={() => void handleCopy()}><ContentCopyIcon /></IconButton>
+            <IconButton onClick={() => void handleCopy()} sx={{ minWidth: 44, minHeight: 44 }}><ContentCopyIcon /></IconButton>
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowPublishModal(false)} variant="contained">Đóng</Button>
+          <Button onClick={() => setShowPublishModal(false)} variant="contained" sx={{ minHeight: 44 }}>Đóng</Button>
         </DialogActions>
       </Dialog>
     </Box>

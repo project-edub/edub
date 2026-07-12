@@ -1,5 +1,20 @@
 import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { AxiosError } from 'axios';
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  CircularProgress,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from '@mui/material';
 import type { AccountResponse, CreateAccountRequest, UpdateAccountRequest } from '../../types/account';
 import type { SubscriptionPackage } from '../../types/subscription';
 import { AccountStatus, type ApiError } from '../../types/common';
@@ -169,86 +184,105 @@ export default function AccountManagementPage() {
   }
 
   return (
-    <div style={{ padding: 24 }}>
-      <h1 style={{ marginBottom: 24, color: '#000' }}>Quản lý tài khoản giáo viên</h1>
+    <Box sx={{ p: { xs: 1.5, md: 2 } }}>
+      <Typography variant="h4" sx={{ fontWeight: 800, mb: 3, color: '#000' }}>
+        Quản lý tài khoản giáo viên
+      </Typography>
 
       {error && (
-        <div role="alert" style={{ color: '#d32f2f', marginBottom: 16 }}>
+        <Typography role="alert" color="error" sx={{ mb: 2 }}>
           {error}
-        </div>
+        </Typography>
       )}
 
-      <button
-        type="button"
+      <Button
+        variant="contained"
         onClick={openCreateModal}
         className="btn btn-add"
-        style={{ marginBottom: 16 }}
+        sx={{ mb: 2, minHeight: 44 }}
       >
         Thêm tài khoản
-      </button>
+      </Button>
 
       {loading ? (
-        <p>Đang tải...</p>
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+          <CircularProgress />
+        </Box>
+      ) : accounts.length === 0 ? (
+        <Typography sx={{ textAlign: 'center', py: 4 }} color="text.secondary">
+          Không có tài khoản nào
+        </Typography>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr>
-              <th style={thStyle}>Email</th>
-              <th style={thStyle}>Họ và tên</th>
-              <th style={thStyle}>ECoin</th>
-              <th style={thStyle}>Trạng thái</th>
-              <th style={thStyle}>Hành động</th>
-            </tr>
-          </thead>
-          <tbody>
-            {accounts.length === 0 ? (
-              <tr>
-                <td colSpan={5} style={{ textAlign: 'center', padding: 16 }}>
-                  Không có tài khoản nào
-                </td>
-              </tr>
-            ) : (
-              accounts.map((account) => (
-                <tr key={account.id}>
-                  <td style={tdStyle}>{account.email}</td>
-                  <td style={tdStyle}>{account.fullName}</td>
-                  <td style={tdStyle}>{account.coinBalance.toLocaleString('vi-VN')}</td>
-                  <td style={tdStyle}>
-                    {account.status === AccountStatus.Active ? 'Hoạt động' : 'Vô hiệu hóa'}
-                  </td>
-                  <td style={tdStyle}>
-                    <button
-                      type="button"
-                      onClick={() => openEditModal(account)}
-                      disabled={actionLoading}
-                      className="btn btn-update"
-                      style={{ marginRight: 8 }}
-                    >
-                      Sửa
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDeleteTarget(account)}
-                      disabled={actionLoading}
-                      className="btn btn-delete"
-                      style={{ marginRight: 8 }}
-                    >
-                      Xóa
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleToggleStatus(account)}
-                      disabled={actionLoading}
-                      className="btn btn-view"
-                    >
+        <>
+          <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 2 }}>
+            {accounts.map((account) => (
+              <Card key={account.id} sx={{ borderRadius: 2 }}>
+                <CardContent sx={{ p: 2 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5, wordBreak: 'break-word' }}>
+                    {account.fullName}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, wordBreak: 'break-all' }}>
+                    {account.email}
+                  </Typography>
+                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mb: 2 }}>
+                    <Box>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>ECoin</Typography>
+                      <Typography variant="body2">{account.coinBalance.toLocaleString('vi-VN')}</Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>Trạng thái</Typography>
+                      <Typography variant="body2">
+                        {account.status === AccountStatus.Active ? 'Hoạt động' : 'Vô hiệu hóa'}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <Button fullWidth variant="outlined" onClick={() => openEditModal(account)} disabled={actionLoading} sx={{ minHeight: 44 }}>Sửa</Button>
+                    <Button fullWidth variant="outlined" color="error" onClick={() => setDeleteTarget(account)} disabled={actionLoading} sx={{ minHeight: 44 }}>Xóa</Button>
+                    <Button fullWidth variant="outlined" onClick={() => handleToggleStatus(account)} disabled={actionLoading} sx={{ minHeight: 44 }}>
                       {account.status === AccountStatus.Active ? 'Vô hiệu hóa' : 'Kích hoạt'}
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            ))}
+          </Box>
+
+          <TableContainer component={Paper} variant="outlined" sx={{ display: { xs: 'none', md: 'block' }, overflowX: 'auto' }}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 700 }}>Email</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Họ và tên</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>ECoin</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Trạng thái</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Hành động</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {accounts.map((account) => (
+                  <TableRow key={account.id} hover>
+                    <TableCell>{account.email}</TableCell>
+                    <TableCell>{account.fullName}</TableCell>
+                    <TableCell>{account.coinBalance.toLocaleString('vi-VN')}</TableCell>
+                    <TableCell>
+                      {account.status === AccountStatus.Active ? 'Hoạt động' : 'Vô hiệu hóa'}
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                        <button type="button" onClick={() => openEditModal(account)} disabled={actionLoading} className="btn btn-update" style={{ marginRight: 8, minHeight: 44 }}>Sửa</button>
+                        <button type="button" onClick={() => setDeleteTarget(account)} disabled={actionLoading} className="btn btn-delete" style={{ marginRight: 8, minHeight: 44 }}>Xóa</button>
+                        <button type="button" onClick={() => handleToggleStatus(account)} disabled={actionLoading} className="btn btn-view" style={{ minHeight: 44 }}>
+                          {account.status === AccountStatus.Active ? 'Vô hiệu hóa' : 'Kích hoạt'}
+                        </button>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </>
       )}
 
       {/* Create / Edit Modal */}
@@ -338,7 +372,7 @@ export default function AccountManagementPage() {
                 </div>
               )}
 
-              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, justifyContent: 'flex-end' }}>
                 <button
                   type="button"
                   onClick={closeModal}
@@ -389,20 +423,9 @@ export default function AccountManagementPage() {
           </div>
         </div>
       )}
-    </div>
+    </Box>
   );
 }
-
-const thStyle: React.CSSProperties = {
-  textAlign: 'left',
-  padding: '8px 12px',
-  borderBottom: '2px solid #ccc',
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: '8px 12px',
-  borderBottom: '1px solid #eee',
-};
 
 const overlayStyle: React.CSSProperties = {
   position: 'fixed',
@@ -418,7 +441,7 @@ const modalStyle: React.CSSProperties = {
   backgroundColor: '#fff',
   padding: 24,
   borderRadius: 8,
-  minWidth: 400,
+  width: '100%',
   maxWidth: 500,
 };
 

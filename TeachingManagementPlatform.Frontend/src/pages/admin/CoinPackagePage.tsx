@@ -1,5 +1,21 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { AxiosError } from 'axios';
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  CircularProgress,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from '@mui/material';
 import type { ApiError } from '../../types/common';
 import type { CoinPackage, CreateCoinPackageRequest, UpdateCoinPackageRequest } from '../../types/coin';
 import * as coinService from '../../services/coinService';
@@ -188,33 +204,49 @@ export default function CoinPackagePage() {
   const activeCount = packages.filter((pkg) => pkg.isActive).length;
 
   return (
-    <div style={pageStyle}>
-      <div style={heroStyle}>
-        <div>
-          <p style={eyebrowStyle}>Gói ECoin</p>
-          <h1 style={titleStyle}>Quản lý gói mua ECoin</h1>
-          <p style={subtitleStyle}>
+    <Box sx={{ p: { xs: 1.5, md: 2 }, background: 'linear-gradient(180deg, #f8fbff 0%, #ffffff 100%)' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          justifyContent: 'space-between',
+          gap: 3,
+          alignItems: { xs: 'stretch', md: 'flex-start' },
+          mb: 2.5,
+          p: { xs: 2, md: 3 },
+          borderRadius: 2.5,
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+          color: '#fff',
+          boxShadow: '0 18px 40px rgba(15, 23, 42, 0.16)',
+        }}
+      >
+        <Box>
+          <Typography sx={{ m: 0, textTransform: 'uppercase', letterSpacing: '0.14em', fontSize: 12, color: 'rgba(255,255,255,0.72)' }}>
+            Gói ECoin
+          </Typography>
+          <Typography variant="h4" sx={{ my: 1, fontWeight: 800 }}>Quản lý gói mua ECoin</Typography>
+          <Typography sx={{ m: 0, color: 'rgba(255,255,255,0.75)', maxWidth: 720, lineHeight: 1.6 }}>
             Tạo và điều chỉnh các gói nạp coin cho giảng viên. Thanh toán thật sẽ được nối sau.
-          </p>
-        </div>
+          </Typography>
+        </Box>
 
-        <div style={heroActionsStyle}>
-          <div style={statsGridStyle}>
-            <div style={statCardStyle}>
-              <span style={statValueStyle}>{packages.length}</span>
-              <span style={statLabelStyle}>gói</span>
-            </div>
-            <div style={statCardStyle}>
-              <span style={statValueStyle}>{activeCount}</span>
-              <span style={statLabelStyle}>đang mở bán</span>
-            </div>
-          </div>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: { xs: 'stretch', md: 'flex-end' }, gap: 2 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(84px, 1fr))', gap: 1.25 }}>
+            <Box sx={{ minWidth: 96, p: '12px 14px', borderRadius: 2, bgcolor: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)', textAlign: 'center' }}>
+              <Typography sx={{ display: 'block', fontSize: 22, fontWeight: 700 }}>{packages.length}</Typography>
+              <Typography sx={{ display: 'block', mt: 0.5, fontSize: 12, color: 'rgba(255,255,255,0.72)' }}>gói</Typography>
+            </Box>
+            <Box sx={{ minWidth: 96, p: '12px 14px', borderRadius: 2, bgcolor: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)', textAlign: 'center' }}>
+              <Typography sx={{ display: 'block', fontSize: 22, fontWeight: 700 }}>{activeCount}</Typography>
+              <Typography sx={{ display: 'block', mt: 0.5, fontSize: 12, color: 'rgba(255,255,255,0.72)' }}>đang mở bán</Typography>
+            </Box>
+          </Box>
 
-          <button type="button" onClick={openCreateModal} className="btn btn-add">
+          <Button variant="contained" onClick={openCreateModal} className="btn btn-add" sx={{ minHeight: 44 }}>
             Thêm gói coin
-          </button>
-        </div>
-      </div>
+          </Button>
+        </Box>
+      </Box>
 
       {error && (
         <div role="alert" style={alertErrorStyle}>
@@ -223,45 +255,79 @@ export default function CoinPackagePage() {
       )}
 
       {loading ? (
-        <div style={emptyStateStyle}>Đang tải dữ liệu gói ECoin...</div>
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+          <CircularProgress />
+        </Box>
       ) : packages.length === 0 ? (
-        <div style={emptyStateStyle}>Chưa có gói ECoin nào. Tạo gói đầu tiên để giảng viên có thể nạp coin.</div>
+        <Typography sx={emptyStateStyle as object}>Chưa có gói ECoin nào. Tạo gói đầu tiên để giảng viên có thể nạp coin.</Typography>
       ) : (
-        <div style={tableShellStyle}>
-          <table style={tableStyle}>
-            <thead>
-              <tr>
-                <th style={thStyle}>Gói</th>
-                <th style={thStyle}>Giá</th>
-                <th style={thStyle}>ECoin</th>
-                <th style={thStyle}>Mô tả</th>
-                <th style={thStyle}>Trạng thái</th>
-                <th style={thStyle}>Hành động</th>
-              </tr>
-            </thead>
-            <tbody>
-              {packages.map((pkg) => (
-                <tr key={pkg.id}>
-                  <td style={tdStyle}>{pkg.name}</td>
-                  <td style={tdStyle}>{formatCurrency(pkg.price)}</td>
-                  <td style={tdStyle}>{pkg.coinAmount.toLocaleString('vi-VN')}</td>
-                  <td style={tdStyle}>{pkg.description || '—'}</td>
-                  <td style={tdStyle}>{pkg.isActive ? 'Đang mở bán' : 'Tạm ẩn'}</td>
-                  <td style={tdStyle}>
-                    <div style={actionButtonsStyle}>
-                      <button type="button" onClick={() => openEditModal(pkg)} disabled={actionLoading} className="btn btn-update">
-                        Sửa
-                      </button>
-                      <button type="button" onClick={() => setDeleteTarget(pkg)} disabled={actionLoading} className="btn btn-delete">
-                        Xóa
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <>
+          <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 2 }}>
+            {packages.map((pkg) => (
+              <Card key={pkg.id} sx={{ borderRadius: 2 }}>
+                <CardContent sx={{ p: 2 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>{pkg.name}</Typography>
+                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mb: 1.5 }}>
+                    <Box>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>Giá</Typography>
+                      <Typography variant="body2">{formatCurrency(pkg.price)}</Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>ECoin</Typography>
+                      <Typography variant="body2">{pkg.coinAmount.toLocaleString('vi-VN')}</Typography>
+                    </Box>
+                  </Box>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                    {pkg.description || '—'}
+                  </Typography>
+                  <Chip
+                    label={pkg.isActive ? 'Đang mở bán' : 'Tạm ẩn'}
+                    color={pkg.isActive ? 'success' : 'default'}
+                    size="small"
+                    variant="outlined"
+                    sx={{ mb: 2 }}
+                  />
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button fullWidth variant="outlined" onClick={() => openEditModal(pkg)} disabled={actionLoading} sx={{ minHeight: 44 }}>Sửa</Button>
+                    <Button fullWidth variant="outlined" color="error" onClick={() => setDeleteTarget(pkg)} disabled={actionLoading} sx={{ minHeight: 44 }}>Xóa</Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            ))}
+          </Box>
+
+          <TableContainer component={Paper} variant="outlined" sx={{ display: { xs: 'none', md: 'block' }, overflowX: 'auto' }}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 700 }}>Gói</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Giá</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>ECoin</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Mô tả</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Trạng thái</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Hành động</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {packages.map((pkg) => (
+                  <TableRow key={pkg.id} hover>
+                    <TableCell>{pkg.name}</TableCell>
+                    <TableCell>{formatCurrency(pkg.price)}</TableCell>
+                    <TableCell>{pkg.coinAmount.toLocaleString('vi-VN')}</TableCell>
+                    <TableCell>{pkg.description || '—'}</TableCell>
+                    <TableCell>{pkg.isActive ? 'Đang mở bán' : 'Tạm ẩn'}</TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                        <button type="button" onClick={() => openEditModal(pkg)} disabled={actionLoading} className="btn btn-update" style={{ minHeight: 44 }}>Sửa</button>
+                        <button type="button" onClick={() => setDeleteTarget(pkg)} disabled={actionLoading} className="btn btn-delete" style={{ minHeight: 44 }}>Xóa</button>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </>
       )}
 
       {modal.type && (
@@ -313,7 +379,7 @@ export default function CoinPackagePage() {
                 </label>
               </section>
 
-              <div style={footerActionsStyle}>
+              <div style={{ ...footerActionsStyle, flexDirection: 'column' }}>
                 <button type="button" onClick={closeModal} disabled={actionLoading} className="btn btn-neutral">Hủy</button>
                 <button type="submit" disabled={actionLoading} className="btn btn-update">{actionLoading ? 'Đang xử lý...' : modal.type === 'create' ? 'Tạo gói' : 'Lưu thay đổi'}</button>
               </div>
@@ -329,14 +395,14 @@ export default function CoinPackagePage() {
             <p style={{ ...modalSubtitleStyle, marginBottom: 20 }}>
               Bạn có chắc chắn muốn xóa gói {deleteTarget.name}?
             </p>
-            <div style={footerActionsStyle}>
-              <button type="button" onClick={() => setDeleteTarget(null)} disabled={actionLoading} className="btn btn-neutral">Hủy</button>
-              <button type="button" onClick={handleDelete} disabled={actionLoading} className="btn btn-delete">{actionLoading ? 'Đang xử lý...' : 'Xóa'}</button>
+            <div style={{ ...footerActionsStyle, flexDirection: 'column' }}>
+              <button type="button" onClick={() => setDeleteTarget(null)} disabled={actionLoading} className="btn btn-neutral" style={{ minHeight: 44 }}>Hủy</button>
+              <button type="button" onClick={handleDelete} disabled={actionLoading} className="btn btn-delete" style={{ minHeight: 44 }}>{actionLoading ? 'Đang xử lý...' : 'Xóa'}</button>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </Box>
   );
 }
 
@@ -350,77 +416,7 @@ function Field({ label, error, children }: { label: string; error?: string; chil
   );
 }
 
-const pageStyle: React.CSSProperties = {
-  padding: 24,
-  background: 'linear-gradient(180deg, #f8fbff 0%, #ffffff 100%)',
-};
-
-const heroStyle: React.CSSProperties = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  gap: 24,
-  alignItems: 'flex-start',
-  marginBottom: 20,
-  padding: 24,
-  borderRadius: 20,
-  background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-  color: '#fff',
-  boxShadow: '0 18px 40px rgba(15, 23, 42, 0.16)',
-};
-
-const eyebrowStyle: React.CSSProperties = {
-  margin: 0,
-  textTransform: 'uppercase',
-  letterSpacing: '0.14em',
-  fontSize: 12,
-  color: 'rgba(255,255,255,0.72)',
-};
-
-const titleStyle: React.CSSProperties = {
-  margin: '8px 0 8px',
-};
-
-const subtitleStyle: React.CSSProperties = {
-  margin: 0,
-  color: 'rgba(255,255,255,0.75)',
-  maxWidth: 720,
-  lineHeight: 1.6,
-};
-
-const heroActionsStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'flex-end',
-  gap: 16,
-};
-
-const statsGridStyle: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(2, minmax(84px, 1fr))',
-  gap: 10,
-};
-
-const statCardStyle: React.CSSProperties = {
-  minWidth: 96,
-  padding: '12px 14px',
-  borderRadius: 16,
-  backgroundColor: 'rgba(255,255,255,0.08)',
-  border: '1px solid rgba(255,255,255,0.14)',
-  textAlign: 'center',
-};
-
-const statValueStyle: React.CSSProperties = {
-  display: 'block',
-  fontSize: 22,
-  fontWeight: 700,
-};
-
-const statLabelStyle: React.CSSProperties = {
-  display: 'block',
-  marginTop: 4,
-  fontSize: 12,
-  color: 'rgba(255,255,255,0.72)',
-};
+const pageStyle: React.CSSProperties = {};
 
 const alertErrorStyle: React.CSSProperties = {
   marginBottom: 16,
@@ -438,37 +434,7 @@ const emptyStateStyle: React.CSSProperties = {
   backgroundColor: '#f8fafc',
   color: '#475569',
   textAlign: 'center',
-};
-
-const tableShellStyle: React.CSSProperties = {
-  overflowX: 'auto',
-  borderRadius: 16,
-  border: '1px solid #e2e8f0',
-  backgroundColor: '#fff',
-};
-
-const tableStyle: React.CSSProperties = {
-  width: '100%',
-  borderCollapse: 'collapse',
-};
-
-const thStyle: React.CSSProperties = {
-  textAlign: 'left',
-  padding: '12px 14px',
-  borderBottom: '1px solid #e2e8f0',
-  backgroundColor: '#f8fafc',
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: '12px 14px',
-  borderBottom: '1px solid #e2e8f0',
-  verticalAlign: 'top',
-};
-
-const actionButtonsStyle: React.CSSProperties = {
-  display: 'flex',
-  gap: 8,
-  flexWrap: 'wrap',
+  display: 'block',
 };
 
 const overlayStyle: React.CSSProperties = {

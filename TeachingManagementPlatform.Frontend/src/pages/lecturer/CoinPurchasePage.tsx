@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AxiosError } from 'axios';
+import { Box, Button, Typography } from '@mui/material';
 import type { ApiError } from '../../types/common';
 import type { CoinPackage, CoinWalletResponse } from '../../types/coin';
 import * as coinService from '../../services/coinService';
@@ -153,24 +154,25 @@ export default function CoinPurchasePage() {
   }
 
   return (
-    <div style={pageStyle}>
-      <div style={heroStyle}>
-        <div>
+    <Box sx={{ ...pageStyle, p: { xs: 1.5, sm: 2, md: 3 } }}>
+      <Box sx={{ ...heroStyle, display: 'block', p: { xs: 2, sm: 2.5, md: 3 }, mb: { xs: 1.5, md: 2 }, borderRadius: { xs: 3, md: 5 }, boxShadow: { xs: 'none', md: heroStyle.boxShadow }, overflow: 'hidden', minHeight: 0 }}>
+        <Box sx={{ flex: '1 1 auto', minWidth: 0 }}>
           <p style={eyebrowStyle}>ECoin Wallet</p>
-          <h1 style={titleStyle}>Mua ECoin cho tài khoản lecturer</h1>
-          <p style={subtitleStyle}>
+          <Box component="h1" sx={{ ...titleStyle, fontSize: { xs: 28, md: 36 }, lineHeight: { xs: 1.2, md: 1.1 }, overflowWrap: 'anywhere' }}>Mua ECoin cho tài khoản lecturer</Box>
+          <Box component="p" sx={{ ...subtitleStyle, maxWidth: { xs: '100%', md: 'none' }, fontSize: { xs: 15, md: 16 }, lineHeight: { xs: 1.55, md: 1.6 } }}>
             Gói này dùng để trừ lượt khi tạo quiz bằng AI. Khi bấm mua, bạn sẽ được chuyển sang cổng thanh toán PayOS.
-          </p>
-        </div>
+          </Box>
+        </Box>
 
-        <div style={walletCardStyle}>
-          <span style={walletLabelStyle}>Số dư hiện tại</span>
-          <span style={walletValueStyle}>{wallet.coinBalance.toLocaleString('vi-VN')} ECoin</span>
-          <button type="button" className="btn btn-neutral" onClick={() => navigate('/lecturer/quiz-generator')}>
-            Quay lại tạo quiz
-          </button>
-        </div>
-      </div>
+      </Box>
+
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'stretch', sm: 'center' }, justifyContent: 'space-between', gap: 1.5, mb: 2, p: { xs: 2, md: 2.25 }, borderRadius: 3, bgcolor: '#fff', border: '1px solid #e2e8f0', boxShadow: '0 4px 14px rgba(15, 23, 42, 0.05)' }}>
+        <Box>
+          <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.25 }}>Số dư hiện tại</Typography>
+          <Typography sx={{ fontSize: 22, fontWeight: 800, color: '#0f172a' }}>{wallet.coinBalance.toLocaleString('vi-VN')} ECoin</Typography>
+        </Box>
+        <Button variant="outlined" onClick={() => navigate('/lecturer/quiz-generator')} sx={{ minHeight: 44, flexShrink: 0, whiteSpace: 'nowrap' }}>Tạo quiz</Button>
+      </Box>
 
       {error && (
         <div role="alert" style={alertStyle}>
@@ -189,16 +191,16 @@ export default function CoinPurchasePage() {
       ) : packages.length === 0 ? (
         <div style={emptyStateStyle}>Chưa có gói ECoin nào khả dụng.</div>
       ) : (
-        <div style={gridStyle}>
+        <Box sx={{ ...gridStyle, gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'repeat(auto-fit, minmax(250px, 1fr))' }, gap: { xs: 1.5, md: 2 } }}>
           {packages.map((pkg) => (
             <article key={pkg.id} style={cardStyle}>
-              <div style={cardHeaderStyle}>
+              <Box sx={{ ...cardHeaderStyle, flexDirection: { xs: 'column', sm: 'row' } }}>
                 <div>
                   <h2 style={cardTitleStyle}>{pkg.name}</h2>
                   <p style={cardSubtitleStyle}>{pkg.description || 'Gói nạp coin cho AI quiz.'}</p>
                 </div>
                 <span style={coinBadgeStyle}>{pkg.coinAmount.toLocaleString('vi-VN')} ECoin</span>
-              </div>
+              </Box>
 
               <div style={priceRowStyle}>
                 <strong style={priceValueStyle}>{formatCurrency(pkg.price)}</strong>
@@ -210,31 +212,30 @@ export default function CoinPurchasePage() {
                 className="btn btn-add"
                 disabled={actionLoading === pkg.id || !pkg.isActive}
                 onClick={() => void purchasePackage(pkg)}
-                style={{ width: '100%', marginTop: 16 }}
+                style={{ width: '100%', marginTop: 16, minHeight: 44 }}
               >
                 {actionLoading === pkg.id ? 'Đang nạp...' : pkg.isActive ? 'Mua ngay' : 'Tạm ẩn'}
               </button>
             </article>
           ))}
-        </div>
+        </Box>
       )}
 
       <div style={noteStyle}>
         <strong>Lưu ý:</strong> mỗi lần tạo quiz sẽ trừ ECoin theo số câu hỏi yêu cầu. Nếu không đủ coin, hệ thống sẽ chặn trước khi gọi AI.
       </div>
-    </div>
+    </Box>
   );
 }
 
 const pageStyle: React.CSSProperties = {
-  padding: 24,
 };
 
 const heroStyle: React.CSSProperties = {
   display: 'flex',
   justifyContent: 'space-between',
   gap: 24,
-  alignItems: 'stretch',
+  alignItems: 'flex-start',
   marginBottom: 20,
   padding: 24,
   borderRadius: 20,
@@ -260,28 +261,6 @@ const subtitleStyle: React.CSSProperties = {
   maxWidth: 760,
   lineHeight: 1.6,
   color: 'rgba(255,255,255,0.8)',
-};
-
-const walletCardStyle: React.CSSProperties = {
-  minWidth: 240,
-  padding: 20,
-  borderRadius: 18,
-  backgroundColor: 'rgba(255,255,255,0.08)',
-  border: '1px solid rgba(255,255,255,0.12)',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 12,
-  justifyContent: 'center',
-};
-
-const walletLabelStyle: React.CSSProperties = {
-  fontSize: 13,
-  color: 'rgba(255,255,255,0.72)',
-};
-
-const walletValueStyle: React.CSSProperties = {
-  fontSize: 28,
-  fontWeight: 700,
 };
 
 const alertStyle: React.CSSProperties = {

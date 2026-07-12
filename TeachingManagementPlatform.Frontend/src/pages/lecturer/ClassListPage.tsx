@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AxiosError } from 'axios';
+import { Box, Button, Card, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography, CircularProgress, Alert } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import type { ClassDetail, CreateClassRequest, UpdateClassRequest } from '../../types/class';
 import type { ApiError } from '../../types/common';
 import * as classService from '../../services/classService';
@@ -132,210 +135,267 @@ export default function ClassListPage() {
   }
 
   return (
-    <div style={{ padding: 24 }}>
-      <h1 style={{ marginBottom: 24, color: 'var(--edub-text-primary)' }}>Danh sách lớp học</h1>
+    <Box sx={{ p: { xs: 1.5, md: 2 } }}>
+      <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 2 }}>
+        Danh sách lớp học
+      </Typography>
 
-      {error && (
-        <div role="alert" style={{ color: '#d32f2f', marginBottom: 16 }}>
-          {error}
-        </div>
-      )}
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-      <button
-        type="button"
+      <Button
+        variant="contained"
+        color="primary"
         onClick={openCreateModal}
-        className="btn btn-add"
-        style={{ marginBottom: 16 }}
+        sx={{ mb: 2, minHeight: 44, px: 2 }}
       >
         Thêm lớp
-      </button>
+      </Button>
 
       {loading ? (
-        <p>Đang tải...</p>
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <CircularProgress />
+        </Box>
+      ) : classes.length === 0 ? (
+        <Typography sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
+          Không có lớp học nào
+        </Typography>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr>
-              <th style={thStyle}>Tên lớp</th>
-              <th style={thStyle}>Năm học</th>
-              <th style={thStyle}>Số học sinh</th>
-              <th style={thStyle}>Hành động</th>
-            </tr>
-          </thead>
-          <tbody>
-            {classes.length === 0 ? (
+        <Box
+          sx={{
+            display: { xs: 'flex', md: 'none' },
+            flexDirection: 'column',
+            gap: 2,
+          }}
+        >
+          {/* Mobile Card View */}
+          {classes.map((cls) => (
+            <Card key={cls.id} sx={{ borderRadius: 2 }}>
+              <CardContent sx={{ p: 2 }}>
+                <Typography
+                  variant="h6"
+                  component="button"
+                  onClick={() => navigate(`/lecturer/classes/${cls.id}`)}
+                  sx={{
+                    fontWeight: 600,
+                    mb: 1,
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    textDecoration: 'underline',
+                    background: 'none',
+                    border: 'none',
+                    p: 0,
+                    textAlign: 'left',
+                    minHeight: 44,
+                  }}
+                >
+                  {cls.name}
+                </Typography>
+
+                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mb: 2, fontSize: { xs: 0.875, sm: 1 } }}>
+                  <Box>
+                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                      Năm học
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                      {cls.year}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                      Số học sinh
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                      {cls.studentCount}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<EditIcon />}
+                    onClick={() => openEditModal(cls)}
+                    disabled={actionLoading}
+                    sx={{ flex: 1, minHeight: 44 }}
+                  >
+                    Sửa
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="error"
+                    startIcon={<DeleteIcon />}
+                    onClick={() => setDeleteTarget(cls)}
+                    disabled={actionLoading}
+                    sx={{ flex: 1, minHeight: 44 }}
+                  >
+                    Xóa
+                  </Button>
+                </Box>
+              </CardContent>
+            </Card>
+          ))}
+        </Box>
+      )}
+
+      {/* Desktop Table View */}
+      {!loading && classes.length > 0 && (
+        <Box
+          sx={{
+            display: { xs: 'none', md: 'block' },
+            overflowX: 'auto',
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 2,
+          }}
+        >
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
               <tr>
-                <td colSpan={4} style={{ textAlign: 'center', padding: 16 }}>
-                  Không có lớp học nào
-                </td>
+                <th style={thStyle}>Tên lớp</th>
+                <th style={thStyle}>Năm học</th>
+                <th style={thStyle}>Số học sinh</th>
+                <th style={thStyle}>Hành động</th>
               </tr>
-            ) : (
-              classes.map((cls) => (
+            </thead>
+            <tbody>
+              {classes.map((cls) => (
                 <tr key={cls.id}>
                   <td style={tdStyle}>
-                    <button
-                      type="button"
+                    <Button
+                      variant="text"
                       onClick={() => navigate(`/lecturer/classes/${cls.id}`)}
-                      style={{ background: 'none', border: 'none', color: 'var(--edub-link)', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                      sx={{
+                        p: 0,
+                        textTransform: 'none',
+                        justifyContent: 'flex-start',
+                        textDecoration: 'underline',
+                        minHeight: 44,
+                        minWidth: 44,
+                      }}
                     >
                       {cls.name}
-                    </button>
+                    </Button>
                   </td>
                   <td style={tdStyle}>{cls.year}</td>
                   <td style={tdStyle}>{cls.studentCount}</td>
                   <td style={tdStyle}>
-                    <button
-                      type="button"
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<EditIcon />}
                       onClick={() => openEditModal(cls)}
                       disabled={actionLoading}
-                      className="btn btn-update"
-                      style={{ marginRight: 8 }}
+                      sx={{ mr: 1, minHeight: 44 }}
                     >
                       Sửa
-                    </button>
-                    <button
-                      type="button"
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      color="error"
+                      startIcon={<DeleteIcon />}
                       onClick={() => setDeleteTarget(cls)}
                       disabled={actionLoading}
-                      className="btn btn-delete"
+                      sx={{ minHeight: 44 }}
                     >
                       Xóa
-                    </button>
+                    </Button>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ))}
+            </tbody>
+          </table>
+        </Box>
       )}
 
       {/* Create / Edit Modal */}
-      {modal.type && (
-        <div style={overlayStyle}>
-          <div style={modalStyle}>
-            <h2 style={{ marginBottom: 16 }}>
-              {modal.type === 'create' ? 'Thêm lớp học' : 'Sửa lớp học'}
-            </h2>
+      <Dialog open={modal.type !== null} onClose={closeModal} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          {modal.type === 'create' ? 'Thêm lớp học' : 'Sửa lớp học'}
+        </DialogTitle>
 
-            {formError && (
-              <div role="alert" style={{ color: '#d32f2f', marginBottom: 12 }}>
-                {formError}
-              </div>
-            )}
+        {formError && (
+          <Box sx={{ px: 3, pt: 0 }}>
+            <Alert severity="error">{formError}</Alert>
+          </Box>
+        )}
 
-            <form onSubmit={modal.type === 'create' ? handleCreateSubmit : handleEditSubmit} noValidate>
-              <div style={{ marginBottom: 12 }}>
-                <label htmlFor="modal-name" style={{ display: 'block', marginBottom: 4 }}>Tên lớp</label>
-                <input
-                  id="modal-name"
-                  type="text"
-                  placeholder="Nhập tên lớp"
-                  value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
-                  style={inputStyle}
-                />
-              </div>
+        <DialogContent sx={{ pt: formError ? 1 : 2 }}>
+          <Box component="form" noValidate sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              autoFocus
+              label="Tên lớp"
+              placeholder="Nhập tên lớp"
+              value={formName}
+              onChange={(e) => setFormName(e.target.value)}
+              fullWidth
+              variant="outlined"
+            />
+            <TextField
+              label="Năm học"
+              placeholder="Nhập năm học (vd: 2024-2025)"
+              value={formYear}
+              onChange={(e) => setFormYear(e.target.value)}
+              fullWidth
+              variant="outlined"
+            />
+          </Box>
+        </DialogContent>
 
-              <div style={{ marginBottom: 16 }}>
-                <label htmlFor="modal-year" style={{ display: 'block', marginBottom: 4 }}>Năm học</label>
-                <input
-                  id="modal-year"
-                  type="text"
-                  placeholder="Nhập năm học (vd: 2024-2025)"
-                  value={formYear}
-                  onChange={(e) => setFormYear(e.target.value)}
-                  style={inputStyle}
-                />
-              </div>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button onClick={closeModal} disabled={actionLoading}>
+            Hủy
+          </Button>
+          <Button
+            onClick={modal.type === 'create' ? handleCreateSubmit : handleEditSubmit}
+            variant="contained"
+            disabled={actionLoading}
+          >
+            {actionLoading ? 'Đang xử lý...' : 'Lưu'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
-              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  disabled={actionLoading}
-                  className="btn btn-neutral"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  disabled={actionLoading}
-                  className="btn btn-update"
-                >
-                  {actionLoading ? 'Đang xử lý...' : 'Lưu'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation */}
-      {deleteTarget && (
-        <div style={overlayStyle}>
-          <div style={modalStyle}>
-            <h2 style={{ marginBottom: 16 }}>Xác nhận xóa</h2>
-            <p style={{ marginBottom: 16 }}>
-              Bạn có chắc chắn muốn xóa lớp <strong>{deleteTarget.name}</strong>?
-            </p>
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-              <button
-                type="button"
-                onClick={() => setDeleteTarget(null)}
-                disabled={actionLoading}
-                className="btn btn-neutral"
-              >
-                Hủy
-              </button>
-              <button
-                type="button"
-                onClick={handleDelete}
-                disabled={actionLoading}
-                className="btn btn-delete"
-              >
-                {actionLoading ? 'Đang xử lý...' : 'Xóa'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteTarget !== null} onClose={() => setDeleteTarget(null)}>
+        <DialogTitle>Xác nhận xóa</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Bạn có chắc chắn muốn xóa lớp <strong>{deleteTarget?.name}</strong>?
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button onClick={() => setDeleteTarget(null)} disabled={actionLoading}>
+            Hủy
+          </Button>
+          <Button
+            onClick={handleDelete}
+            variant="contained"
+            color="error"
+            disabled={actionLoading}
+          >
+            {actionLoading ? 'Đang xử lý...' : 'Xóa'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 }
 
 const thStyle: React.CSSProperties = {
   textAlign: 'left',
-  padding: '8px 12px',
-  borderBottom: '2px solid var(--edub-border)',
+  padding: '12px',
+  borderBottom: '2px solid',
+  borderColor: 'var(--edub-border)',
+  fontWeight: 600,
+  fontSize: '14px',
 };
 
 const tdStyle: React.CSSProperties = {
-  padding: '8px 12px',
-  borderBottom: '1px solid var(--edub-border)',
-};
-
-const overlayStyle: React.CSSProperties = {
-  position: 'fixed',
-  inset: 0,
-  backgroundColor: 'rgba(0,0,0,0.4)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  zIndex: 1000,
-};
-
-const modalStyle: React.CSSProperties = {
-  backgroundColor: 'var(--edub-surface)',
-  color: 'var(--edub-text-primary)',
-  border: '1px solid var(--edub-border)',
-  padding: 24,
-  borderRadius: 8,
-  minWidth: 400,
-  maxWidth: 500,
-};
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: 8,
-  boxSizing: 'border-box',
+  padding: '12px',
+  borderBottom: '1px solid',
+  borderColor: 'var(--edub-border)',
+  fontSize: '14px',
 };

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { AxiosError } from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { Box } from '@mui/material';
 import type { StorageItem, StorageFilter, StorageQuota } from '../../types/storage';
 import type { ApiError } from '../../types/common';
 import { ItemType } from '../../types/common';
@@ -219,7 +220,7 @@ export default function TeachingMaterialStoragePage() {
   }
 
   return (
-    <div style={{ padding: 24 }}>
+    <Box sx={{ p: { xs: 1.5, md: 3 } }}>
       <h1 style={{ marginBottom: 24, color: 'var(--edub-text-primary)' }}>Kho tài liệu giảng dạy</h1>
 
       {error && (
@@ -388,7 +389,8 @@ export default function TeachingMaterialStoragePage() {
       {loading ? (
         <p>Đang tải...</p>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <Box sx={{ overflowX: 'auto', mx: { xs: -1.5, md: 0 }, px: { xs: 1.5, md: 0 } }}>
+        <table style={{ width: '100%', minWidth: 640, borderCollapse: 'collapse' }}>
           <thead>
             <tr>
               <th style={thStyle}>Tên</th>
@@ -470,6 +472,7 @@ export default function TeachingMaterialStoragePage() {
             )}
           </tbody>
         </table>
+        </Box>
       )}
 
       {/* Rename modal */}
@@ -516,7 +519,7 @@ export default function TeachingMaterialStoragePage() {
           </div>
         </div>
       )}
-    </div>
+    </Box>
   );
 }
 
