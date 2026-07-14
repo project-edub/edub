@@ -361,4 +361,15 @@ const inputStyle: React.CSSProperties = { width: '100%', padding: 8, boxSizing: 
 const emptyStyle: React.CSSProperties = { color: 'var(--edub-text-secondary)', fontSize: 14 };
 const itemRowStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: 8, border: '1px solid #eee' };
 const overlayStyle: React.CSSProperties = { position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 };
-const modalStyle: React.CSSProperties = { backgroundColor: 'var(--edub-surface)', padding: 24, borderRadius: 12, minWidth: 500, maxWidth: 650, maxHeight: '80vh', overflowY: 'auto', border: '1px solid var(--edub-border)' };
+const modalStyle: React.CSSProperties = {
+  backgroundColor: 'var(--edub-surface)',
+  padding: 24,
+  borderRadius: 12,
+  // Preserve the 500px desktop picker while keeping it within narrow viewports.
+  width: 'min(500px, calc(100% - 24px))',
+  maxWidth: 650,
+  maxHeight: 'calc(100dvh - 24px)',
+  boxSizing: 'border-box',
+  overflowY: 'auto',
+  border: '1px solid var(--edub-border)',
+};

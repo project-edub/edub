@@ -108,7 +108,8 @@ const modalStyle: React.CSSProperties = {
   backgroundColor: 'var(--edub-surface, #fff)',
   padding: 24,
   borderRadius: 12,
-  minWidth: 360,
+  width: 'min(360px, calc(100% - 24px))',
+  boxSizing: 'border-box',
   boxShadow: '0 12px 40px rgba(0,0,0,0.18)',
 };
 

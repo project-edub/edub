@@ -4,6 +4,7 @@ import { AxiosError } from 'axios';
 import { Box, Button, Card, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography, CircularProgress, Alert } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import { IconButton, Tooltip } from '@mui/material';
 import type { ClassDetail, CreateClassRequest, UpdateClassRequest } from '../../types/class';
 import type { ApiError } from '../../types/common';
 import * as classService from '../../services/classService';
@@ -169,8 +170,24 @@ export default function ClassListPage() {
         >
           {/* Mobile Card View */}
           {classes.map((cls) => (
-            <Card key={cls.id} sx={{ borderRadius: 2 }}>
+            <Card key={cls.id} sx={{ borderRadius: 2, position: 'relative' }}>
               <CardContent sx={{ p: 2 }}>
+                <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.5 }}>
+                  <Tooltip title="Sửa lớp">
+                    <span>
+                      <IconButton aria-label={`Sửa lớp ${cls.name}`} onClick={() => openEditModal(cls)} disabled={actionLoading} sx={{ minWidth: 40, minHeight: 40 }}>
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                  <Tooltip title="Xóa lớp">
+                    <span>
+                      <IconButton aria-label={`Xóa lớp ${cls.name}`} color="error" onClick={() => setDeleteTarget(cls)} disabled={actionLoading} sx={{ minWidth: 40, minHeight: 40 }}>
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                </Box>
                 <Typography
                   variant="h6"
                   component="button"
@@ -178,6 +195,7 @@ export default function ClassListPage() {
                   sx={{
                     fontWeight: 600,
                     mb: 1,
+                    pr: 10,
                     cursor: 'pointer',
                     color: 'primary.main',
                     textDecoration: 'underline',
@@ -210,29 +228,6 @@ export default function ClassListPage() {
                   </Box>
                 </Box>
 
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<EditIcon />}
-                    onClick={() => openEditModal(cls)}
-                    disabled={actionLoading}
-                    sx={{ flex: 1, minHeight: 44 }}
-                  >
-                    Sửa
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    color="error"
-                    startIcon={<DeleteIcon />}
-                    onClick={() => setDeleteTarget(cls)}
-                    disabled={actionLoading}
-                    sx={{ flex: 1, minHeight: 44 }}
-                  >
-                    Xóa
-                  </Button>
-                </Box>
               </CardContent>
             </Card>
           ))}

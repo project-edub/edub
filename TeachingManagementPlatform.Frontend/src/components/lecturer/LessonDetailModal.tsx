@@ -479,7 +479,7 @@ export default function LessonDetailModal({ lessonId, onClose }: LessonDetailMod
 
       {showStoragePicker && (
         <div style={{ ...overlayStyle, zIndex: 1100 }}>
-          <div style={{ backgroundColor: 'var(--edub-surface)', color: 'var(--edub-text-primary)', border: '1px solid var(--edub-border)', padding: 20, borderRadius: 8, minWidth: 620, maxWidth: 760, maxHeight: '80vh', overflowY: 'auto' }}>
+          <div style={{ backgroundColor: 'var(--edub-surface)', color: 'var(--edub-text-primary)', border: '1px solid var(--edub-border)', padding: 20, borderRadius: 8, width: 'min(620px, calc(100% - 24px))', maxWidth: 760, maxHeight: 'calc(100dvh - 24px)', boxSizing: 'border-box', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <h3 style={{ margin: 0 }}>Chọn tệp từ kho lưu trữ</h3>
               <button type="button" onClick={closeStoragePicker} className="btn btn-neutral" style={{ padding: '4px 12px' }}>
@@ -592,9 +592,10 @@ const modalStyle: React.CSSProperties = {
   border: '1px solid var(--edub-border)',
   padding: 24,
   borderRadius: 8,
-  minWidth: 600,
+  width: 'min(600px, calc(100% - 24px))',
   maxWidth: 750,
-  maxHeight: '85vh',
+  maxHeight: 'calc(100dvh - 24px)',
+  boxSizing: 'border-box',
   overflowY: 'auto',
 };
 

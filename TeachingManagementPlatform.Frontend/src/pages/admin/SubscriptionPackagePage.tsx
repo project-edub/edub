@@ -475,8 +475,8 @@ export default function SubscriptionPackagePage() {
                 <span style={helperTextStyle}>Cấu hình % giảm giá khi người dùng nâng cấp từ gói khác lên gói này.</span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
                   {/* Free plan (id=0) */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <span style={{ minWidth: 140, fontSize: 13 }}>Từ gói Miễn phí:</span>
+                  <Box component="div" sx={{ display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 0.75, sm: 1.5 } }}>
+                    <span style={{ fontSize: 13 }}>Từ gói Miễn phí:</span>
                     <input
                       type="number"
                       min={0}
@@ -486,13 +486,13 @@ export default function SubscriptionPackagePage() {
                       style={{ width: 60, padding: 6, borderRadius: 6, border: '1px solid #cbd5e1', textAlign: 'center' }}
                     />
                     <span style={{ fontSize: 13, color: '#64748b' }}>%</span>
-                  </div>
+                  </Box>
                   {/* Other packages */}
                   {packages
                     .filter((p) => p.id !== modal.pkg?.id && p.price > 0)
                     .map((p) => (
-                      <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <span style={{ minWidth: 140, fontSize: 13 }}>Từ gói {p.name}:</span>
+                      <Box key={p.id} component="div" sx={{ display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 0.75, sm: 1.5 } }}>
+                        <span style={{ fontSize: 13 }}>Từ gói {p.name}:</span>
                         <input
                           type="number"
                           min={0}
@@ -502,7 +502,7 @@ export default function SubscriptionPackagePage() {
                           style={{ width: 60, padding: 6, borderRadius: 6, border: '1px solid #cbd5e1', textAlign: 'center' }}
                         />
                         <span style={{ fontSize: 13, color: '#64748b' }}>%</span>
-                      </div>
+                      </Box>
                     ))}
                 </div>
               </section>

@@ -59,6 +59,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [subName, setSubName] = useState<string | null>(null);
   const [subExpires, setSubExpires] = useState<string | null>(null);
   const [coinBalance, setCoinBalance] = useState<number | null>(null);
+  const [sessionStartedAt] = useState(() => Date.now());
 
   useEffect(() => {
     if (role !== Role.Admin) {
@@ -71,14 +72,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           setSubName(wallet.subscriptionPackageName ?? null);
           setSubExpires(wallet.subscriptionExpiresAt ?? null);
           setCoinBalance(wallet.coinBalance);
-        } catch {}
+        } catch {
+          // Subscription status is supplementary to navigation.
+        }
       })();
     }
   }, [role]);
 
   // Calculate days remaining
   const daysRemaining = subExpires
-    ? Math.max(0, Math.ceil((new Date(subExpires).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    ? Math.max(0, Math.ceil((new Date(subExpires).getTime() - sessionStartedAt) / (1000 * 60 * 60 * 24)))
     : null;
 
   function handleLogout() {
@@ -142,7 +145,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               onClick={toggleMode}
               aria-label={mode === 'light' ? 'Chuyển sang chế độ tối' : 'Chuyển sang chế độ sáng'}
               size="large"
-              sx={{ p: 0.5, minWidth: 44, minHeight: 44 }}
+              sx={{ p: 0.5, width: 44, height: 44, border: '1px solid', borderColor: 'divider', borderRadius: '50%' }}
             >
               {mode === 'light' ? '🌙' : '☀️'}
             </IconButton>
@@ -163,10 +166,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               variant="outlined"
               color="error"
               startIcon={<LogoutRoundedIcon />}
-              sx={{ whiteSpace: 'nowrap', fontSize: { xs: 0.75, sm: 1 }, px: { xs: 0.5, sm: 1 }, minHeight: 44, minWidth: 44 }}
+              sx={{ whiteSpace: 'nowrap', fontSize: { xs: 0.75, sm: 1 }, px: { xs: 1, sm: 1.5 }, minHeight: 44, minWidth: 'auto', flexShrink: 0 }}
             >
-              <span sx={{ display: { xs: 'none', sm: 'inline' } }}>Đăng xuất</span>
-              <span sx={{ display: { xs: 'inline', sm: 'none' } }}>Thoát</span>
+              <Box component="span">Đăng xuất</Box>
             </Button>
           </Box>
         </Toolbar>

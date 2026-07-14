@@ -416,8 +416,6 @@ function Field({ label, error, children }: { label: string; error?: string; chil
   );
 }
 
-const pageStyle: React.CSSProperties = {};
-
 const alertErrorStyle: React.CSSProperties = {
   marginBottom: 16,
   padding: 12,

@@ -21,11 +21,13 @@ import {
   TableRow,
   TextField,
   Typography,
+  MenuItem,
 } from '@mui/material';
 import type { LessonPlanSummary, LessonPlan, CreateLessonPlanRequest } from '../../types/lessonPlan';
 import type { ApiError } from '../../types/common';
 import * as lessonPlanService from '../../services/lessonPlanService';
 import LessonPlanModal from '../../components/lecturer/LessonPlanModal';
+import { GRADE_OPTIONS } from '../../constants/lessonPlanOptions';
 
 interface ModalState {
   type: 'create' | 'edit' | null;
@@ -44,6 +46,7 @@ export default function LessonPlanPage() {
   const [filterGrade, setFilterGrade] = useState('');
   const [filterSubject, setFilterSubject] = useState('');
   const [filterSchoolYear, setFilterSchoolYear] = useState('');
+  const schoolYearOptions = Array.from(new Set(plans.map((plan) => `${plan.schoolYearStart}-${plan.schoolYearEnd}`))).sort().reverse();
 
   function extractError(err: unknown): string {
     const axiosErr = err as AxiosError<ApiError>;
@@ -166,21 +169,27 @@ export default function LessonPlanPage() {
         <TextField
           id="filter-grade"
           label="Khối lớp"
-          placeholder="Tìm kiếm khối"
+          select
           value={filterGrade}
           onChange={(e) => setFilterGrade(e.target.value)}
           size="small"
           sx={{ flex: { xs: '1 1 100%', sm: '0 1 160px' } }}
-        />
+        >
+          <MenuItem value="">Tất cả khối</MenuItem>
+          {GRADE_OPTIONS.map((grade) => <MenuItem key={grade} value={grade}>{grade}</MenuItem>)}
+        </TextField>
         <TextField
           id="filter-year"
           label="Năm học"
-          placeholder="Tìm kiếm năm học"
+          select
           value={filterSchoolYear}
           onChange={(e) => setFilterSchoolYear(e.target.value)}
           size="small"
           sx={{ flex: { xs: '1 1 100%', sm: '0 1 160px' } }}
-        />
+        >
+          <MenuItem value="">Tất cả năm học</MenuItem>
+          {schoolYearOptions.map((schoolYear) => <MenuItem key={schoolYear} value={schoolYear}>{schoolYear}</MenuItem>)}
+        </TextField>
         <Button
           variant="outlined"
           onClick={() => loadPlans()}
