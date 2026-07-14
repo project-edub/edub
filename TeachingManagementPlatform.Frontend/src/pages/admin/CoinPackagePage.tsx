@@ -265,6 +265,17 @@ export default function CoinPackagePage() {
         <Typography sx={emptyStateStyle as object}>Chưa có gói ECoin nào. Tạo gói đầu tiên để giảng viên có thể nạp coin.</Typography>
       ) : (
         <>
+          <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 1.5 }}>
+            {paginatedItems.map((pkg) => (
+              <Card key={pkg.id}><CardContent sx={{ p: 2 }}>
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>{pkg.name}</Typography>
+                <Typography variant="body2">{formatCurrency(pkg.price)} · {pkg.coinAmount.toLocaleString('vi-VN')} ECoin</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ my: 1 }}>{pkg.description || '—'}</Typography>
+                <Box sx={{ display: 'flex', gap: 1 }}><Button fullWidth variant="outlined" onClick={() => openEditModal(pkg)} disabled={actionLoading} sx={{ minHeight: 44 }}>Sửa</Button><Button fullWidth variant="outlined" color="error" onClick={() => setDeleteTarget(pkg)} disabled={actionLoading} sx={{ minHeight: 44 }}>Xóa</Button></Box>
+              </CardContent></Card>
+            ))}
+          </Box>
+          <Box sx={{ display: { xs: 'none', md: 'block' } }}>
           <div style={tableShellStyle}>
             <table style={tableStyle}>
               <thead>
@@ -300,6 +311,7 @@ export default function CoinPackagePage() {
               </tbody>
             </table>
           </div>
+          </Box>
           <Pagination totalItems={totalItems} currentPage={currentPage} pageSize={pageSize} onPageChange={setCurrentPage} onPageSizeChange={setPageSize} />
         </>
       )}

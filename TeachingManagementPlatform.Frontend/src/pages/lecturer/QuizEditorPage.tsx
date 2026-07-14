@@ -4,7 +4,7 @@ import {
   Box, Button, Alert, CircularProgress, Typography, TextField, Switch,
   FormControlLabel, Dialog, DialogTitle, DialogContent, DialogActions,
   IconButton, Chip, Tabs, Tab, Paper, Table, TableBody, TableCell,
-  TableContainer, TableHead, TableRow,
+  TableContainer, TableHead, TableRow, Tooltip,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -192,9 +192,18 @@ export default function QuizEditorPage() {
             const options: string[] = JSON.parse(q.optionsJson);
             return (
               <Box key={q.id} sx={{ p: { xs: 1.5, md: 2 }, borderRadius: 2, border: '1px solid', borderColor: 'divider', position: 'relative' }}>
-                <IconButton size="small" sx={{ position: 'absolute', top: 8, right: 8, minWidth: 44, minHeight: 44 }} onClick={() => handleDeleteQuestion(q.id)}>
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
+                <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.5 }}>
+                  <Tooltip title="Nhân bản">
+                    <IconButton aria-label={`Nhân bản câu hỏi ${idx + 1}`} size="small" sx={{ minWidth: 44, minHeight: 44 }} onClick={() => void handleDuplicateQuestion(q)}>
+                      <ContentCopyIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Xóa câu hỏi">
+                    <IconButton aria-label={`Xóa câu hỏi ${idx + 1}`} size="small" color="error" sx={{ minWidth: 44, minHeight: 44 }} onClick={() => handleDeleteQuestion(q.id)}>
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
                 <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>Câu {idx + 1}</Typography>
                 <TextField
                   fullWidth size="small" value={q.questionText}

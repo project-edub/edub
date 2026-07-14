@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { AxiosError } from 'axios';
-import { Box, Button, IconButton, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { Box, Button, Drawer, IconButton, List, ListItemButton, ListItemText, Typography, useMediaQuery, useTheme } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import type { StorageItem, StorageFilter, StorageQuota } from '../../types/storage';
 import type { ApiError } from '../../types/common';
@@ -493,6 +493,18 @@ export default function TeachingMaterialStoragePage() {
           </div>
         </div>
       )}
+
+      <Drawer anchor="bottom" open={mobileActionTarget !== null} onClose={() => setMobileActionTarget(null)}>
+        <Box sx={{ p: 1, pb: 2 }}>
+          <Typography sx={{ px: 2, py: 1, fontWeight: 700 }} noWrap>{mobileActionTarget?.name}</Typography>
+          <List disablePadding>
+            <ListItemButton onClick={() => { if (mobileActionTarget) startRename(mobileActionTarget); setMobileActionTarget(null); }} sx={{ minHeight: 48 }}><ListItemText primary="Đổi tên" /></ListItemButton>
+            {mobileActionTarget?.itemType === ItemType.File && <ListItemButton onClick={() => { if (mobileActionTarget) handleOpen(mobileActionTarget); setMobileActionTarget(null); }} disabled={!mobileActionTarget.fileUrl} sx={{ minHeight: 48 }}><ListItemText primary="Mở" /></ListItemButton>}
+            {mobileActionTarget?.itemType === ItemType.File && <ListItemButton onClick={() => { if (mobileActionTarget) handleDownload(mobileActionTarget); setMobileActionTarget(null); }} sx={{ minHeight: 48 }}><ListItemText primary="Tải xuống" /></ListItemButton>}
+            <ListItemButton onClick={() => { setDeleteTarget(mobileActionTarget); setMobileActionTarget(null); }} sx={{ minHeight: 48, color: 'error.main' }}><ListItemText primary="Xóa" /></ListItemButton>
+          </List>
+        </Box>
+      </Drawer>
 
       {/* Rename modal */}
       {renameTarget && (

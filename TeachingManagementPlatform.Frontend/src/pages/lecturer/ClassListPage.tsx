@@ -171,6 +171,22 @@ export default function ClassListPage() {
         </Typography>
       ) : (
         <>
+          <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 1.5 }}>
+            {paginatedClasses.map((cls) => (
+              <Card key={cls.id} sx={{ position: 'relative' }}>
+                <CardContent sx={{ p: 2 }}>
+                  <Box sx={{ position: 'absolute', top: 6, right: 6, display: 'flex' }}>
+                    <Tooltip title="Sửa lớp"><span><IconButton aria-label={`Sửa lớp ${cls.name}`} onClick={() => openEditModal(cls)} disabled={actionLoading} sx={{ minWidth: 40, minHeight: 40 }}><EditIcon fontSize="small" /></IconButton></span></Tooltip>
+                    <Tooltip title="Xóa lớp"><span><IconButton aria-label={`Xóa lớp ${cls.name}`} color="error" onClick={() => setDeleteTarget(cls)} disabled={actionLoading} sx={{ minWidth: 40, minHeight: 40 }}><DeleteIcon fontSize="small" /></IconButton></span></Tooltip>
+                  </Box>
+                  <Typography component="button" onClick={() => navigate(`/lecturer/classes/${cls.id}`)} sx={{ p: 0, pr: 9, minHeight: 44, border: 0, background: 'none', color: 'primary.main', fontWeight: 700, textAlign: 'left' }}>{cls.name}</Typography>
+                  <Typography variant="body2" color="text.secondary">Năm học: {cls.year}</Typography>
+                  <Typography variant="body2" color="text.secondary">Số học sinh: {cls.studentCount}</Typography>
+                </CardContent>
+              </Card>
+            ))}
+          </Box>
+          <Box sx={{ display: { xs: 'none', md: 'block' } }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
@@ -210,6 +226,7 @@ export default function ClassListPage() {
               )}
             </tbody>
           </table>
+          </Box>
           <Pagination totalItems={totalItems} currentPage={currentPage} pageSize={pageSize} onPageChange={setCurrentPage} onPageSizeChange={setPageSize} />
         </>
       )}

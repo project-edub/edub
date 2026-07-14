@@ -237,6 +237,21 @@ export default function AccountManagementPage() {
         </Typography>
       ) : (
         <>
+          <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 1.5 }}>
+            {accounts.map((account) => (
+              <Card key={account.id}><CardContent sx={{ p: 2 }}>
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>{account.fullName}</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-all', mb: 1 }}>{account.email}</Typography>
+                <Typography variant="body2">ECoin: {((account.freeEcoinBalance ?? 0) + account.coinBalance).toLocaleString('vi-VN')}</Typography>
+                <Typography variant="body2" sx={{ mb: 1.5 }}>Trạng thái: {account.status === AccountStatus.Active ? 'Hoạt động' : 'Vô hiệu hóa'}</Typography>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Button fullWidth variant="outlined" onClick={() => openEditModal(account)} disabled={actionLoading} sx={{ minHeight: 44 }}>Sửa</Button>
+                  <Button fullWidth variant="outlined" color="error" onClick={() => setDeleteTarget(account)} disabled={actionLoading} sx={{ minHeight: 44 }}>Xóa</Button>
+                </Box>
+              </CardContent></Card>
+            ))}
+          </Box>
+          <Box sx={{ display: { xs: 'none', md: 'block' } }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
@@ -304,8 +319,9 @@ export default function AccountManagementPage() {
               ))) }
             </tbody>
           </table>
+          </Box>
 
-          <TableContainer component={Paper} variant="outlined" sx={{ display: { xs: 'none', md: 'block' }, overflowX: 'auto' }}>
+          <TableContainer component={Paper} variant="outlined" sx={{ display: 'none' }}>
             <Table>
               <TableHead>
                 <TableRow>
