@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { AxiosError } from 'axios';
+import { Box, Button, IconButton, Typography, useMediaQuery, useTheme } from '@mui/material';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import type { StorageItem, StorageFilter, StorageQuota } from '../../types/storage';
 import type { ApiError } from '../../types/common';
 import { ItemType } from '../../types/common';
@@ -13,6 +15,8 @@ interface BreadcrumbEntry {
 }
 
 export default function TeachingMaterialStoragePage() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [items, setItems] = useState<StorageItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');

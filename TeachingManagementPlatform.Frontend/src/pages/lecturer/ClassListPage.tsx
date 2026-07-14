@@ -74,6 +74,11 @@ export default function ClassListPage() {
     setFormError('');
   }
 
+  function handleSubmit() {
+    const event = { preventDefault: () => undefined } as FormEvent;
+    void (modal.type === 'create' ? handleCreateSubmit(event) : handleEditSubmit(event));
+  }
+
   async function handleCreateSubmit(e: FormEvent) {
     e.preventDefault();
     setFormError('');
@@ -253,7 +258,14 @@ export default function ClassListPage() {
                   onChange={(e) => setFormYear(e.target.value)}
                   style={inputStyle}
                 />
-              </div>
+                </div>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button onClick={closeModal} disabled={actionLoading}>Hủy</Button>
+          <Button onClick={handleSubmit} variant="contained" disabled={actionLoading}>
+            {actionLoading ? 'Đang xử lý...' : 'Lưu'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteTarget !== null} onClose={() => setDeleteTarget(null)}>
@@ -277,7 +289,7 @@ export default function ClassListPage() {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </div>
   );
 }
 

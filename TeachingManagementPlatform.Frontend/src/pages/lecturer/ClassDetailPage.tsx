@@ -164,3 +164,6 @@ export default function ClassDetailPage() {
     </Box>
   );
 }
+
+const labelStyle: React.CSSProperties = { padding: '10px 12px', fontWeight: 600, color: 'var(--edub-text-secondary)' };
+const valueStyle: React.CSSProperties = { padding: '10px 12px' };

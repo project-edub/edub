@@ -68,6 +68,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [coinBalance, setCoinBalance] = useState<number | null>(null);
   const [freeEcoinBalance, setFreeEcoinBalance] = useState<number | null>(null);
   const [freeEcoinMax, setFreeEcoinMax] = useState<number>(50);
+  const [sessionStartedAt] = useState(() => Date.now());
 
   useEffect(() => {
     if (role !== Role.Admin) {

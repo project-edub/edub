@@ -331,7 +331,7 @@ export default function OverviewPage() {
                       <button type="button" onClick={() => { if (expertises.length > 1) setExpertises(expertises.filter((_, j) => j !== i)); }} disabled={expertises.length <= 1} style={{ background: 'none', border: 'none', cursor: expertises.length <= 1 ? 'not-allowed' : 'pointer', opacity: expertises.length <= 1 ? 0.4 : 1, display: 'inline-flex', alignItems: 'center' }} title="Xóa">
                         <CrudIcon name="delete" size={20} />
                       </button>
-                    </div>
+                    </Box>
                     {ex.certificateImageUrls.length > 0 && (
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
                         {ex.certificateImageUrls.map((url, imgIdx) => (
@@ -473,7 +473,7 @@ export default function OverviewPage() {
             ) : <p style={plainTextStyle}>—</p>}
           </Section>
         </tbody>
-      </table>
+        </Box>
 
       {/* Image lightbox */}
       {expandedImage && (
@@ -483,7 +483,7 @@ export default function OverviewPage() {
       )}
 
       <AlertModal open={!!alertMessage} message={alertMessage || ''} onClose={() => setAlertMessage(null)} />
-    </div>
+    </Box>
   );
 }
 
@@ -497,6 +497,8 @@ function Section({ label, children }: { label: string; children: React.ReactNode
 }
 
 const plainTextStyle: React.CSSProperties = { margin: 0 };
+const thStyle: React.CSSProperties = { textAlign: 'left', padding: '12px 16px', color: 'var(--edub-text-secondary)' };
+const tdStyle: React.CSSProperties = { padding: '12px 16px' };
 const inputStyle: React.CSSProperties = { width: '100%', padding: 8, boxSizing: 'border-box', backgroundColor: 'var(--edub-input-bg)', border: '1px solid var(--edub-input-border)', color: 'var(--edub-text-primary)', borderRadius: 8};
 const rowStyle: React.CSSProperties = { display: 'flex', gap: 8, marginBottom: 4, alignItems: 'center' };
 const listStyle: React.CSSProperties = { margin: 0, paddingLeft: 20 };

@@ -211,7 +211,7 @@ export default function CoinPurchasePage() {
               </button>
             </article>
           ))}
-        </Box>
+        </div>
       )}
     </div>
   );

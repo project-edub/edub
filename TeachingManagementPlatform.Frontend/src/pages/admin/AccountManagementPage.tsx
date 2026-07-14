@@ -236,6 +236,7 @@ export default function AccountManagementPage() {
           Không có tài khoản nào
         </Typography>
       ) : (
+        <>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
@@ -297,12 +298,12 @@ export default function AccountManagementPage() {
                       className="btn btn-view"
                     >
                       {account.status === AccountStatus.Active ? 'Vô hiệu hóa' : 'Kích hoạt'}
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
-            ))}
-          </Box>
+                    </button>
+                  </td>
+                </tr>
+              ))) }
+            </tbody>
+          </table>
 
           <TableContainer component={Paper} variant="outlined" sx={{ display: { xs: 'none', md: 'block' }, overflowX: 'auto' }}>
             <Table>
@@ -544,3 +545,6 @@ const inputStyle: React.CSSProperties = {
   padding: 8,
   boxSizing: 'border-box',
 };
+
+const thStyle: React.CSSProperties = { textAlign: 'left', padding: '12px', borderBottom: '2px solid var(--edub-border)' };
+const tdStyle: React.CSSProperties = { padding: '12px', borderBottom: '1px solid var(--edub-border)' };

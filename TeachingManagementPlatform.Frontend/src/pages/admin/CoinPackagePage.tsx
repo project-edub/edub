@@ -513,3 +513,9 @@ const inputStyle: React.CSSProperties = {
   backgroundColor: '#fff',
   boxSizing: 'border-box',
 };
+
+const tableShellStyle: React.CSSProperties = { overflowX: 'auto' };
+const tableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse' };
+const thStyle: React.CSSProperties = { textAlign: 'left', padding: '12px', borderBottom: '2px solid #e2e8f0' };
+const tdStyle: React.CSSProperties = { padding: '12px', borderBottom: '1px solid #e2e8f0' };
+const actionButtonsStyle: React.CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap' };

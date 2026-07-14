@@ -31,11 +31,17 @@ import ActionButton from '../../components/common/ActionButton';
 import Toast from '../../components/common/Toast';
 import Pagination, { usePagination } from '../../components/common/Pagination';
 import InlineHint from '../../components/common/InlineHint';
+import { GRADE_OPTIONS } from '../../constants/lessonPlanOptions';
 
 interface ModalState {
   type: 'create' | 'edit' | null;
   plan?: LessonPlan | null;
 }
+
+const thStyle: React.CSSProperties = { textAlign: 'left', padding: '12px', borderBottom: '2px solid var(--edub-border)' };
+const tdStyle: React.CSSProperties = { padding: '12px', borderBottom: '1px solid var(--edub-border)' };
+const overlayStyle: React.CSSProperties = { position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.4)' };
+const deleteModalStyle: React.CSSProperties = { width: 'min(420px, calc(100% - 24px))', boxSizing: 'border-box', padding: 24, borderRadius: 12, backgroundColor: 'var(--edub-surface)', border: '1px solid var(--edub-border)' };
 
 export default function LessonPlanPage() {
   const navigate = useNavigate();
@@ -320,7 +326,7 @@ export default function LessonPlanPage() {
           sx={{ minHeight: 44, alignSelf: { xs: 'stretch', sm: 'auto' } }}
         >
           Lọc
-        </button>
+        </Button>
 
         {/* Join by code input */}
         <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end', marginLeft: 'auto' }}>
@@ -356,7 +362,7 @@ export default function LessonPlanPage() {
         >
           + Tạo giáo án
         </button>
-      </div>
+      </Box>
 
       {joinMessage && (
         <div style={{ marginBottom: 12, padding: '8px 12px', borderRadius: 8, backgroundColor: joinMessage.includes('thành công') ? '#e8f5e9' : '#fce4ec', color: joinMessage.includes('thành công') ? '#2e7d32' : '#c62828', fontSize: 14 }}>

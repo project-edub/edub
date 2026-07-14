@@ -2,6 +2,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Button from '@mui/material/Button';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import Dialog from '@mui/material/Dialog';
@@ -18,6 +21,8 @@ import * as lessonSuggestionService from '../../services/lessonSuggestionService
 import type { LessonPlan } from '../../types/lessonPlan';
 import TemplateSelectionDialog from '../../components/lecturer/lessonPlan/TemplateSelectionDialog';
 import AISuggestionPanel from '../../components/lecturer/lessonPlan/AISuggestionPanel';
+
+const pageStyle: React.CSSProperties = { maxWidth: 960, margin: '0 auto' };
 
 function parseGradeNumber(grade: string): number {
   const match = grade.match(/\d+/);
@@ -316,7 +321,7 @@ export default function LessonListPage() {
                     <CrudIcon name="delete" tooltip="Xóa bài học" onClick={() => setDeleteLessonTarget(lesson.id)} disabled={actionLoading} />
                   </span>
                 </div>
-              </div>
+              </Card>
             ))}
         </Box>
       )}
@@ -404,6 +409,6 @@ export default function LessonListPage() {
         onCancel={() => setDeleteLessonTarget(null)}
       />
 
-    </div>
+    </Box>
   );
 }

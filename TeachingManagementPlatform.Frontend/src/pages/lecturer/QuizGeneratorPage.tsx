@@ -157,7 +157,7 @@ export default function QuizGeneratorPage() {
         </button>
         <span style={{ color: '#64748b', fontSize: 13 }}>Miễn phí: {wallet.freeEcoinBalance ?? 0} · Trả phí: {wallet.coinBalance}</span>
         {!hasEnoughCoin && <span style={{ color: '#dc2626', fontSize: 13 }}>Không đủ ECoin</span>}
-      </Box>
+      </div>
     </Box>
   );
 }

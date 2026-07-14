@@ -505,7 +505,7 @@ export default function LessonEditPage() {
         onConfirm={handleDeleteThisLesson}
         onCancel={() => setConfirmDeleteOpen(false)}
       />
-    </div>
+    </Box>
   );
 }
 
