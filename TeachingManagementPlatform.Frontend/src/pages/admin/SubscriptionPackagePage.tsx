@@ -9,6 +9,7 @@ import type {
 import type { ApiError } from '../../types/common';
 import * as subscriptionService from '../../services/subscriptionService';
 import { formatCurrency } from '../../utils/formatters';
+import Pagination, { usePagination } from '../../components/common/Pagination';
 
 const BYTES_PER_GB = 1024 * 1024 * 1024;
 const AVAILABLE_FEATURES = [
@@ -51,6 +52,8 @@ export default function SubscriptionPackagePage() {
   const [formError, setFormError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formUpgradeDiscounts, setFormUpgradeDiscounts] = useState<Record<number, number>>({});
+
+  const { paginatedItems, currentPage, pageSize, totalItems, setCurrentPage, setPageSize } = usePagination(packages);
 
   const loadPackages = useCallback(async () => {
     setLoading(true);
@@ -276,41 +279,8 @@ export default function SubscriptionPackagePage() {
         <div style={emptyStateStyle}>Chưa có gói đăng ký nào. Tạo gói mặc định miễn phí để bắt đầu.</div>
       ) : (
         <>
-        <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 1.5 }}>
-          {packages.map((pkg) => (
-            <Box key={pkg.id} sx={{ p: 2, border: '1px solid #e5e7eb', borderRadius: 2.25, bgcolor: '#fff' }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, alignItems: 'flex-start', mb: 1.5 }}>
-                <Box>
-                  <strong>{pkg.name}</strong>
-                  {pkg.isDefault && <span style={{ ...defaultBadgeStyle, marginLeft: 8 }}>Mặc định</span>}
-                </Box>
-                <span style={pkg.isActive ? activeBadgeStyle : inactiveBadgeStyle}>
-                  {pkg.isActive ? 'Đang mở bán' : 'Tạm ẩn'}
-                </span>
-              </Box>
-              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 1.5 }}>
-                <Box><span style={mobileLabelStyle}>Giá</span><div>{formatCurrency(pkg.price)}</div></Box>
-                <Box><span style={mobileLabelStyle}>Lưu trữ</span><div>{formatStorageLimit(pkg.storageLimitBytes)}</div></Box>
-              </Box>
-              <Box sx={{ mb: 1.5 }}>
-                <span style={mobileLabelStyle}>Chức năng</span>
-                <div style={{ ...featureStackStyle, marginTop: 6 }}>
-                  {pkg.unlockedFeatures.length > 0 ? pkg.unlockedFeatures.map((key) => (
-                    <span key={key} style={featureChipStyle}>{featureLabel(key)}</span>
-                  )) : <span style={mutedTextStyle}>Không có</span>}
-                </div>
-              </Box>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <button type="button" onClick={() => openEditModal(pkg)} disabled={actionLoading} className="btn btn-update" style={{ minHeight: 44, flex: 1 }}>Sửa</button>
-                <button type="button" onClick={() => setDeleteTarget(pkg)} disabled={actionLoading || pkg.isDefault} className="btn btn-delete" style={{ minHeight: 44, flex: 1 }}>
-                  {pkg.isDefault ? 'Không xóa' : 'Xóa'}
-                </button>
-              </Box>
-            </Box>
-          ))}
-        </Box>
-        <Box sx={{ display: { xs: 'none', md: 'block' }, ...tableShellStyle }}>
-          <table style={tableStyle}>
+          <div style={tableShellStyle}>
+            <table style={tableStyle}>
             <thead>
               <tr>
                 <th style={thStyle}>Gói</th>
@@ -318,11 +288,11 @@ export default function SubscriptionPackagePage() {
                 <th style={thStyle}>Hạn mức</th>
                 <th style={thStyle}>Chức năng</th>
                 <th style={thStyle}>Trạng thái</th>
-                <th style={thStyle}>Hành động</th>
+                <th style={{ ...thStyle, textAlign: 'center' }}>Hành động</th>
               </tr>
             </thead>
             <tbody>
-              {packages.map((pkg) => (
+              {paginatedItems.map((pkg) => (
                 <tr key={pkg.id}>
                   <td style={tdStyle}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -371,9 +341,10 @@ export default function SubscriptionPackagePage() {
                   </td>
                 </tr>
               ))}
-            </tbody>
-          </table>
-        </Box>
+              </tbody>
+            </table>
+          </div>
+          <Pagination totalItems={totalItems} currentPage={currentPage} pageSize={pageSize} onPageChange={setCurrentPage} onPageSizeChange={setPageSize} />
         </>
       )}
 

@@ -40,7 +40,7 @@ export default function QuizViewModal({ miniGameId, onClose }: QuizViewModalProp
   }
 
   return (
-    <div style={overlayStyle} role="dialog" aria-label="Xem mini game">
+    <div style={overlayStyle} role="dialog" aria-label="Xem trò chơi">
       <div style={modalStyle}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h2>Xem mini game</h2>

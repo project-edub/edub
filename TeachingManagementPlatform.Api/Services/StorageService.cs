@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using Microsoft.EntityFrameworkCore;
 using TeachingManagementPlatform.Api.Data;
 using TeachingManagementPlatform.Api.Interfaces;
@@ -268,6 +269,75 @@ public class StorageService : IStorageService
         // Recursively delete children and physical files
         await DeleteItemRecursiveAsync(item);
         await _context.SaveChangesAsync();
+    }
+
+    public async Task<StorageFolderDownloadResponse> DownloadFolderAsync(int folderId, int lecturerId)
+    {
+        var folder = await _context.StorageItems
+            .FirstOrDefaultAsync(si => si.Id == folderId && si.LecturerId == lecturerId && si.ItemType == "Folder");
+
+        if (folder == null)
+            throw new StorageItemNotFoundException("Thư mục không tìm thấy");
+
+        var allFiles = await GetFilesRecursivelyAsync(folderId, lecturerId);
+
+        if (allFiles.Count == 0)
+            throw new StorageValidationException("Thư mục trống");
+
+        using var memoryStream = new MemoryStream();
+        using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, leaveOpen: true))
+        {
+            foreach (var (relativePath, fileReference) in allFiles)
+            {
+                try
+                {
+                    var fileStream = await _fileStorage.GetFileAsync(fileReference);
+                    var entry = archive.CreateEntry(relativePath, CompressionLevel.Fastest);
+                    using var entryStream = entry.Open();
+                    await fileStream.CopyToAsync(entryStream);
+                }
+                catch
+                {
+                    // Skip files that can't be retrieved (deleted from storage, invalid reference, etc.)
+                    continue;
+                }
+            }
+        }
+
+        if (memoryStream.Length < 100)
+            throw new StorageValidationException("Không thể tải thư mục — tất cả các tệp đều không khả dụng");
+
+        return new StorageFolderDownloadResponse
+        {
+            ZipBytes = memoryStream.ToArray(),
+            FolderName = folder.Name
+        };
+    }
+
+    private async Task<List<(string RelativePath, string FileReference)>> GetFilesRecursivelyAsync(int folderId, int lecturerId, string prefix = "")
+    {
+        var result = new List<(string RelativePath, string FileReference)>();
+
+        var items = await _context.StorageItems
+            .Where(si => si.ParentFolderId == folderId && si.LecturerId == lecturerId)
+            .ToListAsync();
+
+        foreach (var item in items)
+        {
+            if (item.ItemType == "File" && !string.IsNullOrEmpty(item.FileReference))
+            {
+                var path = string.IsNullOrEmpty(prefix) ? item.Name : $"{prefix}/{item.Name}";
+                result.Add((path, item.FileReference));
+            }
+            else if (item.ItemType == "Folder")
+            {
+                var subPrefix = string.IsNullOrEmpty(prefix) ? item.Name : $"{prefix}/{item.Name}";
+                var subFiles = await GetFilesRecursivelyAsync(item.Id, lecturerId, subPrefix);
+                result.AddRange(subFiles);
+            }
+        }
+
+        return result;
     }
 
     private async Task DeleteItemRecursiveAsync(StorageItem item)

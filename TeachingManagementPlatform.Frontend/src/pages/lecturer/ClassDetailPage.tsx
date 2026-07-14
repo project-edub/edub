@@ -134,47 +134,24 @@ export default function ClassDetailPage() {
       </Box>
 
       {activeTab === 'basic' && (
-        <>
-          {/* Mobile card view */}
-          <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 2 }}>
-            {basicInfo.map((item) => (
-              <Card key={item.label} variant="outlined" sx={{ borderRadius: 2 }}>
-                <CardContent sx={{ p: 2 }}>
-                  <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                    {item.label}
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 600, mt: 0.5 }}>
-                    {item.value}
-                  </Typography>
-                </CardContent>
-              </Card>
-            ))}
-          </Box>
-
-          {/* Desktop table view */}
-          <Box component="table" sx={{ display: { xs: 'none', md: 'table' }, borderCollapse: 'collapse' }}>
-            <Box component="tbody">
-              {basicInfo.map((item) => (
-                <Box component="tr" key={item.label}>
-                  <Box
-                    component="td"
-                    sx={{
-                      p: '8px 16px 8px 0',
-                      fontWeight: 600,
-                      color: 'var(--edub-text-secondary)',
-                      verticalAlign: 'top',
-                    }}
-                  >
-                    {item.label}
-                  </Box>
-                  <Box component="td" sx={{ p: '8px 0' }}>
-                    {item.value}
-                  </Box>
-                </Box>
-              ))}
-            </Box>
-          </Box>
-        </>
+        <div>
+          <table style={{ borderCollapse: 'collapse' }}>
+            <tbody>
+              <tr>
+                <td style={labelStyle}>Tên lớp</td>
+                <td style={valueStyle}>{classDetail.name}</td>
+              </tr>
+              <tr>
+                <td style={labelStyle}>Niên khóa</td>
+                <td style={valueStyle}>{classDetail.year}</td>
+              </tr>
+              <tr>
+                <td style={labelStyle}>Số học sinh</td>
+                <td style={valueStyle}>{classDetail.studentCount}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       )}
 
       {activeTab === 'students' && (

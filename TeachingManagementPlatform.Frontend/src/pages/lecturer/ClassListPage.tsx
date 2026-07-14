@@ -8,6 +8,8 @@ import { IconButton, Tooltip } from '@mui/material';
 import type { ClassDetail, CreateClassRequest, UpdateClassRequest } from '../../types/class';
 import type { ApiError } from '../../types/common';
 import * as classService from '../../services/classService';
+import ActionButton from '../../components/common/ActionButton';
+import Pagination, { usePagination } from '../../components/common/Pagination';
 
 interface ModalState {
   type: 'create' | 'edit' | null;
@@ -22,6 +24,9 @@ export default function ClassListPage() {
   const [modal, setModal] = useState<ModalState>({ type: null });
   const [deleteTarget, setDeleteTarget] = useState<ClassDetail | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [hoveredRowId, setHoveredRowId] = useState<number | null>(null);
+
+  const { paginatedItems: paginatedClasses, currentPage, pageSize, totalItems, setCurrentPage, setPageSize } = usePagination(classes);
 
   // Form fields
   const [formName, setFormName] = useState('');
@@ -136,21 +141,20 @@ export default function ClassListPage() {
   }
 
   return (
-    <Box sx={{ p: { xs: 1.5, md: 2 } }}>
-      <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 2 }}>
-        Danh sách lớp học
-      </Typography>
+    <div style={{ padding: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+        <h1 style={{ margin: 0, color: 'var(--edub-text-primary)' }}>Danh sách lớp</h1>
+        <button
+          type="button"
+          onClick={openCreateModal}
+          className="btn btn-add"
+          style={{ borderRadius: 8 }}
+        >
+          + Thêm lớp
+        </button>
+      </div>
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={openCreateModal}
-        sx={{ mb: 2, minHeight: 44, px: 2 }}
-      >
-        Thêm lớp
-      </Button>
 
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
@@ -161,148 +165,48 @@ export default function ClassListPage() {
           Không có lớp học nào
         </Typography>
       ) : (
-        <Box
-          sx={{
-            display: { xs: 'flex', md: 'none' },
-            flexDirection: 'column',
-            gap: 2,
-          }}
-        >
-          {/* Mobile Card View */}
-          {classes.map((cls) => (
-            <Card key={cls.id} sx={{ borderRadius: 2, position: 'relative' }}>
-              <CardContent sx={{ p: 2 }}>
-                <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.5 }}>
-                  <Tooltip title="Sửa lớp">
-                    <span>
-                      <IconButton aria-label={`Sửa lớp ${cls.name}`} onClick={() => openEditModal(cls)} disabled={actionLoading} sx={{ minWidth: 40, minHeight: 40 }}>
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                    </span>
-                  </Tooltip>
-                  <Tooltip title="Xóa lớp">
-                    <span>
-                      <IconButton aria-label={`Xóa lớp ${cls.name}`} color="error" onClick={() => setDeleteTarget(cls)} disabled={actionLoading} sx={{ minWidth: 40, minHeight: 40 }}>
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </span>
-                  </Tooltip>
-                </Box>
-                <Typography
-                  variant="h6"
-                  component="button"
-                  onClick={() => navigate(`/lecturer/classes/${cls.id}`)}
-                  sx={{
-                    fontWeight: 600,
-                    mb: 1,
-                    pr: 10,
-                    cursor: 'pointer',
-                    color: 'primary.main',
-                    textDecoration: 'underline',
-                    background: 'none',
-                    border: 'none',
-                    p: 0,
-                    textAlign: 'left',
-                    minHeight: 44,
-                  }}
-                >
-                  {cls.name}
-                </Typography>
-
-                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mb: 2, fontSize: { xs: 0.875, sm: 1 } }}>
-                  <Box>
-                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                      Năm học
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {cls.year}
-                    </Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                      Số học sinh
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {cls.studentCount}
-                    </Typography>
-                  </Box>
-                </Box>
-
-              </CardContent>
-            </Card>
-          ))}
-        </Box>
-      )}
-
-      {/* Desktop Table View */}
-      {!loading && classes.length > 0 && (
-        <Box
-          sx={{
-            display: { xs: 'none', md: 'block' },
-            overflowX: 'auto',
-            border: '1px solid',
-            borderColor: 'divider',
-            borderRadius: 2,
-          }}
-        >
+        <>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
                 <th style={thStyle}>Tên lớp</th>
-                <th style={thStyle}>Năm học</th>
+                <th style={thStyle}>Niên khóa</th>
                 <th style={thStyle}>Số học sinh</th>
-                <th style={thStyle}>Hành động</th>
+                <th style={{ ...thStyle, textAlign: 'center' }}>Hành động</th>
               </tr>
             </thead>
             <tbody>
-              {classes.map((cls) => (
-                <tr key={cls.id}>
-                  <td style={tdStyle}>
-                    <Button
-                      variant="text"
-                      onClick={() => navigate(`/lecturer/classes/${cls.id}`)}
-                      sx={{
-                        p: 0,
-                        textTransform: 'none',
-                        justifyContent: 'flex-start',
-                        textDecoration: 'underline',
-                        minHeight: 44,
-                        minWidth: 44,
-                      }}
-                    >
-                      {cls.name}
-                    </Button>
-                  </td>
-                  <td style={tdStyle}>{cls.year}</td>
-                  <td style={tdStyle}>{cls.studentCount}</td>
-                  <td style={tdStyle}>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      startIcon={<EditIcon />}
-                      onClick={() => openEditModal(cls)}
-                      disabled={actionLoading}
-                      sx={{ mr: 1, minHeight: 44 }}
-                    >
-                      Sửa
-                    </Button>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      color="error"
-                      startIcon={<DeleteIcon />}
-                      onClick={() => setDeleteTarget(cls)}
-                      disabled={actionLoading}
-                      sx={{ minHeight: 44 }}
-                    >
-                      Xóa
-                    </Button>
+              {classes.length === 0 ? (
+                <tr>
+                  <td colSpan={4} style={{ textAlign: 'center', padding: 16 }}>
+                    Không có lớp học nào
                   </td>
                 </tr>
-              ))}
+              ) : (
+                paginatedClasses.map((cls) => (
+                  <tr
+                    key={cls.id}
+                    style={{ cursor: 'pointer', backgroundColor: hoveredRowId === cls.id ? '#f5f5f5' : undefined, transition: 'background-color 0.15s' }}
+                    onMouseEnter={() => setHoveredRowId(cls.id)}
+                    onMouseLeave={() => setHoveredRowId(null)}
+                    onClick={() => navigate(`/lecturer/classes/${cls.id}`)}
+                  >
+                    <td style={tdStyle}>{cls.name}</td>
+                    <td style={tdStyle}>{cls.year}</td>
+                    <td style={tdStyle}>{cls.studentCount}</td>
+                    <td style={{ ...tdStyle, textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                      <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
+                        <ActionButton icon="edit" label="Sửa" color="primary" onClick={() => openEditModal(cls)} disabled={actionLoading} />
+                        <ActionButton icon="delete" label="Xóa" color="error" onClick={() => setDeleteTarget(cls)} disabled={actionLoading} />
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
-        </Box>
+          <Pagination totalItems={totalItems} currentPage={currentPage} pageSize={pageSize} onPageChange={setCurrentPage} onPageSizeChange={setPageSize} />
+        </>
       )}
 
       {/* Create / Edit Modal */}
@@ -339,19 +243,17 @@ export default function ClassListPage() {
           </Box>
         </DialogContent>
 
-        <DialogActions sx={{ p: 2, gap: 1 }}>
-          <Button onClick={closeModal} disabled={actionLoading}>
-            Hủy
-          </Button>
-          <Button
-            onClick={modal.type === 'create' ? handleCreateSubmit : handleEditSubmit}
-            variant="contained"
-            disabled={actionLoading}
-          >
-            {actionLoading ? 'Đang xử lý...' : 'Lưu'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+              <div style={{ marginBottom: 16 }}>
+                <label htmlFor="modal-year" style={{ display: 'block', marginBottom: 4 }}>Niên khóa</label>
+                <input
+                  id="modal-year"
+                  type="text"
+                  placeholder="Nhập niên khóa (vd: 2024-2025)"
+                  value={formYear}
+                  onChange={(e) => setFormYear(e.target.value)}
+                  style={inputStyle}
+                />
+              </div>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteTarget !== null} onClose={() => setDeleteTarget(null)}>
@@ -389,8 +291,33 @@ const thStyle: React.CSSProperties = {
 };
 
 const tdStyle: React.CSSProperties = {
-  padding: '12px',
-  borderBottom: '1px solid',
-  borderColor: 'var(--edub-border)',
-  fontSize: '14px',
+  padding: '8px 12px',
+  borderBottom: '1px solid var(--edub-border)',
+};
+
+const overlayStyle: React.CSSProperties = {
+  position: 'fixed',
+  inset: 0,
+  backgroundColor: 'rgba(0,0,0,0.4)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  zIndex: 1000,
+};
+
+const modalStyle: React.CSSProperties = {
+  backgroundColor: 'var(--edub-surface)',
+  color: 'var(--edub-text-primary)',
+  border: '1px solid var(--edub-border)',
+  padding: 24,
+  borderRadius: 8,
+  minWidth: 400,
+  maxWidth: 500,
+};
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: 8,
+  boxSizing: 'border-box',
+  borderRadius: 8,
 };

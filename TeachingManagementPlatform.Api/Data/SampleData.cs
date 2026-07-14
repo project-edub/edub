@@ -26,11 +26,6 @@ public static class SampleData
                 FullName = "Nguyễn Thị Mai Anh",
                 Introduction = "Giáo viên Toán học với hơn 8 năm kinh nghiệm dạy học sinh THPT và THCS. Chuyên gia trong việc giúp học sinh yếu kém cải thiện điểm số và đạt kết quả cao trong các kỳ thi.",
                 AvatarUrl = "/avatars/nguyen-thi-mai-anh.jpg",
-                Occupations = new List<ProfileOccupation>
-                {
-                    new() { Value = "Giáo viên Toán học", SortOrder = 1 },
-                    new() { Value = "Giảng viên Đại học", SortOrder = 2 }
-                },
                 TeachingLocations = new List<ProfileTeachingLocation>
                 {
                     new() { Value = "Hà Nội", SortOrder = 1 },
@@ -54,11 +49,6 @@ public static class SampleData
                 FullName = "Trần Văn Minh",
                 Introduction = "Giáo viên Tiếng Anh chuyên nghiệp với chứng chỉ TESOL. Phương pháp giảng dạy hiện đại, tập trung vào giao tiếp thực tế và ngữ pháp. Đã giúp hàng trăm học sinh đạt điểm cao IELTS/TOEIC.",
                 AvatarUrl = "/avatars/tran-van-minh.jpg",
-                Occupations = new List<ProfileOccupation>
-                {
-                    new() { Value = "Giáo viên Tiếng Anh", SortOrder = 1 },
-                    new() { Value = "Dịch giả", SortOrder = 2 }
-                },
                 TeachingLocations = new List<ProfileTeachingLocation>
                 {
                     new() { Value = "Đà Nẵng", SortOrder = 1 },
@@ -82,11 +72,6 @@ public static class SampleData
                 FullName = "Lê Thị Hoa",
                 Introduction = "Giáo viên Ngữ văn và Lịch sử với 10 năm kinh nghiệm. Giáo viên THPT với phương pháp dạy học sáng tạo, giúp học sinh yêu thích môn học và đạt điểm cao trong các kỳ thi.",
                 AvatarUrl = "/avatars/le-thi-hoa.jpg",
-                Occupations = new List<ProfileOccupation>
-                {
-                    new() { Value = "Giáo viên THPT", SortOrder = 1 },
-                    new() { Value = "Giáo viên Ngữ văn", SortOrder = 2 }
-                },
                 TeachingLocations = new List<ProfileTeachingLocation>
                 {
                     new() { Value = "Cần Thơ", SortOrder = 1 },
@@ -110,11 +95,6 @@ public static class SampleData
                 FullName = "Phạm Đức Anh",
                 Introduction = "Giáo viên Vật lý và Hóa học, kỹ sư cơ khí với 12 năm kinh nghiệm. Chuyên giảng dạy các môn khoa học tự nhiên với phương pháp thực hành và thí nghiệm.",
                 AvatarUrl = "/avatars/pham-duc-anh.jpg",
-                Occupations = new List<ProfileOccupation>
-                {
-                    new() { Value = "Giáo viên Khoa học", SortOrder = 1 },
-                    new() { Value = "Kỹ sư", SortOrder = 2 }
-                },
                 TeachingLocations = new List<ProfileTeachingLocation>
                 {
                     new() { Value = "Hải Phòng", SortOrder = 1 },
@@ -138,11 +118,6 @@ public static class SampleData
                 FullName = "Hoàng Minh Tuấn",
                 Introduction = "Giáo viên Tin học và Lập trình với 15 năm kinh nghiệm. Phát triển phần mềm chuyên nghiệp, giảng dạy từ cơ bản đến nâng cao với các dự án thực tế.",
                 AvatarUrl = "/avatars/hoang-minh-tuan.jpg",
-                Occupations = new List<ProfileOccupation>
-                {
-                    new() { Value = "Giáo viên CNTT", SortOrder = 1 },
-                    new() { Value = "Lập trình viên", SortOrder = 2 }
-                },
                 TeachingLocations = new List<ProfileTeachingLocation>
                 {
                     new() { Value = "TP.HCM", SortOrder = 1 },
@@ -166,11 +141,6 @@ public static class SampleData
                 FullName = "Đỗ Thị Lan",
                 Introduction = "Giáo viên Tiếng Pháp và Tiếng Đức với chứng chỉ DELF/DALF và Goethe-Zertifikat. Phương pháp giảng dạy chú trọng văn hóa và giao tiếp thực tế.",
                 AvatarUrl = "/avatars/do-thi-lan.jpg",
-                Occupations = new List<ProfileOccupation>
-                {
-                    new() { Value = "Giáo viên Ngoại ngữ", SortOrder = 1 },
-                    new() { Value = "Dịch giả", SortOrder = 2 }
-                },
                 TeachingLocations = new List<ProfileTeachingLocation>
                 {
                     new() { Value = "Hà Nội", SortOrder = 1 },
@@ -194,11 +164,6 @@ public static class SampleData
                 FullName = "Vũ Quang Vinh",
                 Introduction = "Giáo viên Địa lý và Sinh học với 7 năm kinh nghiệm. Giáo viên tận tâm, sử dụng công nghệ và hình ảnh để giảng dạy sinh động và dễ hiểu.",
                 AvatarUrl = "/avatars/vu-quang-vinh.jpg",
-                Occupations = new List<ProfileOccupation>
-                {
-                    new() { Value = "Giáo viên Khoa học xã hội", SortOrder = 1 },
-                    new() { Value = "Giáo viên THCS", SortOrder = 2 }
-                },
                 TeachingLocations = new List<ProfileTeachingLocation>
                 {
                     new() { Value = "Thanh Hóa", SortOrder = 1 },
@@ -222,11 +187,6 @@ public static class SampleData
                 FullName = "Ngô Thanh Tùng",
                 Introduction = "Giáo viên Hóa học và Sinh học với bằng Thạc sĩ Hóa học. Chuyên gia trong việc giảng dạy thí nghiệm và nghiên cứu khoa học cho học sinh.",
                 AvatarUrl = "/avatars/ngo-thanh-tung.jpg",
-                Occupations = new List<ProfileOccupation>
-                {
-                    new() { Value = "Giáo viên Hóa học", SortOrder = 1 },
-                    new() { Value = "Nghiên cứu viên", SortOrder = 2 }
-                },
                 TeachingLocations = new List<ProfileTeachingLocation>
                 {
                     new() { Value = "Hà Nội", SortOrder = 1 },

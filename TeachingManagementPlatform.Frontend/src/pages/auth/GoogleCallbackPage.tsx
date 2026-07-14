@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Alert, Box, Button, CircularProgress, Container, Stack, Typography } from '@mui/material';
+import { getUserSettings } from '../../services/userSettingsService';
+import { DEFAULT_PRIMARY_COLOR } from '../../theme/ColorModeContext';
 
 function redirectForRole(role: string | null, navigate: ReturnType<typeof useNavigate>) {
   if (role === 'Admin') {
@@ -37,7 +39,22 @@ export default function GoogleCallbackPage() {
     if (googleAccessToken) {
       localStorage.setItem('googleAccessToken', googleAccessToken);
     }
-    redirectForRole(role, navigate);
+
+    // Load theme color from user profile before redirecting
+    getUserSettings()
+      .then((settings) => {
+        if (settings.themeColor) {
+          localStorage.setItem('edub-primary-color', settings.themeColor);
+        } else {
+          localStorage.removeItem('edub-primary-color');
+        }
+      })
+      .catch(() => {
+        localStorage.setItem('edub-primary-color', DEFAULT_PRIMARY_COLOR);
+      })
+      .finally(() => {
+        redirectForRole(role, navigate);
+      });
   }, [navigate, searchParams]);
 
   const error = searchParams.get('error');

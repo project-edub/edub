@@ -9,6 +9,7 @@ import GenerateConfirmModal from '../../components/lecturer/crossword/GenerateCo
 import * as crosswordService from '../../services/crosswordService';
 import * as coinService from '../../services/coinService';
 import type { CrosswordFileExtractResult, GameConfig } from '../../types/crossword';
+import InlineHint from '../../components/common/InlineHint';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -63,6 +64,11 @@ export default function CrosswordCreatorPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
 
+  // ── Title / name for the crossword ────────────────────────────────────────
+  const [crosswordTitle, setCrosswordTitle] = useState('');
+  const [titleWarning, setTitleWarning] = useState<string | null>(null);
+  const [existingTitles, setExistingTitles] = useState<string[]>([]);
+
   // ── Fake progress for generation loading overlay ──────────────────────────
   const [fakeProgress, setFakeProgress] = useState(0);
   const [statusMessageIndex, setStatusMessageIndex] = useState(0);
@@ -78,14 +84,29 @@ export default function CrosswordCreatorPage() {
     void (async () => {
       try {
         const wallet = await coinService.getLecturerCoinWallet();
-        setCoinBalance(wallet.coinBalance);
+        setCoinBalance((wallet.freeEcoinBalance ?? 0) + wallet.coinBalance);
       } catch {
         setCoinBalance(0);
       } finally {
         setBalanceLoading(false);
       }
     })();
+    void (async () => {
+      try {
+        const list = await crosswordService.getCrosswordList();
+        setExistingTitles(list.map((c) => c.title.toLowerCase().trim()));
+      } catch {}
+    })();
   }, []);
+
+  // ── Duplicate title check ─────────────────────────────────────────────────
+  useEffect(() => {
+    if (crosswordTitle.trim() && existingTitles.includes(crosswordTitle.toLowerCase().trim())) {
+      setTitleWarning('Tên này đã tồn tại trong kho ô chữ của bạn.');
+    } else {
+      setTitleWarning(null);
+    }
+  }, [crosswordTitle, existingTitles]);
 
   // ── Fake progress animation ───────────────────────────────────────────────
   function startFakeProgress() {
@@ -180,8 +201,12 @@ export default function CrosswordCreatorPage() {
   // ── Generation ────────────────────────────────────────────────────────────
 
   const handleGenerateRequest = useCallback(() => {
+    if (!crosswordTitle.trim()) {
+      setGenerateError('Vui lòng nhập tên cho ô chữ.');
+      return;
+    }
     setShowConfirmModal(true);
-  }, []);
+  }, [crosswordTitle]);
 
   const handleConfirmGenerate = useCallback(async () => {
     setShowConfirmModal(false);
@@ -222,7 +247,7 @@ export default function CrosswordCreatorPage() {
       {/* Header */}
       <Box sx={{ ...heroStyle, flexDirection: { xs: 'column', md: 'row' }, p: { xs: 2, md: 3 }, gap: { xs: 2, md: 3 } }}>
         <div>
-          <p style={eyebrowStyle}>Crossword Generator</p>
+          <p style={eyebrowStyle}>Công cụ tạo ô chữ</p>
           <h1 style={titleStyle}>Tạo ô chữ từ tài liệu</h1>
           <p style={subtitleStyle}>
             Tải lên tài liệu, xem trước nội dung trích xuất, rồi cấu hình và để AI tạo ô chữ cho bạn.
@@ -345,10 +370,35 @@ export default function CrosswordCreatorPage() {
               <div style={stepPanelStyle}>
                 <h2 style={stepTitleStyle}>
                   {STEPS[2].icon} {STEPS[2].label}
+                  <InlineHint text="Chia sẻ ô chữ với học viên qua link hoặc nhúng vào web" />
                 </h2>
                 <p style={stepDescStyle}>
                   Tùy chỉnh cách AI tạo ô chữ. Số ECoin sẽ được tính theo cấu hình bên phải.
                 </p>
+
+                {/* Title field */}
+                <div style={{ marginBottom: 20 }}>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <span style={{ fontWeight: 600 }}>Tên ô chữ <span style={{ color: '#dc2626' }}>*</span></span>
+                    <input
+                      type="text"
+                      value={crosswordTitle}
+                      onChange={(e) => setCrosswordTitle(e.target.value)}
+                      placeholder="VD: Ô chữ Hóa học chương 3"
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        borderRadius: 10,
+                        border: '1px solid #cbd5e1',
+                        boxSizing: 'border-box' as const,
+                        fontSize: 14,
+                      }}
+                    />
+                    {titleWarning && (
+                      <span style={{ color: '#d97706', fontSize: 13 }}>⚠️ {titleWarning}</span>
+                    )}
+                  </label>
+                </div>
 
                 <GameConfigForm
                   config={config}

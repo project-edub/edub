@@ -29,6 +29,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import type { CrosswordListItemDto, GameStatus } from '../../types/crossword';
 import { GameStatus as GameStatusEnum } from '../../types/crossword';
 import * as crosswordService from '../../services/crosswordService';
+import Pagination, { usePagination } from '../../components/common/Pagination';
 
 // ── Status badge config ─────────────────────────────────────────────────────
 
@@ -58,6 +59,8 @@ export default function CrosswordListPage() {
   const [deleteTarget, setDeleteTarget] = useState<CrosswordListItemDto | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [copiedId, setCopiedId] = useState<number | null>(null);
+
+  const { paginatedItems, currentPage, pageSize, totalItems, setCurrentPage, setPageSize } = usePagination(items);
 
   const loadList = useCallback(async () => {
     setLoading(true);
@@ -167,212 +170,102 @@ export default function CrosswordListPage() {
 
       {/* Mobile Card View */}
       {!loading && items.length > 0 && (
-        <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 2 }}>
-          {items.map((item) => {
-            const statusCfg = STATUS_CONFIG[item.status] ?? STATUS_CONFIG[GameStatusEnum.Draft];
-            return (
-              <Card key={item.id} sx={{ borderRadius: 2 }}>
-                <CardContent sx={{ p: 2 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                    {item.title}
-                  </Typography>
-
-                  <Box sx={{ display: 'flex', gap: 1, mb: 1.5, flexWrap: 'wrap' }}>
-                    <Chip
-                      label={statusCfg.label}
-                      color={statusCfg.color}
-                      size="small"
-                      variant="outlined"
-                    />
-                  </Box>
-
-                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 1, mb: 2, fontSize: { xs: 0.875, sm: 1 } }}>
-                    <Box>
-                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                        Ngày tạo
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        {formatDate(item.createdAt)}
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                        Số từ
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        {item.wordCount}
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                        ECoin
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        {item.ecoinsSpent} 🪙
-                      </Typography>
-                    </Box>
-                  </Box>
-
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    {item.status === 'published' && (
-                      <>
-                        <Button
-                          fullWidth
+        <>
+          <TableContainer component={Paper} variant="outlined">
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 700 }}>Tiêu đề</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Trạng thái</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Ngày tạo</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }} align="center">Số từ</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }} align="center">ECoin</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }} align="center">Hành động</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {paginatedItems.map((item) => {
+                  const statusCfg = STATUS_CONFIG[item.status] ?? STATUS_CONFIG[GameStatusEnum.Draft];
+                  return (
+                    <TableRow key={item.id} hover>
+                      <TableCell>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {item.title}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={statusCfg.label}
+                          color={statusCfg.color}
                           size="small"
                           variant="outlined"
-                          color="success"
-                          startIcon={<PlayArrowIcon />}
-                          onClick={() => window.open(`/play/${item.slug}`, '_blank')}
-                          sx={{ minHeight: 44 }}
-                        >
-                          Chơi
-                        </Button>
-                        <Button
-                          fullWidth
-                          size="small"
-                          variant="outlined"
-                          startIcon={<ContentCopyIcon />}
-                          onClick={async () => {
-                            await navigator.clipboard.writeText(`${window.location.origin}/play/${item.slug}`);
-                            setCopiedId(item.id);
-                            setTimeout(() => setCopiedId(null), 2000);
-                          }}
-                          sx={{ minHeight: 44 }}
-                        >
-                          {copiedId === item.id ? 'Đã copy!' : 'Copy link'}
-                        </Button>
-                      </>
-                    )}
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Button
-                        fullWidth
-                        size="small"
-                        variant="outlined"
-                        startIcon={<EditIcon />}
-                        onClick={() => navigate(`/lecturer/crossword/${item.id}/edit`)}
-                        sx={{ minHeight: 44 }}
-                      >
-                        Chỉnh sửa
-                      </Button>
-                      <Button
-                        fullWidth
-                        size="small"
-                        variant="outlined"
-                        color="error"
-                        startIcon={<DeleteIcon />}
-                        onClick={() => setDeleteTarget(item)}
-                        sx={{ minHeight: 44 }}
-                      >
-                        Xóa
-                      </Button>
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </Box>
-      )}
-
-      {/* Desktop Table View */}
-      {!loading && items.length > 0 && (
-        <TableContainer component={Paper} variant="outlined" sx={{ display: { xs: 'none', md: 'block' }, overflowX: 'auto' }}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 700 }}>Tiêu đề</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Trạng thái</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Ngày tạo</TableCell>
-                <TableCell sx={{ fontWeight: 700 }} align="center">Số từ</TableCell>
-                <TableCell sx={{ fontWeight: 700 }} align="center">ECoin</TableCell>
-                <TableCell sx={{ fontWeight: 700 }} align="right">Hành động</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {items.map((item) => {
-                const statusCfg = STATUS_CONFIG[item.status] ?? STATUS_CONFIG[GameStatusEnum.Draft];
-                return (
-                  <TableRow key={item.id} hover>
-                    <TableCell>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {item.title}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={statusCfg.label}
-                        color={statusCfg.color}
-                        size="small"
-                        variant="outlined"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" color="text.secondary">
-                        {formatDate(item.createdAt)}
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Typography variant="body2">{item.wordCount}</Typography>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Typography variant="body2">{item.ecoinsSpent} 🪙</Typography>
-                    </TableCell>
-                    <TableCell align="right">
-                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                        {item.status === 'published' && (
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" color="text.secondary">
+                          {formatDate(item.createdAt)}
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Typography variant="body2">{item.wordCount}</Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Typography variant="body2">{item.ecoinsSpent} 🪙</Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                          {item.status === 'published' && (
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="success"
+                              startIcon={<PlayArrowIcon />}
+                              onClick={() => window.open(`/play/${item.slug}`, '_blank')}
+                            >
+                              Chơi
+                            </Button>
+                          )}
+                          {item.status === 'published' && (
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              startIcon={<ContentCopyIcon />}
+                              onClick={async () => {
+                                await navigator.clipboard.writeText(`${window.location.origin}/play/${item.slug}`);
+                                setCopiedId(item.id);
+                                setTimeout(() => setCopiedId(null), 2000);
+                              }}
+                            >
+                              {copiedId === item.id ? 'Đã copy!' : 'Copy link'}
+                            </Button>
+                          )}
                           <Button
                             size="small"
                             variant="outlined"
-                            color="success"
-                            startIcon={<PlayArrowIcon />}
-                            onClick={() => window.open(`/play/${item.slug}`, '_blank')}
-                            sx={{ minHeight: 44 }}
+                            startIcon={<EditIcon />}
+                            onClick={() => navigate(`/lecturer/crossword/${item.id}/edit`)}
                           >
-                            Chơi
+                            Chỉnh sửa
                           </Button>
-                        )}
-                        {item.status === 'published' && (
                           <Button
                             size="small"
                             variant="outlined"
-                            startIcon={<ContentCopyIcon />}
-                            onClick={async () => {
-                              await navigator.clipboard.writeText(`${window.location.origin}/play/${item.slug}`);
-                              setCopiedId(item.id);
-                              setTimeout(() => setCopiedId(null), 2000);
-                            }}
-                            sx={{ minHeight: 44 }}
+                            color="error"
+                            startIcon={<DeleteIcon />}
+                            onClick={() => setDeleteTarget(item)}
                           >
-                            {copiedId === item.id ? 'Đã copy!' : 'Copy link'}
+                            Xóa
                           </Button>
-                        )}
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          startIcon={<EditIcon />}
-                          onClick={() => navigate(`/lecturer/crossword/${item.id}/edit`)}
-                          sx={{ minHeight: 44 }}
-                        >
-                          Chỉnh sửa
-                        </Button>
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          color="error"
-                          startIcon={<DeleteIcon />}
-                          onClick={() => setDeleteTarget(item)}
-                          sx={{ minHeight: 44 }}
-                        >
-                          Xóa
-                        </Button>
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          <Pagination totalItems={totalItems} currentPage={currentPage} pageSize={pageSize} onPageChange={setCurrentPage} onPageSizeChange={setPageSize} />
+        </>
       )}
 
       {/* Delete confirmation dialog */}

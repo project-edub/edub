@@ -49,6 +49,36 @@ public class LessonController : ControllerBase
         }
     }
 
+    [HttpPut("api/lessons/{id}/periods")]
+    public async Task<IActionResult> UpdatePeriods(int id, [FromBody] UpdateLessonPeriodsRequest request)
+    {
+        var userId = GetUserId();
+        try
+        {
+            var lesson = await _lessonService.UpdatePeriodsAsync(id, userId, request);
+            return Ok(lesson);
+        }
+        catch (LessonNotFoundException ex)
+        {
+            return NotFound(new { error = new { code = "LESSON_NOT_FOUND", message = ex.Message } });
+        }
+    }
+
+    [HttpDelete("api/lessons/{id}")]
+    public async Task<IActionResult> DeleteLesson(int id)
+    {
+        var userId = GetUserId();
+        try
+        {
+            await _lessonService.DeleteLessonAsync(id, userId);
+            return NoContent();
+        }
+        catch (LessonNotFoundException ex)
+        {
+            return NotFound(new { error = new { code = "LESSON_NOT_FOUND", message = ex.Message } });
+        }
+    }
+
     [HttpPost("api/lessons/{id}/documents")]
     public async Task<IActionResult> AddDocument(int id, [FromBody] CreateDocumentRequest request)
     {

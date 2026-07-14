@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { AxiosError } from 'axios';
 import { Box, Button, Typography } from '@mui/material';
 import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined';
@@ -9,9 +9,9 @@ import * as coinService from '../../services/coinService';
 import { formatCurrency } from '../../utils/formatters';
 
 export default function CoinPurchasePage() {
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [wallet, setWallet] = useState<CoinWalletResponse>({ coinBalance: 0 });
+  const [wallet, setWallet] = useState<CoinWalletResponse>({ coinBalance: 0, freeEcoinBalance: 0, freeEcoinMax: 50 });
+  void wallet; // fetched for sync, will be used in future
   const [packages, setPackages] = useState<CoinPackage[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
@@ -155,25 +155,16 @@ export default function CoinPurchasePage() {
   }
 
   return (
-    <Box sx={{ ...pageStyle, p: { xs: 1.5, sm: 2, md: 3 } }}>
-      <Box sx={{ ...heroStyle, display: 'block', p: { xs: 2, sm: 2.5, md: 3 }, mb: { xs: 1.5, md: 2 }, borderRadius: { xs: 3, md: 5 }, boxShadow: { xs: 'none', md: heroStyle.boxShadow }, overflow: 'hidden', minHeight: 0 }}>
-        <Box sx={{ flex: '1 1 auto', minWidth: 0 }}>
-          <p style={eyebrowStyle}>ECoin Wallet</p>
-          <Box component="h1" sx={{ ...titleStyle, fontSize: { xs: 28, md: 36 }, lineHeight: { xs: 1.2, md: 1.1 }, overflowWrap: 'anywhere' }}>Mua ECoin cho tài khoản lecturer</Box>
-          <Box component="p" sx={{ ...subtitleStyle, maxWidth: { xs: '100%', md: 'none' }, fontSize: { xs: 15, md: 16 }, lineHeight: { xs: 1.55, md: 1.6 } }}>
+    <div style={pageStyle}>
+      <div style={heroStyle}>
+        <div>
+          <p style={eyebrowStyle}>Ví ECoin </p>
+          <h1 style={titleStyle}>Mua ECoin cho tài khoản lecturer</h1>
+          <p style={subtitleStyle}>
             Gói này dùng để trừ lượt khi tạo quiz bằng AI. Khi bấm mua, bạn sẽ được chuyển sang cổng thanh toán PayOS.
-          </Box>
-        </Box>
-
-      </Box>
-
-      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'stretch', sm: 'center' }, justifyContent: 'space-between', gap: 1.5, mb: 2, p: { xs: 2, md: 2.25 }, borderRadius: 3, bgcolor: '#fff', border: '1px solid #e2e8f0', boxShadow: '0 4px 14px rgba(15, 23, 42, 0.05)' }}>
-        <Box>
-          <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.25 }}>Số dư hiện tại</Typography>
-          <Typography sx={{ fontSize: 22, fontWeight: 800, color: '#0f172a' }}>{wallet.coinBalance.toLocaleString('vi-VN')} ECoin</Typography>
-        </Box>
-        <Button variant="outlined" onClick={() => navigate('/lecturer/quiz-generator')} sx={{ minHeight: 44, flexShrink: 0, whiteSpace: 'nowrap' }}>Tạo quiz</Button>
-      </Box>
+          </p>
+        </div>
+      </div>
 
       {error && (
         <Box role="alert" sx={{ ...alertStyle, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'stretch', sm: 'center' }, justifyContent: 'space-between', gap: 1.5 }}>
@@ -197,28 +188,24 @@ export default function CoinPurchasePage() {
           <Typography variant="body2" color="text.secondary">Vui lòng kiểm tra lại sau hoặc liên hệ quản trị viên.</Typography>
         </Box>
       ) : (
-        <Box sx={{ ...gridStyle, gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'repeat(auto-fit, minmax(250px, 1fr))' }, gap: { xs: 1.5, md: 2 } }}>
-          {packages.map((pkg) => (
+        <div style={gridStyle}>
+          {[...packages].sort((a, b) => a.price - b.price).map((pkg) => (
             <article key={pkg.id} style={cardStyle}>
               <Box sx={{ ...cardHeaderStyle, flexDirection: { xs: 'column', sm: 'row' } }}>
                 <div>
                   <h2 style={cardTitleStyle}>{pkg.name}</h2>
+                  <strong style={priceValueStyle}>{formatCurrency(pkg.price)}</strong>
                   <p style={cardSubtitleStyle}>{pkg.description || 'Gói nạp coin cho AI quiz.'}</p>
                 </div>
                 <span style={coinBadgeStyle}>{pkg.coinAmount.toLocaleString('vi-VN')} ECoin</span>
               </Box>
-
-              <div style={priceRowStyle}>
-                <strong style={priceValueStyle}>{formatCurrency(pkg.price)}</strong>
-                <span style={priceHintStyle}>Thanh toán thật sẽ được bổ sung sau</span>
-              </div>
 
               <button
                 type="button"
                 className="btn btn-add"
                 disabled={actionLoading === pkg.id || !pkg.isActive}
                 onClick={() => void purchasePackage(pkg)}
-                style={{ width: '100%', marginTop: 16, minHeight: 44 }}
+                style={{ width: '100%', marginTop: 'auto' }}
               >
                 {actionLoading === pkg.id ? 'Đang nạp...' : pkg.isActive ? 'Mua ngay' : 'Tạm ẩn'}
               </button>
@@ -226,11 +213,7 @@ export default function CoinPurchasePage() {
           ))}
         </Box>
       )}
-
-      <div style={noteStyle}>
-        <strong>Lưu ý:</strong> mỗi lần tạo quiz sẽ trừ ECoin theo số câu hỏi yêu cầu. Nếu không đủ coin, hệ thống sẽ chặn trước khi gọi AI.
-      </div>
-    </Box>
+    </div>
   );
 }
 
@@ -241,7 +224,6 @@ const heroStyle: React.CSSProperties = {
   display: 'flex',
   justifyContent: 'space-between',
   gap: 24,
-  alignItems: 'flex-start',
   marginBottom: 20,
   padding: 24,
   borderRadius: 20,
@@ -308,6 +290,8 @@ const cardStyle: React.CSSProperties = {
   backgroundColor: '#fff',
   border: '1px solid #e2e8f0',
   boxShadow: '0 10px 30px rgba(15, 23, 42, 0.06)',
+  display: 'flex',
+  flexDirection: 'column',
 };
 
 const cardHeaderStyle: React.CSSProperties = {
@@ -337,27 +321,6 @@ const coinBadgeStyle: React.CSSProperties = {
   whiteSpace: 'nowrap',
 };
 
-const priceRowStyle: React.CSSProperties = {
-  marginTop: 16,
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 4,
-};
-
 const priceValueStyle: React.CSSProperties = {
   fontSize: 20,
-};
-
-const priceHintStyle: React.CSSProperties = {
-  color: '#64748b',
-  fontSize: 13,
-};
-
-const noteStyle: React.CSSProperties = {
-  marginTop: 20,
-  padding: 16,
-  borderRadius: 16,
-  backgroundColor: '#f8fafc',
-  border: '1px solid #e2e8f0',
-  color: '#334155',
 };

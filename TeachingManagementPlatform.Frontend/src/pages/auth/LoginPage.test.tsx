@@ -4,6 +4,16 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import LoginPage from './LoginPage';
 
+vi.mock('../../theme/ColorModeContext', () => ({
+  useColorMode: () => ({
+    mode: 'light',
+    setMode: () => {},
+    toggleMode: () => {},
+    primaryColor: '#c48a10',
+    setPrimaryColor: () => {},
+  }),
+}));
+
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');

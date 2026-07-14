@@ -158,24 +158,57 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <Box
+        component="section"
         sx={{
-          py: { xs: 8, md: 12 },
+          py: { xs: 8, sm: 10, md: 12, lg: 14 },
+          px: { xs: 2, sm: 3, md: 4 },
           textAlign: 'center',
           background: 'linear-gradient(140deg, #c48a10 0%, #e2b23a 100%)',
           color: '#fff',
         }}
       >
         <Container maxWidth="md">
-          <Typography variant="h2" sx={{ fontWeight: 800, mb: 2, color: '#fff' }}>
+          <Typography
+            variant="h2"
+            sx={{
+              fontWeight: 800,
+              mb: { xs: 1.5, md: 2 },
+              color: '#fff',
+              fontSize: { xs: '2.25rem', sm: '2.75rem', md: '3.25rem', lg: '3.75rem' },
+              letterSpacing: '-0.02em',
+              lineHeight: 1.1,
+            }}
+          >
             EduB
           </Typography>
-          <Typography variant="h5" sx={{ mb: 3, opacity: 0.9 }}>
+          <Typography
+            variant="h5"
+            sx={{
+              mb: { xs: 2, md: 3 },
+              opacity: 0.9,
+              fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' },
+              lineHeight: 1.4,
+            }}
+          >
             Nền tảng quản lý giảng dạy thông minh cho giáo viên hiện đại
           </Typography>
-          <Typography sx={{ opacity: 0.8, mb: 4, maxWidth: 600, mx: 'auto' }}>
+          <Typography
+            sx={{
+              opacity: 0.8,
+              mb: { xs: 3, md: 4 },
+              maxWidth: 600,
+              mx: 'auto',
+              fontSize: { xs: '0.9rem', sm: '1rem' },
+              lineHeight: 1.6,
+            }}
+          >
             Tạo hồ sơ, quản lý lớp học, lưu trữ tài liệu và tạo quiz bằng AI — tất cả trong một nền tảng duy nhất.
           </Typography>
-          <Stack direction="row" spacing={2} sx={{ justifyContent: 'center' }}>
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={2}
+            sx={{ justifyContent: 'center', alignItems: 'center' }}
+          >
             {!isAuthenticated ? (
               <>
                 <Button
@@ -183,7 +216,12 @@ export default function LandingPage() {
                   to="/register"
                   variant="contained"
                   size="large"
-                  sx={{ bgcolor: '#fff', color: '#c48a10', '&:hover': { bgcolor: '#f5f5f5' } }}
+                  sx={{
+                    bgcolor: '#fff',
+                    color: '#c48a10',
+                    '&:hover': { bgcolor: '#f5f5f5' },
+                    width: { xs: '100%', sm: 'auto' },
+                  }}
                 >
                   Bắt đầu miễn phí
                 </Button>
@@ -192,7 +230,12 @@ export default function LandingPage() {
                   to="/login"
                   variant="outlined"
                   size="large"
-                  sx={{ borderColor: '#fff', color: '#fff', '&:hover': { borderColor: '#f5f5f5', bgcolor: 'rgba(255,255,255,0.1)' } }}
+                  sx={{
+                    borderColor: '#fff',
+                    color: '#fff',
+                    '&:hover': { borderColor: '#f5f5f5', bgcolor: 'rgba(255,255,255,0.1)' },
+                    width: { xs: '100%', sm: 'auto' },
+                  }}
                 >
                   Đăng nhập
                 </Button>
@@ -202,7 +245,12 @@ export default function LandingPage() {
                 onClick={() => navigate(role === Role.Admin ? '/admin/accounts' : '/lecturer/overview')}
                 variant="contained"
                 size="large"
-                sx={{ bgcolor: '#fff', color: '#c48a10', '&:hover': { bgcolor: '#f5f5f5' } }}
+                sx={{
+                  bgcolor: '#fff',
+                  color: '#c48a10',
+                  '&:hover': { bgcolor: '#f5f5f5' },
+                  width: { xs: '100%', sm: 'auto' },
+                }}
               >
                 Vào bảng điều khiển
               </Button>
@@ -212,61 +260,131 @@ export default function LandingPage() {
       </Box>
 
       {/* Features Section */}
-      <Container maxWidth="lg" sx={{ py: { xs: 6, md: 10 } }}>
-        <Typography variant="h4" sx={{ fontWeight: 700, textAlign: 'center', mb: 1 }}>
-          Tính năng nổi bật
-        </Typography>
-        <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', mb: 5 }}>
-          Mọi thứ bạn cần để quản lý việc giảng dạy hiệu quả hơn
-        </Typography>
+      <Box
+        component="section"
+        sx={{
+          py: { xs: 6, sm: 8, md: 10, lg: 12 },
+          bgcolor: 'background.default',
+        }}
+      >
+        <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3, md: 4 } }}>
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 700,
+              textAlign: 'center',
+              mb: 1.5,
+              fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2.125rem' },
+              letterSpacing: '-0.01em',
+              lineHeight: 1.2,
+            }}
+          >
+            Tính năng nổi bật
+          </Typography>
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{
+              textAlign: 'center',
+              mb: { xs: 4, sm: 5, md: 6 },
+              lineHeight: 1.6,
+              maxWidth: 520,
+              mx: 'auto',
+            }}
+          >
+            Mọi thứ bạn cần để quản lý việc giảng dạy hiệu quả hơn
+          </Typography>
 
-        <Box
-          sx={{
-            display: 'grid',
-            gap: 3,
-            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
-          }}
-        >
-          {FEATURES.map((feature) => (
-            <Card
-              key={feature.title}
-              elevation={0}
-              sx={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                border: '1px solid',
-                borderColor: 'divider',
-                transition: 'box-shadow 0.2s',
-                '&:hover': { boxShadow: 4 },
-              }}
-            >
-              <CardContent sx={{ flexGrow: 1, textAlign: 'center', pt: 4 }}>
-                <Box sx={{ color: 'primary.main', mb: 2 }}>{feature.icon}</Box>
-                <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
-                  {feature.title}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {feature.description}
-                </Typography>
-              </CardContent>
-              <CardActions sx={{ justifyContent: 'center', pb: 3 }}>
-                <Button variant="outlined" onClick={() => handleFeatureClick(feature.path)}>
-                  Truy cập
-                </Button>
-              </CardActions>
-            </Card>
-          ))}
-        </Box>
-      </Container>
+          <Box
+            sx={{
+              display: 'grid',
+              gap: { xs: 2.5, sm: 3, md: 4 },
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'repeat(2, 1fr)',
+                md: 'repeat(2, 1fr)',
+                lg: 'repeat(4, 1fr)',
+              },
+            }}
+          >
+            {FEATURES.map((feature) => (
+              <Card
+                key={feature.title}
+                elevation={0}
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  transition: 'box-shadow 0.2s, transform 0.2s',
+                  '&:hover': { boxShadow: 4, transform: 'translateY(-2px)' },
+                }}
+              >
+                <CardContent sx={{ flexGrow: 1, textAlign: 'center', pt: { xs: 3.5, md: 4.5 }, px: { xs: 2, md: 3 } }}>
+                  <Box sx={{ color: 'primary.main', mb: 2.5 }}>{feature.icon}</Box>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 700,
+                      mb: 1.5,
+                      fontSize: { xs: '1rem', md: '1.1rem' },
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    {feature.title}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ lineHeight: 1.6 }}
+                  >
+                    {feature.description}
+                  </Typography>
+                </CardContent>
+                <CardActions sx={{ justifyContent: 'center', pb: { xs: 2.5, md: 3.5 } }}>
+                  <Button variant="outlined" onClick={() => handleFeatureClick(feature.path)}>
+                    Truy cập
+                  </Button>
+                </CardActions>
+              </Card>
+            ))}
+          </Box>
+        </Container>
+      </Box>
 
       {/* Find Teacher CTA */}
-      <Box sx={{ bgcolor: 'action.hover', py: { xs: 4, md: 6 } }}>
+      <Box
+        component="section"
+        sx={{
+          bgcolor: 'action.hover',
+          py: { xs: 7, sm: 8, md: 10 },
+          px: { xs: 2, sm: 3 },
+          borderTop: '1px solid',
+          borderColor: 'divider',
+        }}
+      >
         <Container maxWidth="sm" sx={{ textAlign: 'center' }}>
-          <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 700,
+              mb: { xs: 1.5, md: 2 },
+              fontSize: { xs: '1.25rem', sm: '1.4rem', md: '1.5rem' },
+              letterSpacing: '-0.01em',
+              lineHeight: 1.3,
+            }}
+          >
             Bạn đang tìm giáo viên?
           </Typography>
-          <Typography color="text.secondary" sx={{ mb: 3 }}>
+          <Typography
+            color="text.secondary"
+            sx={{
+              mb: { xs: 3, md: 4 },
+              fontSize: { xs: '0.9rem', sm: '1rem' },
+              lineHeight: 1.6,
+            }}
+          >
             Khám phá giảng viên chất lượng với chuyên môn đúng nhu cầu học tập.
           </Typography>
           <Button variant="contained" size="large" onClick={() => navigate('/teachers')}>

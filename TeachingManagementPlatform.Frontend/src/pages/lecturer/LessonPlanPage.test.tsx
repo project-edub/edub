@@ -10,13 +10,16 @@ vi.mock('../../services/lessonPlanService', () => ({
   create: vi.fn(),
   update: vi.fn(),
   remove: vi.fn(),
+  toggleShare: vi.fn(),
+  getSharedPlans: vi.fn(),
+  copySharedPlan: vi.fn(),
 }));
 
 import * as lessonPlanService from '../../services/lessonPlanService';
 
 const samplePlans = [
-  { id: 1, subject: 'Toán', grade: 'Lớp 10', schoolYearStart: '2024', schoolYearEnd: '2025', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
-  { id: 2, subject: 'Văn', grade: 'Lớp 11', schoolYearStart: '2024', schoolYearEnd: '2025', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
+  { id: 1, subject: 'Toán', grade: 'Lớp 10', schoolYearStart: '2024', schoolYearEnd: '2025', isShared: false, createdAt: '2024-01-01', updatedAt: '2024-01-01' },
+  { id: 2, subject: 'Văn', grade: 'Lớp 11', schoolYearStart: '2024', schoolYearEnd: '2025', isShared: false, createdAt: '2024-01-01', updatedAt: '2024-01-01' },
 ];
 
 const sampleFullPlan = {
@@ -26,10 +29,11 @@ const sampleFullPlan = {
   grade: 'Lớp 10',
   schoolYearStart: '2024',
   schoolYearEnd: '2025',
+  isShared: false,
   createdAt: '2024-01-01',
   updatedAt: '2024-01-01',
   lessons: [
-    { id: 1, lessonPlanId: 1, name: 'Bài 1', orderIndex: 1, scheduledDate: null, documents: [], attachments: [], miniGames: [] },
+    { id: 1, lessonPlanId: 1, name: 'Bài 1', orderIndex: 1, suggestedPeriods: 1, scheduledDate: null, documents: [], attachments: [], miniGames: [] },
   ],
 };
 
@@ -86,10 +90,10 @@ describe('LessonPlanPage', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('Thêm giáo án')).toBeInTheDocument();
+      expect(screen.getByText(/Tạo giáo án/)).toBeInTheDocument();
     });
 
-    await user.click(screen.getByText('Thêm giáo án'));
+    await user.click(screen.getByText(/Tạo giáo án/));
     expect(screen.getByText('Thêm giáo án', { selector: 'h2' })).toBeInTheDocument();
 
     await user.type(screen.getByPlaceholderText('Nhập môn học'), 'Toán');
@@ -114,10 +118,10 @@ describe('LessonPlanPage', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('Thêm giáo án')).toBeInTheDocument();
+      expect(screen.getByText(/Tạo giáo án/)).toBeInTheDocument();
     });
 
-    await user.click(screen.getByText('Thêm giáo án'));
+    await user.click(screen.getByText(/Tạo giáo án/));
     await user.click(screen.getByText('Lưu'));
 
     expect(screen.getByRole('alert')).toHaveTextContent('Vui lòng nhập đầy đủ thông tin');
@@ -129,10 +133,10 @@ describe('LessonPlanPage', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getByText('Thêm giáo án')).toBeInTheDocument();
+      expect(screen.getByText(/Tạo giáo án/)).toBeInTheDocument();
     });
 
-    await user.click(screen.getByText('Thêm giáo án'));
+    await user.click(screen.getByText(/Tạo giáo án/));
 
     // Add a lesson
     await user.click(screen.getByText('Thêm bài học'));
@@ -160,10 +164,10 @@ describe('LessonPlanPage', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getAllByText('Sửa')[0]).toBeInTheDocument();
+      expect(screen.getAllByTitle('Sửa')[0]).toBeInTheDocument();
     });
 
-    await user.click(screen.getAllByText('Sửa')[0]);
+    await user.click(screen.getAllByTitle('Sửa')[0]);
 
     await waitFor(() => {
       expect(screen.getByText('Sửa giáo án')).toBeInTheDocument();
@@ -181,17 +185,16 @@ describe('LessonPlanPage', () => {
     renderPage();
 
     await waitFor(() => {
-      expect(screen.getAllByText('Xóa')[0]).toBeInTheDocument();
+      expect(screen.getAllByTitle('Xóa')[0]).toBeInTheDocument();
     });
 
-    await user.click(screen.getAllByText('Xóa')[0]);
+    await user.click(screen.getAllByTitle('Xóa')[0]);
     expect(screen.getByText('Xác nhận xóa')).toBeInTheDocument();
 
-    const deleteButtons = screen.getAllByText('Xóa');
-    const confirmDeleteBtn = deleteButtons.find(
-      (btn) => (btn as HTMLElement).style?.color === 'rgb(211, 47, 47)'
+    const deleteButtons = screen.getAllByRole('button').filter(
+      (btn) => btn.textContent === 'Xóa' && btn.classList.contains('btn-delete'),
     );
-    await user.click(confirmDeleteBtn!);
+    await user.click(deleteButtons[0]);
 
     await waitFor(() => {
       expect(lessonPlanService.remove).toHaveBeenCalledWith(1);

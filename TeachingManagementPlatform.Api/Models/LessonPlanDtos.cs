@@ -33,6 +33,7 @@ public class UpdateLessonRequest
     [Required]
     public string Name { get; set; } = string.Empty;
     public int SortOrder { get; set; }
+    public int SuggestedPeriods { get; set; } = 1;
 }
 
 public class UpdateLessonPlanRequest
@@ -58,7 +59,26 @@ public class LessonPlanResponse
     public string Grade { get; set; } = string.Empty;
     public string SchoolYearStart { get; set; } = string.Empty;
     public string SchoolYearEnd { get; set; } = string.Empty;
+    public bool IsShared { get; set; }
+    public string? ShareCode { get; set; }
     public List<LessonResponse> Lessons { get; set; } = new();
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+}
+
+public class ToggleShareRequest
+{
+    public bool IsShared { get; set; }
+}
+
+public class SharedLessonPlanResponse
+{
+    public int Id { get; set; }
+    public string Subject { get; set; } = string.Empty;
+    public string Grade { get; set; } = string.Empty;
+    public string SchoolYearStart { get; set; } = string.Empty;
+    public string SchoolYearEnd { get; set; } = string.Empty;
+    public int LessonCount { get; set; }
+    public string LecturerName { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
 }

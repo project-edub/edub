@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AxiosError } from 'axios';
@@ -31,6 +31,7 @@ import { getApiOrigin } from '../services/apiConfig';
 import { useColorMode } from '../theme/ColorModeContext';
 import { useAuth } from '../hooks/useAuth';
 import { Role } from '../types/auth';
+import Pagination, { usePagination } from '../components/common/Pagination';
 
 function resolveImageUrl(value: unknown): string {
   if (typeof value !== 'string') return '';
@@ -66,7 +67,7 @@ function normalizeTextList(items: unknown): string[] {
   return Array.from(new Set(values));
 }
 
-function normalizeExpertises(items: unknown): { specialty: string; degree: string }[] {
+function normalizeExpertises(items: unknown): { specialty: string; degree: string; certificateImageUrl?: string }[] {
   if (!Array.isArray(items)) return [];
 
   return items
@@ -81,14 +82,44 @@ function normalizeExpertises(items: unknown): { specialty: string; degree: strin
       const candidate = item as Record<string, unknown>;
       const specialtyRaw = candidate.specialty ?? candidate.subject ?? candidate.value;
       const degreeRaw = candidate.degree ?? candidate.level ?? '';
+      const certUrlRaw = candidate.certificateImageUrl ?? '';
 
       const specialty = typeof specialtyRaw === 'string' ? specialtyRaw.trim() : '';
       const degree = typeof degreeRaw === 'string' ? degreeRaw.trim() : '';
+      const certificateImageUrl = typeof certUrlRaw === 'string' && certUrlRaw.trim() ? certUrlRaw.trim() : undefined;
 
       if (!specialty && !degree) return null;
-      return { specialty, degree };
+      return { specialty, degree, certificateImageUrl };
     })
-    .filter((item): item is { specialty: string; degree: string } => Boolean(item));
+    .filter((item): item is { specialty: string; degree: string; certificateImageUrl?: string } => Boolean(item));
+}
+
+function normalizeDescriptionList(items: unknown): { description: string; imageUrl?: string }[] {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((item) => {
+      if (typeof item === 'string') return item.trim() ? { description: item.trim() } : null;
+      if (!item || typeof item !== 'object') return null;
+      const candidate = item as Record<string, unknown>;
+      const desc = candidate.description ?? candidate.value ?? '';
+      const imgUrlRaw = candidate.imageUrl ?? '';
+      const imageUrl = typeof imgUrlRaw === 'string' && imgUrlRaw.trim() ? imgUrlRaw.trim() : undefined;
+      return typeof desc === 'string' && desc.trim() ? { description: desc.trim(), imageUrl } : null;
+    })
+    .filter((item): item is { description: string; imageUrl?: string } => Boolean(item));
+}
+
+function normalizeContentList(items: unknown): { content: string }[] {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((item) => {
+      if (typeof item === 'string') return item.trim() ? { content: item.trim() } : null;
+      if (!item || typeof item !== 'object') return null;
+      const candidate = item as Record<string, unknown>;
+      const content = candidate.content ?? candidate.value ?? '';
+      return typeof content === 'string' && content.trim() ? { content: content.trim() } : null;
+    })
+    .filter((item): item is { content: string } => Boolean(item));
 }
 
 function normalizeLecturer(input: unknown, fallbackId: number): PublicLecturerProfile {
@@ -105,9 +136,11 @@ function normalizeLecturer(input: unknown, fallbackId: number): PublicLecturerPr
     fullName,
     introduction,
     avatarUrl: resolveImageUrl(source.avatarUrl),
-    occupations: normalizeTextList(source.occupations).map((value) => ({ value })),
     teachingLocations: normalizeTextList(source.teachingLocations).map((value) => ({ value })),
     expertises: normalizeExpertises(source.expertises),
+    experiences: normalizeDescriptionList(source.experiences),
+    teachingSkills: normalizeDescriptionList(source.teachingSkills),
+    notes: normalizeContentList(source.notes),
   };
 }
 
@@ -121,6 +154,26 @@ function normalizeSearchResponse(response: unknown): PublicLecturerProfile[] {
   return list.map((item, index) => normalizeLecturer(item, index + 1));
 }
 
+/** Client-side filter: matches search query against all profile text fields */
+function matchesSearch(lecturer: PublicLecturerProfile, query: string): boolean {
+  if (!query.trim()) return true;
+  const lowerQuery = query.toLowerCase().trim();
+
+  const searchableTexts: string[] = [
+    lecturer.fullName,
+    lecturer.introduction || '',
+    ...lecturer.teachingLocations.map((l) => l.value),
+    ...lecturer.expertises.map((e) => `${e.specialty} ${e.degree}`),
+    ...(lecturer.experiences || []).map((e) => e.description),
+    ...(lecturer.teachingSkills || []).map((s) => s.description),
+    ...(lecturer.notes || []).map((n) => n.content),
+  ];
+
+  return searchableTexts.some((text) => text.toLowerCase().includes(lowerQuery));
+}
+
+const PAGE_SIZE = 9;
+
 export default function HomePage() {
   const { mode, toggleMode } = useColorMode();
   const { isAuthenticated, email, role } = useAuth();
@@ -130,6 +183,7 @@ export default function HomePage() {
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLecturer, setSelectedLecturer] = useState<PublicLecturerProfile | null>(null);
+  const [expandedImage, setExpandedImage] = useState<string | null>(null);
 
   const searchLecturers = useCallback(async () => {
     setLoading(true);
@@ -158,8 +212,25 @@ export default function HomePage() {
     searchLecturers();
   }, [searchLecturers]);
 
+  // Client-side filtering across all profile fields
+  const filteredLecturers = useMemo(() => {
+    const safeLecturers = Array.isArray(lecturers) ? lecturers : [];
+    return safeLecturers.filter((lecturer) => matchesSearch(lecturer, searchQuery));
+  }, [lecturers, searchQuery]);
+
+  // Pagination
+  const {
+    paginatedItems: paginatedLecturers,
+    currentPage,
+    pageSize,
+    totalItems,
+    setCurrentPage,
+    setPageSize,
+  } = usePagination(filteredLecturers, PAGE_SIZE);
+
   const handleSearch = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setCurrentPage(1);
     searchLecturers();
   };
 
@@ -170,8 +241,6 @@ export default function HomePage() {
   const handleCloseProfile = () => {
     setSelectedLecturer(null);
   };
-
-  const safeLecturers = Array.isArray(lecturers) ? lecturers : [];
 
   return (
     <Box sx={{ minHeight: '100vh' }}>
@@ -262,62 +331,147 @@ export default function HomePage() {
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="lg" sx={{ py: { xs: 4, md: 7 } }}>
-        <Box
-          sx={{
-            p: { xs: 2.5, md: 4 },
-            borderRadius: 8,
-            background: 'linear-gradient(140deg, #c48a10 0%, #e2b23a 100%)',
-            color: '#fff',
-            mb: 3,
-          }}
-        >
-          <Typography variant="h2" sx={{ color: '#fff', mb: 0.5 }}>Tìm giáo viên phù hợp</Typography>
-          <Typography sx={{ opacity: 0.86 }}>Khám phá giảng viên chất lượng với chuyên môn đúng nhu cầu học tập.</Typography>
-        </Box>
-
-        <Box component="form" onSubmit={handleSearch} sx={{ mb: 3 }}>
-          <Box sx={{ display: 'flex', gap: 1.5 }}>
-            <TextField
-              fullWidth
-              placeholder="Tìm theo tên giáo viên"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <Button type="submit" variant="contained" sx={{ whiteSpace: 'nowrap', px: 4 }}>
-              Tìm kiếm
-            </Button>
+      {/* Hero Banner Section */}
+      <Box
+        component="section"
+        sx={{
+          px: { xs: 2, sm: 3, md: 4 },
+          pt: { xs: 3, sm: 4, md: 5, lg: 7 },
+          pb: { xs: 2, sm: 3, md: 4 },
+        }}
+      >
+        <Container maxWidth="lg">
+          <Box
+            sx={{
+              p: { xs: 3, sm: 4, md: 5 },
+              borderRadius: { xs: 4, sm: 6, md: 8 },
+              background: 'linear-gradient(140deg, #c48a10 0%, #e2b23a 100%)',
+              color: '#fff',
+            }}
+          >
+            <Typography
+              variant="h2"
+              sx={{
+                color: '#fff',
+                mb: 1,
+                fontSize: { xs: '1.6rem', sm: '2rem', md: '2.4rem' },
+                fontWeight: 800,
+                letterSpacing: '-0.02em',
+                lineHeight: 1.1,
+              }}
+            >
+              Tìm giáo viên phù hợp
+            </Typography>
+            <Typography
+              sx={{
+                opacity: 0.86,
+                fontSize: { xs: '0.85rem', sm: '0.95rem', md: '1.05rem' },
+                lineHeight: 1.5,
+              }}
+            >
+              Khám phá giảng viên chất lượng với chuyên môn đúng nhu cầu học tập.
+            </Typography>
           </Box>
-        </Box>
+        </Container>
+      </Box>
 
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        {loading && <LinearProgress sx={{ mb: 2, borderRadius: 3 }} />}
-
-        {!loading && (
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            {safeLecturers.length} giáo viên được tìm thấy
-          </Typography>
-        )}
-
-        <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(3, minmax(0, 1fr))' } }}>
-          {safeLecturers.map((lecturer) => (
-            <Box key={lecturer.id}>
-              <LecturerCard lecturer={lecturer} onViewProfile={() => handleOpenProfile(lecturer)} />
+      {/* Search & Results Section */}
+      <Box
+        component="section"
+        sx={{
+          px: { xs: 2, sm: 3, md: 4 },
+          pb: { xs: 5, sm: 6, md: 8 },
+          bgcolor: 'background.default',
+        }}
+      >
+        <Container maxWidth="lg">
+          {/* Search Form */}
+          <Box component="form" onSubmit={handleSearch} sx={{ mb: { xs: 3, md: 4 } }}>
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1.5 }}>
+              <TextField
+                fullWidth
+                placeholder="Tìm theo tên, chuyên môn, địa điểm, kinh nghiệm..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <Button
+                type="submit"
+                variant="contained"
+                sx={{ whiteSpace: 'nowrap', px: 4, minWidth: { sm: 120 } }}
+              >
+                Tìm kiếm
+              </Button>
             </Box>
-          ))}
-        </Box>
+          </Box>
 
-        {!loading && safeLecturers.length === 0 && (
-          <Card elevation={0} sx={{ border: '1px dashed', borderColor: 'divider', textAlign: 'center', mt: 2 }}>
-            <CardContent>
-              <Typography color="text.secondary">
-                Không tìm thấy giáo viên nào phù hợp với tiêu chí tìm kiếm.
-              </Typography>
-            </CardContent>
-          </Card>
-        )}
+          {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+          {loading && <LinearProgress sx={{ mb: 3, borderRadius: 3 }} />}
 
-        <Dialog open={Boolean(selectedLecturer)} onClose={handleCloseProfile} maxWidth="sm" fullWidth>
+          {/* Result Count */}
+          {!loading && (
+            <Typography
+              variant="h6"
+              sx={{
+                mb: { xs: 2.5, md: 3 },
+                fontSize: { xs: '1rem', md: '1.15rem' },
+                fontWeight: 600,
+                letterSpacing: '-0.01em',
+                pb: { xs: 1.5, md: 2 },
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+              }}
+            >
+              {filteredLecturers.length} giáo viên được tìm thấy
+            </Typography>
+          )}
+
+          {/* Results Grid */}
+          <Box
+            sx={{
+              display: 'grid',
+              gap: { xs: 2.5, sm: 3, md: 3.5 },
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'repeat(2, minmax(0, 1fr))',
+                md: 'repeat(2, minmax(0, 1fr))',
+                lg: 'repeat(3, minmax(0, 1fr))',
+              },
+            }}
+          >
+            {paginatedLecturers.map((lecturer) => (
+              <Box key={lecturer.id}>
+                <LecturerCard lecturer={lecturer} onViewProfile={() => handleOpenProfile(lecturer)} />
+              </Box>
+            ))}
+          </Box>
+
+          {!loading && filteredLecturers.length === 0 && (
+            <Card elevation={0} sx={{ border: '1px dashed', borderColor: 'divider', textAlign: 'center', mt: 3 }}>
+              <CardContent sx={{ py: { xs: 4, md: 5 } }}>
+                <Typography color="text.secondary">
+                  Không tìm thấy giáo viên nào phù hợp với tiêu chí tìm kiếm.
+                </Typography>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Pagination */}
+          {!loading && filteredLecturers.length > 0 && (
+            <Box sx={{ mt: { xs: 3, md: 4 } }}>
+              <Pagination
+                totalItems={totalItems}
+                currentPage={currentPage}
+                pageSize={pageSize}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+              />
+            </Box>
+          )}
+        </Container>
+      </Box>
+
+      {/* Teacher profile modal */}
+      <Dialog open={Boolean(selectedLecturer)} onClose={handleCloseProfile} maxWidth="sm" fullWidth>
           <DialogTitle>Thông tin giáo viên</DialogTitle>
           <DialogContent dividers>
             {selectedLecturer && (
@@ -331,43 +485,115 @@ export default function HomePage() {
                   </Avatar>
                   <Box>
                     <Typography variant="h6" sx={{ lineHeight: 1.2 }}>{selectedLecturer.fullName}</Typography>
-                    <Typography color="text.secondary">
-                      {selectedLecturer.occupations.map((o) => o.value).join(', ') || 'Chưa cập nhật nghề nghiệp'}
-                    </Typography>
                   </Box>
                 </Stack>
 
                 {selectedLecturer.introduction && (
-                  <Typography>{selectedLecturer.introduction}</Typography>
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ mb: 0.5 }}>Giới thiệu</Typography>
+                    <Typography>{selectedLecturer.introduction}</Typography>
+                  </Box>
                 )}
 
-                <Box>
-                  <Typography variant="subtitle2" sx={{ mb: 0.8 }}>Địa điểm giảng dạy</Typography>
-                  <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-                    {selectedLecturer.teachingLocations.map((l) => (
-                      <Chip key={`${selectedLecturer.id}-${l.value}`} label={l.value} />
-                    ))}
-                  </Stack>
-                </Box>
+                {selectedLecturer.teachingLocations.length > 0 && (
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ mb: 0.8 }}>Địa điểm giảng dạy</Typography>
+                    <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
+                      {selectedLecturer.teachingLocations.map((l) => (
+                        <Chip key={`${selectedLecturer.id}-loc-${l.value}`} label={l.value} />
+                      ))}
+                    </Stack>
+                  </Box>
+                )}
 
-                <Box>
-                  <Typography variant="subtitle2" sx={{ mb: 0.8 }}>Chuyên môn</Typography>
-                  <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-                    {selectedLecturer.expertises.map((e, index) => (
-                      <Chip
-                        key={`${selectedLecturer.id}-${index}-${e.specialty}`}
-                        color="primary"
-                        variant="outlined"
-                        label={e.degree ? `${e.specialty} (${e.degree})` : e.specialty}
-                      />
-                    ))}
-                  </Stack>
-                </Box>
+                {selectedLecturer.expertises.length > 0 && (
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ mb: 0.8 }}>Chuyên môn</Typography>
+                    <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
+                      {selectedLecturer.expertises.map((e, index) => (
+                        <Box key={`${selectedLecturer.id}-exp-${index}-${e.specialty}`}>
+                          <Chip
+                            color="primary"
+                            variant="outlined"
+                            label={e.degree ? `${e.specialty} (${e.degree})` : e.specialty}
+                          />
+                          {e.certificateImageUrl && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                              {e.certificateImageUrl.split('|').filter(Boolean).map((url, imgIdx) => (
+                                <img key={`cert-${index}-${imgIdx}`} src={resolveImageUrl(url)} alt="" style={{ maxWidth: 200, borderRadius: 8, display: 'block', cursor: 'pointer' }} onClick={() => setExpandedImage(resolveImageUrl(url))} />
+                              ))}
+                            </div>
+                          )}
+                        </Box>
+                      ))}
+                    </Stack>
+                  </Box>
+                )}
+
+                {selectedLecturer.experiences && selectedLecturer.experiences.length > 0 && (
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ mb: 0.8 }}>Kinh nghiệm</Typography>
+                    <Stack spacing={0.5}>
+                      {selectedLecturer.experiences.map((exp, index) => (
+                        <Box key={`${selectedLecturer.id}-experience-${index}`}>
+                          <Typography variant="body2">• {exp.description}</Typography>
+                          {exp.imageUrl && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                              {exp.imageUrl.split('|').filter(Boolean).map((url, imgIdx) => (
+                                <img key={`exp-${index}-${imgIdx}`} src={resolveImageUrl(url)} alt="" style={{ maxWidth: 200, borderRadius: 8, cursor: 'pointer' }} onClick={() => setExpandedImage(resolveImageUrl(url))} />
+                              ))}
+                            </div>
+                          )}
+                        </Box>
+                      ))}
+                    </Stack>
+                  </Box>
+                )}
+
+                {selectedLecturer.teachingSkills && selectedLecturer.teachingSkills.length > 0 && (
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ mb: 0.8 }}>Kỹ năng giảng dạy</Typography>
+                    <Stack spacing={0.5}>
+                      {selectedLecturer.teachingSkills.map((skill, index) => (
+                        <Box key={`${selectedLecturer.id}-skill-${index}`}>
+                          <Typography variant="body2">• {skill.description}</Typography>
+                          {skill.imageUrl && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                              {skill.imageUrl.split('|').filter(Boolean).map((url, imgIdx) => (
+                                <img key={`skill-${index}-${imgIdx}`} src={resolveImageUrl(url)} alt="" style={{ maxWidth: 200, borderRadius: 8, cursor: 'pointer' }} onClick={() => setExpandedImage(resolveImageUrl(url))} />
+                              ))}
+                            </div>
+                          )}
+                        </Box>
+                      ))}
+                    </Stack>
+                  </Box>
+                )}
+
+                {selectedLecturer.notes && selectedLecturer.notes.length > 0 && (
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ mb: 0.8 }}>Ghi chú</Typography>
+                    <Stack spacing={0.5}>
+                      {selectedLecturer.notes.map((note, index) => (
+                        <Typography key={`${selectedLecturer.id}-note-${index}`} variant="body2">
+                          • {note.content}
+                        </Typography>
+                      ))}
+                    </Stack>
+                  </Box>
+                )}
               </Stack>
             )}
           </DialogContent>
         </Dialog>
-      </Container>
+        {/* Image lightbox */}
+        <Dialog open={Boolean(expandedImage)} onClose={() => setExpandedImage(null)} maxWidth="md">
+          <DialogContent sx={{ p: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            {expandedImage && (
+              <img src={expandedImage} alt="" style={{ maxWidth: '100%', maxHeight: '80vh', borderRadius: 8 }} />
+            )}
+          </DialogContent>
+        </Dialog>
     </Box>
   );
 }
@@ -378,47 +604,71 @@ interface LecturerCardProps {
 }
 
 function LecturerCard({ lecturer, onViewProfile }: LecturerCardProps) {
-  const occupationText = lecturer.occupations.map((o) => o.value).join(', ');
   const locationText = lecturer.teachingLocations.map((l) => l.value).join(', ');
 
   return (
-    <Card elevation={0} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <CardContent sx={{ pb: 1.2 }}>
-        <Stack direction="row" spacing={1.4} sx={{ mb: 1.3, alignItems: 'center' }}>
+    <Card elevation={0} sx={{ height: '100%', display: 'flex', flexDirection: 'column', border: '1px solid', borderColor: 'divider' }}>
+      <CardContent sx={{ pb: 1.5, pt: { xs: 2.5, md: 3 }, px: { xs: 2, md: 2.5 } }}>
+        <Stack direction="row" spacing={1.5} sx={{ mb: 1.5, alignItems: 'center' }}>
           <Avatar src={lecturer.avatarUrl || undefined} sx={{ width: 48, height: 48, bgcolor: 'secondary.main' }}>
             <PersonRoundedIcon />
           </Avatar>
           <Box>
-            <Typography variant="h6" sx={{ fontSize: '1.05rem', lineHeight: 1.2 }}>{lecturer.fullName}</Typography>
-            <Typography variant="body2" color="text.secondary">{occupationText || 'Chưa cập nhật nghề nghiệp'}</Typography>
+            <Typography
+              variant="h6"
+              sx={{
+                fontSize: '1.05rem',
+                lineHeight: 1.3,
+                fontWeight: 600,
+                letterSpacing: '-0.01em',
+              }}
+            >
+              {lecturer.fullName}
+            </Typography>
           </Box>
         </Stack>
 
         {lecturer.introduction && (
           <Typography
+            variant="body2"
             color="text.secondary"
             sx={{
-              mb: 1.2,
+              mb: 1.5,
               display: '-webkit-box',
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
+              lineHeight: 1.5,
             }}
           >
             {lecturer.introduction}
           </Typography>
         )}
 
-        <Typography variant="caption" color="text.secondary">ĐỊA ĐIỂM</Typography>
-        <Typography variant="body2" sx={{ mb: 1.2 }}>{locationText || 'Chưa cập nhật'}</Typography>
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ fontWeight: 600, letterSpacing: '0.05em' }}
+        >
+          ĐỊA ĐIỂM
+        </Typography>
+        <Typography variant="body2" sx={{ mb: 1.5, lineHeight: 1.5 }}>
+          {locationText || 'Chưa cập nhật'}
+        </Typography>
 
-        <Typography variant="caption" color="text.secondary">CHUYÊN MÔN</Typography>
-        <Typography variant="body2">
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ fontWeight: 600, letterSpacing: '0.05em' }}
+        >
+          CHUYÊN MÔN
+        </Typography>
+        <Typography variant="body2" sx={{ lineHeight: 1.5 }}>
           {lecturer.expertises.map((e) => (e.degree ? `${e.specialty} (${e.degree})` : e.specialty)).join(', ') || 'Chưa cập nhật'}
         </Typography>
       </CardContent>
 
-      <CardActions sx={{ mt: 'auto', pt: 0, px: 2, pb: 2 }}>
+      <CardActions sx={{ mt: 'auto', pt: 0, px: 2.5, pb: 2.5 }}>
         <Button variant="contained" fullWidth onClick={onViewProfile}>Xem hồ sơ</Button>
       </CardActions>
     </Card>

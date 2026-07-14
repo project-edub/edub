@@ -35,6 +35,14 @@ public class AuthController : ControllerBase
         {
             return StatusCode(403, new { error = new { code = "ACCOUNT_INACTIVE", message = ex.Message } });
         }
+        catch (AccountPendingVerificationException ex)
+        {
+            return StatusCode(403, new { error = new { code = "ACCOUNT_PENDING_VERIFICATION", message = ex.Message } });
+        }
+        catch (GoogleOnlyAccountException ex)
+        {
+            return BadRequest(new { error = new { code = "GOOGLE_ONLY_ACCOUNT", message = ex.Message } });
+        }
         catch (UnauthorizedAccessException ex)
         {
             return Unauthorized(new { error = new { code = "INVALID_CREDENTIALS", message = ex.Message } });

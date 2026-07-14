@@ -45,7 +45,7 @@ export default function QuizEditorPage() {
         setTitle(data.title);
         setShowAnswers(data.showAnswersAfterSubmit);
       } catch (err: any) {
-        setError(err?.message || 'Không thể tải bài quiz.');
+        setError(err?.message || 'Không thể tải bài trắc nghiệm.');
       } finally { setLoading(false); }
     })();
   }, [gameId]);
@@ -101,6 +101,33 @@ export default function QuizEditorPage() {
   const handleDeleteQuestion = useCallback((qId: number) => {
     setQuestions(prev => prev.filter(q => q.id !== qId).map((q, idx) => ({ ...q, number: idx + 1 })));
   }, []);
+
+  const handleDuplicateQuestion = useCallback(async (sourceQuestion: QuizQuestionDetail) => {
+    if (!game) return;
+    try {
+      // Create a new question on the server to get a valid ID
+      const newQuestion = await quizService.addQuestion(game.id);
+      // Copy content from source into the new question, insert after source
+      setQuestions(prev => {
+        const sourceIndex = prev.findIndex(q => q.id === sourceQuestion.id);
+        const duplicated: QuizQuestionDetail = {
+          ...newQuestion,
+          questionText: sourceQuestion.questionText,
+          optionsJson: sourceQuestion.optionsJson,
+          correctAnswerIndex: sourceQuestion.correctAnswerIndex,
+          correctAnswerText: sourceQuestion.correctAnswerText,
+          explanation: sourceQuestion.explanation,
+          difficulty: sourceQuestion.difficulty,
+        };
+        const updated = [...prev];
+        updated.splice(sourceIndex + 1, 0, duplicated);
+        // Re-number
+        return updated.map((q, idx) => ({ ...q, number: idx + 1 }));
+      });
+    } catch (err: any) {
+      setError(err?.message || 'Nhân bản câu hỏi thất bại.');
+    }
+  }, [game]);
 
   const handleAddQuestion = useCallback(async () => {
     if (!game) return;

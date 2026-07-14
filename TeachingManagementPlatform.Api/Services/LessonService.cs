@@ -30,6 +30,35 @@ public class LessonService : ILessonService
         return MapToDetailResponse(lesson);
     }
 
+    public async Task<LessonDetailResponse> UpdatePeriodsAsync(int lessonId, int lecturerId, UpdateLessonPeriodsRequest request)
+    {
+        var lesson = await GetLessonWithOwnershipCheck(lessonId, lecturerId);
+        lesson.SuggestedPeriods = request.SuggestedPeriods;
+        await _context.SaveChangesAsync();
+        return MapToDetailResponse(lesson);
+    }
+
+    public async Task DeleteLessonAsync(int lessonId, int lecturerId)
+    {
+        var lesson = await GetLessonWithOwnershipCheck(lessonId, lecturerId);
+
+        // Delete child entities
+        var documents = await _context.LessonDocuments.Where(d => d.LessonId == lessonId).ToListAsync();
+        var attachments = await _context.LessonAttachments.Where(a => a.LessonId == lessonId).ToListAsync();
+        var miniGames = await _context.MiniGames.Where(g => g.LessonId == lessonId).ToListAsync();
+        var schedules = await _context.ClassLessonSchedules.Where(s => s.LessonId == lessonId).ToListAsync();
+        var caches = await _context.LessonSuggestionCaches.Where(c => c.LessonId == lessonId).ToListAsync();
+
+        _context.LessonDocuments.RemoveRange(documents);
+        _context.LessonAttachments.RemoveRange(attachments);
+        _context.MiniGames.RemoveRange(miniGames);
+        _context.ClassLessonSchedules.RemoveRange(schedules);
+        _context.LessonSuggestionCaches.RemoveRange(caches);
+        _context.Lessons.Remove(lesson);
+
+        await _context.SaveChangesAsync();
+    }
+
     public async Task<DocumentResponse> AddDocumentAsync(int lessonId, int lecturerId, CreateDocumentRequest request)
     {
         await VerifyLessonOwnership(lessonId, lecturerId);

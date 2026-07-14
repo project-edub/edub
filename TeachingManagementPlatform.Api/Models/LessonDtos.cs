@@ -7,6 +7,7 @@ public class LessonDetailResponse
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public int OrderIndex { get; set; }
+    public int SuggestedPeriods { get; set; } = 1;
     public DateTime? ScheduledDate { get; set; }
     public List<DocumentResponse> Documents { get; set; } = new();
     public List<AttachmentResponse> Attachments { get; set; } = new();
@@ -17,6 +18,12 @@ public class UpdateLessonNameRequest
 {
     [Required]
     public string Name { get; set; } = string.Empty;
+}
+
+public class UpdateLessonPeriodsRequest
+{
+    [Range(1, 20)]
+    public int SuggestedPeriods { get; set; } = 1;
 }
 
 public class CreateDocumentRequest

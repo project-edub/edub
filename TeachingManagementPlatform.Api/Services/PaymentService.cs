@@ -215,7 +215,7 @@ public class PaymentService : IPaymentService
             .AsNoTracking()
             .Where(item => item.UserId == userId)
             .Where(item => item.SubscriptionPackageId == null) // Only coin purchases, not subscriptions
-            .Where(item => !string.Equals(item.Status, "paid", StringComparison.OrdinalIgnoreCase))
+            .Where(item => item.Status!.ToLower() != "paid")
             .OrderByDescending(item => item.CreatedAt)
             .FirstOrDefaultAsync();
 
@@ -231,7 +231,7 @@ public class PaymentService : IPaymentService
             .AsNoTracking()
             .Where(item => item.UserId == userId)
             .Where(item => item.SubscriptionPackageId != null)
-            .Where(item => !string.Equals(item.Status, "paid", StringComparison.OrdinalIgnoreCase))
+            .Where(item => item.Status!.ToLower() != "paid")
             .OrderByDescending(item => item.CreatedAt)
             .FirstOrDefaultAsync();
 
@@ -268,19 +268,29 @@ public class PaymentService : IPaymentService
         if (subPkg == null || !subPkg.IsActive)
             throw new CoinPurchasePaymentException("Gói đăng ký này hiện không khả dụng.");
 
-        var amount = decimal.ToInt32(decimal.Round(subPkg.Price, 0, MidpointRounding.AwayFromZero));
+        // Apply upgrade discount if user has an existing paid subscription
+        var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
+        var currentPkgId = user?.SubscriptionPackageId ?? 0;
+        var discountPercent = 0;
+        if (subPkg.UpgradeDiscounts != null && subPkg.UpgradeDiscounts.TryGetValue(currentPkgId, out var d))
+            discountPercent = d;
+
+        var finalPrice = discountPercent > 0
+            ? subPkg.Price * (100 - discountPercent) / 100
+            : subPkg.Price;
+
+        var amount = decimal.ToInt32(decimal.Round(finalPrice, 0, MidpointRounding.AwayFromZero));
         if (amount <= 0)
             throw new CoinPurchasePaymentException("Gói miễn phí không cần thanh toán.");
 
         var orderCode = await GenerateUniqueOrderCodeAsync();
 
-        // Use CoinPackageId = null to indicate this is NOT a coin purchase
         var transaction = new CoinPurchaseTransaction
         {
             OrderCode = orderCode,
             UserId = userId,
             CoinPackageId = null,
-            Amount = subPkg.Price,
+            Amount = finalPrice,
             CoinAmount = 0,
             Status = "pending",
             SubscriptionPackageId = subscriptionPackageId,

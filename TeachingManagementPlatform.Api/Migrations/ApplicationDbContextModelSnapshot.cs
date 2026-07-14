@@ -17,7 +17,7 @@ namespace TeachingManagementPlatform.Api.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.16")
+                .HasAnnotation("ProductVersion", "9.0.17")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -91,6 +91,46 @@ namespace TeachingManagementPlatform.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("ClassLessonSchedules");
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.ClassSubjectSchedule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CalendarId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ClassId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PeriodsPerWeek")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("WeekdaySlots")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CalendarId");
+
+                    b.HasIndex("ClassId", "Subject")
+                        .IsUnique();
+
+                    b.ToTable("ClassSubjectSchedules");
                 });
 
             modelBuilder.Entity("TeachingManagementPlatform.Api.Models.ClassificationRange", b =>
@@ -385,6 +425,91 @@ namespace TeachingManagementPlatform.Api.Migrations
                     b.ToTable("CrosswordWords");
                 });
 
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.CurriculumTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BookSet")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Grade")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsPublic")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("SourceNote")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UsageCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("Subject", "Grade");
+
+                    b.ToTable("CurriculumTemplates");
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.CurriculumTemplateLesson", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ChapterName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LessonName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("OrderIndex")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SuggestedPeriods")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
+                    b.Property<int>("TemplateId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TemplateId");
+
+                    b.ToTable("CurriculumTemplateLessons");
+                });
+
             modelBuilder.Entity("TeachingManagementPlatform.Api.Models.LecturerProfile", b =>
                 {
                     b.Property<int>("Id")
@@ -434,6 +559,9 @@ namespace TeachingManagementPlatform.Api.Migrations
 
                     b.Property<DateTime?>("ScheduledDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<int>("SuggestedPeriods")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -515,6 +643,11 @@ namespace TeachingManagementPlatform.Api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsShared")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<int>("LecturerId")
                         .HasColumnType("int");
 
@@ -524,6 +657,9 @@ namespace TeachingManagementPlatform.Api.Migrations
 
                     b.Property<string>("SchoolYearStart")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ShareCode")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Subject")
@@ -538,6 +674,52 @@ namespace TeachingManagementPlatform.Api.Migrations
                     b.HasIndex("LecturerId");
 
                     b.ToTable("LessonPlans");
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.LessonSuggestionCache", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("LessonId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("LessonNameHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("SuggestedAttachments")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SuggestedCrosswordTopic")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("SuggestedKeywords")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SuggestedLinks")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SuggestedQuizTopic")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LessonId", "LessonNameHash");
+
+                    b.ToTable("LessonSuggestionCaches");
                 });
 
             modelBuilder.Entity("TeachingManagementPlatform.Api.Models.MiniGame", b =>
@@ -660,31 +842,6 @@ namespace TeachingManagementPlatform.Api.Migrations
                     b.ToTable("ProfileNotes");
                 });
 
-            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.ProfileOccupation", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ProfileId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProfileId");
-
-                    b.ToTable("ProfileOccupations");
-                });
-
             modelBuilder.Entity("TeachingManagementPlatform.Api.Models.ProfileTeachingLocation", b =>
                 {
                     b.Property<int>("Id")
@@ -736,31 +893,6 @@ namespace TeachingManagementPlatform.Api.Migrations
                     b.HasIndex("ProfileId");
 
                     b.ToTable("ProfileTeachingSkills");
-                });
-
-            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.ProfileTuitionFee", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ProfileId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProfileId");
-
-                    b.ToTable("ProfileTuitionFees");
                 });
 
             modelBuilder.Entity("TeachingManagementPlatform.Api.Models.QuizGame", b =>
@@ -910,6 +1042,66 @@ namespace TeachingManagementPlatform.Api.Migrations
                     b.HasIndex("QuizGameId");
 
                     b.ToTable("QuizSubmissions", (string)null);
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.SchoolYearCalendar", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDefault")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateOnly>("YearEnd")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("YearStart")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.ToTable("SchoolYearCalendars");
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.SchoolYearHoliday", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CalendarId")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CalendarId");
+
+                    b.ToTable("SchoolYearHolidays");
                 });
 
             modelBuilder.Entity("TeachingManagementPlatform.Api.Models.ScoreColumnMetadata", b =>
@@ -1075,6 +1267,32 @@ namespace TeachingManagementPlatform.Api.Migrations
                     b.ToTable("StorageItems");
                 });
 
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.StorageItemEmbedding", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("ComputedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Embedding")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("StorageItemId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StorageItemId")
+                        .IsUnique();
+
+                    b.ToTable("StorageItemEmbeddings");
+                });
+
             modelBuilder.Entity("TeachingManagementPlatform.Api.Models.StudentEntry", b =>
                 {
                     b.Property<int>("Id")
@@ -1204,6 +1422,9 @@ namespace TeachingManagementPlatform.Api.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("UpgradeDiscounts")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
                     b.ToTable("SubscriptionPackages");
@@ -1227,12 +1448,18 @@ namespace TeachingManagementPlatform.Api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<int>("FreeEcoinBalance")
+                        .HasColumnType("int");
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("GoogleId")
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<bool>("OnboardingCompleted")
+                        .HasColumnType("bit");
 
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");
@@ -1252,6 +1479,10 @@ namespace TeachingManagementPlatform.Api.Migrations
 
                     b.Property<int?>("SubscriptionPackageId")
                         .HasColumnType("int");
+
+                    b.Property<string>("ThemeColor")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -1305,6 +1536,25 @@ namespace TeachingManagementPlatform.Api.Migrations
                     b.Navigation("Class");
 
                     b.Navigation("Lesson");
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.ClassSubjectSchedule", b =>
+                {
+                    b.HasOne("TeachingManagementPlatform.Api.Models.SchoolYearCalendar", "Calendar")
+                        .WithMany()
+                        .HasForeignKey("CalendarId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TeachingManagementPlatform.Api.Models.Class", "Class")
+                        .WithMany()
+                        .HasForeignKey("ClassId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Calendar");
+
+                    b.Navigation("Class");
                 });
 
             modelBuilder.Entity("TeachingManagementPlatform.Api.Models.ClassificationRange", b =>
@@ -1377,6 +1627,27 @@ namespace TeachingManagementPlatform.Api.Migrations
                     b.Navigation("Game");
                 });
 
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.CurriculumTemplate", b =>
+                {
+                    b.HasOne("TeachingManagementPlatform.Api.Models.User", "Creator")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Creator");
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.CurriculumTemplateLesson", b =>
+                {
+                    b.HasOne("TeachingManagementPlatform.Api.Models.CurriculumTemplate", "Template")
+                        .WithMany("Lessons")
+                        .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Template");
+                });
+
             modelBuilder.Entity("TeachingManagementPlatform.Api.Models.LecturerProfile", b =>
                 {
                     b.HasOne("TeachingManagementPlatform.Api.Models.User", "User")
@@ -1432,6 +1703,17 @@ namespace TeachingManagementPlatform.Api.Migrations
                     b.Navigation("Lecturer");
                 });
 
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.LessonSuggestionCache", b =>
+                {
+                    b.HasOne("TeachingManagementPlatform.Api.Models.Lesson", "Lesson")
+                        .WithMany()
+                        .HasForeignKey("LessonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Lesson");
+                });
+
             modelBuilder.Entity("TeachingManagementPlatform.Api.Models.MiniGame", b =>
                 {
                     b.HasOne("TeachingManagementPlatform.Api.Models.Lesson", "Lesson")
@@ -1476,17 +1758,6 @@ namespace TeachingManagementPlatform.Api.Migrations
                     b.Navigation("Profile");
                 });
 
-            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.ProfileOccupation", b =>
-                {
-                    b.HasOne("TeachingManagementPlatform.Api.Models.LecturerProfile", "Profile")
-                        .WithMany("Occupations")
-                        .HasForeignKey("ProfileId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Profile");
-                });
-
             modelBuilder.Entity("TeachingManagementPlatform.Api.Models.ProfileTeachingLocation", b =>
                 {
                     b.HasOne("TeachingManagementPlatform.Api.Models.LecturerProfile", "Profile")
@@ -1502,17 +1773,6 @@ namespace TeachingManagementPlatform.Api.Migrations
                 {
                     b.HasOne("TeachingManagementPlatform.Api.Models.LecturerProfile", "Profile")
                         .WithMany("TeachingSkills")
-                        .HasForeignKey("ProfileId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Profile");
-                });
-
-            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.ProfileTuitionFee", b =>
-                {
-                    b.HasOne("TeachingManagementPlatform.Api.Models.LecturerProfile", "Profile")
-                        .WithMany("TuitionFees")
                         .HasForeignKey("ProfileId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1551,6 +1811,27 @@ namespace TeachingManagementPlatform.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("QuizGame");
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.SchoolYearCalendar", b =>
+                {
+                    b.HasOne("TeachingManagementPlatform.Api.Models.User", "Creator")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Creator");
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.SchoolYearHoliday", b =>
+                {
+                    b.HasOne("TeachingManagementPlatform.Api.Models.SchoolYearCalendar", "Calendar")
+                        .WithMany("Holidays")
+                        .HasForeignKey("CalendarId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Calendar");
                 });
 
             modelBuilder.Entity("TeachingManagementPlatform.Api.Models.ScoreColumnMetadata", b =>
@@ -1602,6 +1883,17 @@ namespace TeachingManagementPlatform.Api.Migrations
                     b.Navigation("Lecturer");
 
                     b.Navigation("ParentFolder");
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.StorageItemEmbedding", b =>
+                {
+                    b.HasOne("TeachingManagementPlatform.Api.Models.StorageItem", "StorageItem")
+                        .WithOne()
+                        .HasForeignKey("TeachingManagementPlatform.Api.Models.StorageItemEmbedding", "StorageItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("StorageItem");
                 });
 
             modelBuilder.Entity("TeachingManagementPlatform.Api.Models.StudentEntry", b =>
@@ -1659,6 +1951,11 @@ namespace TeachingManagementPlatform.Api.Migrations
                     b.Navigation("Words");
                 });
 
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.CurriculumTemplate", b =>
+                {
+                    b.Navigation("Lessons");
+                });
+
             modelBuilder.Entity("TeachingManagementPlatform.Api.Models.LecturerProfile", b =>
                 {
                     b.Navigation("Experiences");
@@ -1667,13 +1964,9 @@ namespace TeachingManagementPlatform.Api.Migrations
 
                     b.Navigation("Notes");
 
-                    b.Navigation("Occupations");
-
                     b.Navigation("TeachingLocations");
 
                     b.Navigation("TeachingSkills");
-
-                    b.Navigation("TuitionFees");
                 });
 
             modelBuilder.Entity("TeachingManagementPlatform.Api.Models.Lesson", b =>
@@ -1699,6 +1992,11 @@ namespace TeachingManagementPlatform.Api.Migrations
                     b.Navigation("Questions");
 
                     b.Navigation("Submissions");
+                });
+
+            modelBuilder.Entity("TeachingManagementPlatform.Api.Models.SchoolYearCalendar", b =>
+                {
+                    b.Navigation("Holidays");
                 });
 
             modelBuilder.Entity("TeachingManagementPlatform.Api.Models.ScoreTemplate", b =>

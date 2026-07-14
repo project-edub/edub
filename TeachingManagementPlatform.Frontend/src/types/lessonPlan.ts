@@ -27,6 +27,7 @@ export interface Lesson {
   lessonPlanId: number;
   name: string;
   orderIndex: number;
+  suggestedPeriods: number;
   scheduledDate?: string | null;
   documents: LessonDocument[];
   attachments: LessonAttachment[];
@@ -40,6 +41,8 @@ export interface LessonPlan {
   grade: string;
   schoolYearStart: string;
   schoolYearEnd: string;
+  isShared: boolean;
+  shareCode?: string | null;
   createdAt: string;
   updatedAt: string;
   lessons: Lesson[];
@@ -51,6 +54,8 @@ export interface LessonPlanSummary {
   grade: string;
   schoolYearStart: string;
   schoolYearEnd: string;
+  isShared: boolean;
+  shareCode?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -59,6 +64,7 @@ export interface CreateLessonRequest {
   id?: number;
   name: string;
   orderIndex: number;
+  suggestedPeriods?: number;
 }
 
 export interface CreateLessonPlanRequest {
@@ -120,6 +126,7 @@ export interface LessonDetail {
   id: number;
   name: string;
   orderIndex: number;
+  suggestedPeriods: number;
   scheduledDate?: string | null;
   documents: DocumentResponse[];
   attachments: AttachmentResponse[];
@@ -130,4 +137,15 @@ export interface LessonPlanSearchParams {
   grade?: string;
   subject?: string;
   schoolYear?: string;
+}
+
+export interface SharedLessonPlan {
+  id: number;
+  subject: string;
+  grade: string;
+  schoolYearStart: string;
+  schoolYearEnd: string;
+  lessonCount: number;
+  lecturerName: string;
+  createdAt: string;
 }

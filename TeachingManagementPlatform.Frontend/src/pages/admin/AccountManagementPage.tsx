@@ -20,6 +20,7 @@ import type { SubscriptionPackage } from '../../types/subscription';
 import { AccountStatus, type ApiError } from '../../types/common';
 import * as accountService from '../../services/accountService';
 import * as subscriptionService from '../../services/subscriptionService';
+import Pagination, { usePagination } from '../../components/common/Pagination';
 
 interface ModalState {
   type: 'create' | 'edit' | null;
@@ -39,9 +40,13 @@ export default function AccountManagementPage() {
   const [formPassword, setFormPassword] = useState('');
   const [formFullName, setFormFullName] = useState('');
   const [formCoinBalance, setFormCoinBalance] = useState('0');
+  const [formFreeEcoinBalance, setFormFreeEcoinBalance] = useState('0');
   const [formSubscriptionPackageId, setFormSubscriptionPackageId] = useState<string>('');
+  const [formSubscriptionDays, setFormSubscriptionDays] = useState('');
   const [formError, setFormError] = useState('');
   const [subscriptionPackages, setSubscriptionPackages] = useState<SubscriptionPackage[]>([]);
+
+  const { paginatedItems: paginatedAccounts, currentPage, pageSize, totalItems, setCurrentPage, setPageSize } = usePagination(accounts);
 
   const loadAccounts = useCallback(async () => {
     setLoading(true);
@@ -74,6 +79,7 @@ export default function AccountManagementPage() {
     setFormPassword('');
     setFormFullName('');
     setFormCoinBalance('0');
+    setFormFreeEcoinBalance('0');
     setFormError('');
     setModal({ type: 'create' });
   }
@@ -83,7 +89,12 @@ export default function AccountManagementPage() {
     setFormPassword('');
     setFormFullName(account.fullName);
     setFormCoinBalance(String(account.coinBalance));
+    setFormFreeEcoinBalance(String(account.freeEcoinBalance ?? 0));
     setFormSubscriptionPackageId(account.subscriptionPackageId != null ? String(account.subscriptionPackageId) : '');
+    const days = account.subscriptionExpiresAt
+      ? Math.max(0, Math.ceil((new Date(account.subscriptionExpiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+      : 0;
+    setFormSubscriptionDays(String(days));
     setFormError('');
     setModal({ type: 'edit', account });
   }
@@ -142,7 +153,19 @@ export default function AccountManagementPage() {
       if (!Number.isNaN(coinBalance)) {
         data.coinBalance = coinBalance;
       }
+      const freeEcoin = Number(formFreeEcoinBalance);
+      if (!Number.isNaN(freeEcoin)) {
+        data.freeEcoinBalance = freeEcoin;
+      }
       data.subscriptionPackageId = formSubscriptionPackageId ? Number(formSubscriptionPackageId) : null;
+      const days = Number(formSubscriptionDays);
+      if (!Number.isNaN(days) && days > 0) {
+        const expiryDate = new Date();
+        expiryDate.setDate(expiryDate.getDate() + days);
+        data.subscriptionExpiresAt = expiryDate.toISOString().slice(0, 10);
+      } else {
+        data.subscriptionExpiresAt = null;
+      }
       await accountService.update(modal.account.id, data);
       closeModal();
       await loadAccounts();
@@ -213,33 +236,66 @@ export default function AccountManagementPage() {
           Không có tài khoản nào
         </Typography>
       ) : (
-        <>
-          <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 2 }}>
-            {accounts.map((account) => (
-              <Card key={account.id} sx={{ borderRadius: 2 }}>
-                <CardContent sx={{ p: 2 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5, wordBreak: 'break-word' }}>
-                    {account.fullName}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, wordBreak: 'break-all' }}>
-                    {account.email}
-                  </Typography>
-                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mb: 2 }}>
-                    <Box>
-                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>ECoin</Typography>
-                      <Typography variant="body2">{account.coinBalance.toLocaleString('vi-VN')}</Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>Trạng thái</Typography>
-                      <Typography variant="body2">
-                        {account.status === AccountStatus.Active ? 'Hoạt động' : 'Vô hiệu hóa'}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    <Button fullWidth variant="outlined" onClick={() => openEditModal(account)} disabled={actionLoading} sx={{ minHeight: 44 }}>Sửa</Button>
-                    <Button fullWidth variant="outlined" color="error" onClick={() => setDeleteTarget(account)} disabled={actionLoading} sx={{ minHeight: 44 }}>Xóa</Button>
-                    <Button fullWidth variant="outlined" onClick={() => handleToggleStatus(account)} disabled={actionLoading} sx={{ minHeight: 44 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              <th style={thStyle}>Email</th>
+              <th style={thStyle}>Họ và tên</th>
+              <th style={thStyle}>ECoin</th>
+              <th style={thStyle}>Còn lại</th>
+              <th style={thStyle}>Trạng thái</th>
+              <th style={{ ...thStyle, textAlign: 'center' }}>Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            {paginatedAccounts.length === 0 ? (
+              <tr>
+                <td colSpan={6} style={{ textAlign: 'center', padding: 16 }}>
+                  Không có tài khoản nào
+                </td>
+              </tr>
+            ) : (
+              paginatedAccounts.map((account) => (
+                <tr key={account.id}>
+                  <td style={tdStyle}>{account.email}</td>
+                  <td style={tdStyle}>{account.fullName}</td>
+                  <td style={tdStyle}>{((account.freeEcoinBalance ?? 0) + account.coinBalance).toLocaleString('vi-VN')}</td>
+                  <td style={tdStyle}>
+                    {(() => {
+                      if (!account.subscriptionExpiresAt) return 'Chưa có';
+                      const days = Math.ceil((new Date(account.subscriptionExpiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                      if (days <= 0) return <span style={{ color: '#d32f2f' }}>Đã hết hạn</span>;
+                      return `${days} ngày`;
+                    })()}
+                  </td>
+                  <td style={tdStyle}>
+                    {account.status === AccountStatus.Active ? 'Hoạt động' : 'Vô hiệu hóa'}
+                  </td>
+                  <td style={tdStyle}>
+                    <button
+                      type="button"
+                      onClick={() => openEditModal(account)}
+                      disabled={actionLoading}
+                      className="btn btn-update"
+                      style={{ marginRight: 8 }}
+                    >
+                      Sửa
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDeleteTarget(account)}
+                      disabled={actionLoading}
+                      className="btn btn-delete"
+                      style={{ marginRight: 8 }}
+                    >
+                      Xóa
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleStatus(account)}
+                      disabled={actionLoading}
+                      className="btn btn-view"
+                    >
                       {account.status === AccountStatus.Active ? 'Vô hiệu hóa' : 'Kích hoạt'}
                     </Button>
                   </Box>
@@ -284,6 +340,14 @@ export default function AccountManagementPage() {
           </TableContainer>
         </>
       )}
+
+      <Pagination
+        totalItems={totalItems}
+        currentPage={currentPage}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+      />
 
       {/* Create / Edit Modal */}
       {modal.type && (
@@ -356,6 +420,22 @@ export default function AccountManagementPage() {
 
               {modal.type === 'edit' && (
                 <div style={{ marginBottom: 16 }}>
+                  <label htmlFor="modal-free-ecoin-balance" style={{ display: 'block', marginBottom: 4 }}>ECoin miễn phí</label>
+                  <input
+                    id="modal-free-ecoin-balance"
+                    type="number"
+                    min="0"
+                    step="1"
+                    placeholder="0"
+                    value={formFreeEcoinBalance}
+                    onChange={(e) => setFormFreeEcoinBalance(e.target.value)}
+                    style={inputStyle}
+                  />
+                </div>
+              )}
+
+              {modal.type === 'edit' && (
+                <div style={{ marginBottom: 16 }}>
                   <label htmlFor="modal-subscription" style={{ display: 'block', marginBottom: 4 }}>Gói đăng ký</label>
                   <select
                     id="modal-subscription"
@@ -372,7 +452,21 @@ export default function AccountManagementPage() {
                 </div>
               )}
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, justifyContent: 'flex-end' }}>
+              {modal.type === 'edit' && (
+                <div style={{ marginBottom: 16 }}>
+                  <label htmlFor="modal-subscription-expires" style={{ display: 'block', marginBottom: 4 }}>Thời gian còn lại (ngày)</label>
+                  <input
+                    id="modal-subscription-expires"
+                    type="number"
+                    min="0"
+                    value={formSubscriptionDays}
+                    onChange={(e) => setFormSubscriptionDays(e.target.value)}
+                    style={inputStyle}
+                  />
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                 <button
                   type="button"
                   onClick={closeModal}

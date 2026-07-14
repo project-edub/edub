@@ -26,8 +26,8 @@ import * as lessonPlanService from '../../services/lessonPlanService';
 import * as classLessonPlanService from '../../services/classLessonPlanService';
 
 const samplePlans = [
-  { id: 1, subject: 'Toán', grade: '10', schoolYearStart: '2024', schoolYearEnd: '2025', createdAt: '', updatedAt: '' },
-  { id: 2, subject: 'Lý', grade: '11', schoolYearStart: '2024', schoolYearEnd: '2025', createdAt: '', updatedAt: '' },
+  { id: 1, subject: 'Toán', grade: '10', schoolYearStart: '2024', schoolYearEnd: '2025', createdAt: '', updatedAt: '', isShared: false },
+  { id: 2, subject: 'Lý', grade: '11', schoolYearStart: '2024', schoolYearEnd: '2025', createdAt: '', updatedAt: '', isShared: false },
 ];
 
 const sampleAssignedPlan = {

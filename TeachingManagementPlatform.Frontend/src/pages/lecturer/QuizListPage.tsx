@@ -12,8 +12,10 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import CreateIcon from '@mui/icons-material/Create';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import FileCopyOutlinedIcon from '@mui/icons-material/FileCopyOutlined';
 import * as quizService from '../../services/quizService';
 import type { QuizListItem } from '../../services/quizService';
+import Pagination, { usePagination } from '../../components/common/Pagination';
 
 export default function QuizListPage() {
   const navigate = useNavigate();
@@ -29,6 +31,9 @@ export default function QuizListPage() {
   const [manualTitle, setManualTitle] = useState('');
   const [creating, setCreating] = useState(false);
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [duplicating, setDuplicating] = useState<number | null>(null);
+
+  const { paginatedItems, currentPage, pageSize, totalItems, setCurrentPage, setPageSize } = usePagination(items);
 
   const loadList = useCallback(async () => {
     setLoading(true);
@@ -75,6 +80,18 @@ export default function QuizListPage() {
       setCreating(false);
     }
   }, [manualTitle, navigate]);
+
+  const handleDuplicate = useCallback(async (quizId: number) => {
+    setDuplicating(quizId);
+    try {
+      await quizService.duplicateQuiz(quizId);
+      await loadList();
+    } catch (err: any) {
+      setError(err?.message || 'Nhân bản thất bại.');
+    } finally {
+      setDuplicating(null);
+    }
+  }, [loadList]);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, p: { xs: 1.5, md: 2 } }}>
@@ -206,61 +223,72 @@ export default function QuizListPage() {
 
       {/* Desktop Table View */}
       {!loading && items.length > 0 && (
-        <TableContainer component={Paper} variant="outlined" sx={{ display: { xs: 'none', md: 'block' }, overflowX: 'auto' }}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 700 }}>Tiêu đề</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Trạng thái</TableCell>
-                <TableCell sx={{ fontWeight: 700 }} align="center">Câu hỏi</TableCell>
-                <TableCell sx={{ fontWeight: 700 }} align="center">Bài nộp</TableCell>
-                <TableCell sx={{ fontWeight: 700 }} align="right">Hành động</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {items.map((item) => (
-                <TableRow key={item.id} hover>
-                  <TableCell><Typography variant="body2" sx={{ fontWeight: 600 }}>{item.title || 'Chưa đặt tên'}</Typography></TableCell>
-                  <TableCell>
-                    <Chip label={item.status === 'published' ? 'Đã xuất bản' : 'Nháp'} color={item.status === 'published' ? 'success' : 'default'} size="small" variant="outlined" />
-                  </TableCell>
-                  <TableCell align="center">{item.questionCount}</TableCell>
-                  <TableCell align="center">{item.submissionCount}</TableCell>
-                  <TableCell align="right">
-                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                      {item.status === 'published' && (
-                        <Button size="small" variant="outlined" color="success" startIcon={<PlayArrowIcon />} onClick={() => window.open(`/quiz/${item.slug}`, '_blank')} sx={{ minHeight: 44 }}>
-                          Chơi
+        <>
+          <TableContainer component={Paper} variant="outlined">
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 700 }}>Tiêu đề</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Trạng thái</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }} align="center">Câu hỏi</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }} align="center">Bài nộp</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }} align="center">Hành động</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {paginatedItems.map((item) => (
+                  <TableRow key={item.id} hover>
+                    <TableCell><Typography variant="body2" sx={{ fontWeight: 600 }}>{item.title || 'Chưa đặt tên'}</Typography></TableCell>
+                    <TableCell>
+                      <Chip label={item.status === 'published' ? 'Đã xuất bản' : 'Nháp'} color={item.status === 'published' ? 'success' : 'default'} size="small" variant="outlined" />
+                    </TableCell>
+                    <TableCell align="center">{item.questionCount}</TableCell>
+                    <TableCell align="center">{item.submissionCount}</TableCell>
+                    <TableCell align="center">
+                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                        {item.status === 'published' && (
+                          <Button size="small" variant="outlined" color="success" startIcon={<PlayArrowIcon />} onClick={() => window.open(`/quiz/${item.slug}`, '_blank')}>
+                            Chơi
+                          </Button>
+                        )}
+                        {item.status === 'published' && (
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            startIcon={<ContentCopyIcon />}
+                            onClick={async () => {
+                              await navigator.clipboard.writeText(`${window.location.origin}/quiz/${item.slug}`);
+                              setCopiedId(item.id);
+                              setTimeout(() => setCopiedId(null), 2000);
+                            }}
+                          >
+                            {copiedId === item.id ? 'Đã copy!' : 'Copy link'}
+                          </Button>
+                        )}
+                        <Button size="small" variant="outlined" startIcon={<EditIcon />} onClick={() => navigate(`/lecturer/quiz/${item.id}/edit`)}>
+                          Quản lý
                         </Button>
-                      )}
-                      {item.status === 'published' && (
                         <Button
                           size="small"
                           variant="outlined"
-                          startIcon={<ContentCopyIcon />}
-                          onClick={async () => {
-                            await navigator.clipboard.writeText(`${window.location.origin}/quiz/${item.slug}`);
-                            setCopiedId(item.id);
-                            setTimeout(() => setCopiedId(null), 2000);
-                          }}
-                          sx={{ minHeight: 44 }}
+                          startIcon={<FileCopyOutlinedIcon />}
+                          onClick={() => void handleDuplicate(item.id)}
+                          disabled={duplicating === item.id}
                         >
-                          {copiedId === item.id ? 'Đã copy!' : 'Copy link'}
+                          {duplicating === item.id ? 'Đang nhân bản...' : 'Nhân bản'}
                         </Button>
-                      )}
-                      <Button size="small" variant="outlined" startIcon={<EditIcon />} onClick={() => navigate(`/lecturer/quiz/${item.id}/edit`)} sx={{ minHeight: 44 }}>
-                        Quản lý
-                      </Button>
-                      <Button size="small" variant="outlined" color="error" startIcon={<DeleteIcon />} onClick={() => setDeleteTarget(item)} sx={{ minHeight: 44 }}>
-                        Xóa
-                      </Button>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                        <Button size="small" variant="outlined" color="error" startIcon={<DeleteIcon />} onClick={() => setDeleteTarget(item)}>
+                          Xóa
+                        </Button>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          <Pagination totalItems={totalItems} currentPage={currentPage} pageSize={pageSize} onPageChange={setCurrentPage} onPageSizeChange={setPageSize} />
+        </>
       )}
 
       <Dialog open={deleteTarget != null} onClose={() => setDeleteTarget(null)} maxWidth="sm" fullWidth>

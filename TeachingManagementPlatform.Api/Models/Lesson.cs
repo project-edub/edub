@@ -6,6 +6,7 @@ public class Lesson
     public int LessonPlanId { get; set; }
     public string Name { get; set; } = string.Empty;
     public int OrderIndex { get; set; }
+    public int SuggestedPeriods { get; set; } = 1;
     public DateTime? ScheduledDate { get; set; }
 
     // Navigation properties

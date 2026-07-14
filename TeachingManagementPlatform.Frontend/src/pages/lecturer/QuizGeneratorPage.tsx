@@ -4,6 +4,7 @@ import { Box } from '@mui/material';
 import * as quizService from '../../services/quizService';
 import * as coinService from '../../services/coinService';
 import type { CoinWalletResponse } from '../../types/coin';
+import InlineHint from '../../components/common/InlineHint';
 
 const ACCEPTED_EXTENSIONS = ['.docx', '.xlsx', '.pdf', '.pptx'];
 const MAX_FILES = 5;
@@ -13,30 +14,50 @@ export default function QuizGeneratorPage() {
   const navigate = useNavigate();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [questionCount, setQuestionCount] = useState(10);
+  const [title, setTitle] = useState('');
+  const [titleWarning, setTitleWarning] = useState<string | null>(null);
+  const [existingTitles, setExistingTitles] = useState<string[]>([]);
   const [topic, setTopic] = useState('');
   const [difficulty, setDifficulty] = useState('trung bình');
   const [language] = useState('vi');
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [wallet, setWallet] = useState<CoinWalletResponse>({ coinBalance: 0 });
+  const [wallet, setWallet] = useState<CoinWalletResponse>({ coinBalance: 0, freeEcoinBalance: 0, freeEcoinMax: 50 });
 
   useEffect(() => {
     void (async () => {
       try { const w = await coinService.getLecturerCoinWallet(); setWallet(w); } catch {}
     })();
+    void (async () => {
+      try {
+        const list = await quizService.getQuizList();
+        setExistingTitles(list.map((q) => q.title.toLowerCase().trim()));
+      } catch {}
+    })();
   }, []);
 
+  useEffect(() => {
+    if (title.trim() && existingTitles.includes(title.toLowerCase().trim())) {
+      setTitleWarning('Tên này đã tồn tại trong kho trắc nghiệm của bạn.');
+    } else {
+      setTitleWarning(null);
+    }
+  }, [title, existingTitles]);
+
   const estimatedCost = Math.max(1, questionCount);
-  const hasEnoughCoin = wallet.coinBalance >= estimatedCost;
+  const totalBalance = (wallet.freeEcoinBalance ?? 0) + wallet.coinBalance;
+  const hasEnoughCoin = totalBalance >= estimatedCost;
 
   const handleGenerate = useCallback(async () => {
     if (selectedFiles.length === 0) return;
+    if (!title.trim()) { setError('Vui lòng nhập tên cho bài trắc nghiệm.'); return; }
     setLoading(true); setError(null);
     try {
       const fd = new FormData();
       for (const f of selectedFiles) fd.append('files', f);
       fd.append('questionCount', String(questionCount));
+      fd.append('title', title.trim());
       fd.append('topic', topic);
       fd.append('difficulty', difficulty);
       fd.append('language', language);
@@ -45,11 +66,11 @@ export default function QuizGeneratorPage() {
       const result = await quizService.generateQuiz(fd);
       navigate(`/lecturer/quiz/${result.gameId}/edit`);
     } catch (err: any) {
-      setError(err?.message || 'Tạo quiz thất bại.');
+      setError(err?.message || 'Tạo bài trắc nghiệm thất bại.');
     } finally {
       setLoading(false);
     }
-  }, [selectedFiles, questionCount, topic, difficulty, language, prompt, navigate]);
+  }, [selectedFiles, questionCount, title, topic, difficulty, language, prompt, navigate]);
 
   return (
     <Box sx={{ p: { xs: 1.5, md: 3 }, maxWidth: 900, mx: 'auto' }}>
@@ -59,7 +80,7 @@ export default function QuizGeneratorPage() {
         </button>
       </div>
 
-      <h1 style={{ marginBottom: 8 }}>Tạo quiz từ tài liệu</h1>
+      <h1 style={{ marginBottom: 8 }}>Tạo bài trắc nghiệm từ tài liệu</h1>
       <p style={{ color: '#64748b', marginBottom: 24 }}>
         Upload tài liệu, cấu hình và để AI tạo câu hỏi. Sau khi tạo xong bạn có thể chỉnh sửa và xuất bản.
       </p>
@@ -94,7 +115,17 @@ export default function QuizGeneratorPage() {
 
       {/* Config */}
       <section style={{ ...cardStyle, marginTop: 16 }}>
-        <h2 style={sectionTitle}>2. Cấu hình</h2>
+        <h2 style={sectionTitle}>
+          2. Cấu hình
+          <InlineHint text="Chọn số lượng câu hỏi và độ khó mong muốn" />
+        </h2>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16, marginBottom: 16 }}>
+          <label style={fieldStyle}>
+            <span style={{ fontWeight: 600 }}>Tên quiz <span style={{ color: '#dc2626' }}>*</span></span>
+            <input type="text" value={title} onChange={e => setTitle(e.target.value)} style={inputStyle} placeholder="VD: Quiz Hóa học chương 3" />
+            {titleWarning && <span style={{ color: '#d97706', fontSize: 13 }}>⚠️ {titleWarning}</span>}
+          </label>
+        </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
           <label style={fieldStyle}>
             <span style={{ fontWeight: 600 }}>Số câu hỏi</span>
@@ -120,11 +151,11 @@ export default function QuizGeneratorPage() {
       </section>
 
       {/* Action */}
-      <Box sx={{ mt: 3, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'stretch', sm: 'center' }, gap: 2 }}>
-        <button type="button" className="btn btn-add" disabled={selectedFiles.length === 0 || loading || !hasEnoughCoin} onClick={() => void handleGenerate()} style={{ minHeight: 44 }}>
+      <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
+        <button type="button" className="btn btn-add" disabled={selectedFiles.length === 0 || !title.trim() || loading || !hasEnoughCoin} onClick={() => void handleGenerate()}>
           {loading ? 'Đang tạo...' : `Tạo quiz (${estimatedCost} ECoin)`}
         </button>
-        <span style={{ color: '#64748b', fontSize: 13 }}>Số dư: {wallet.coinBalance} ECoin</span>
+        <span style={{ color: '#64748b', fontSize: 13 }}>Miễn phí: {wallet.freeEcoinBalance ?? 0} · Trả phí: {wallet.coinBalance}</span>
         {!hasEnoughCoin && <span style={{ color: '#dc2626', fontSize: 13 }}>Không đủ ECoin</span>}
       </Box>
     </Box>

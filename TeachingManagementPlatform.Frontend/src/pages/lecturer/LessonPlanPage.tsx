@@ -27,7 +27,10 @@ import type { LessonPlanSummary, LessonPlan, CreateLessonPlanRequest } from '../
 import type { ApiError } from '../../types/common';
 import * as lessonPlanService from '../../services/lessonPlanService';
 import LessonPlanModal from '../../components/lecturer/LessonPlanModal';
-import { GRADE_OPTIONS } from '../../constants/lessonPlanOptions';
+import ActionButton from '../../components/common/ActionButton';
+import Toast from '../../components/common/Toast';
+import Pagination, { usePagination } from '../../components/common/Pagination';
+import InlineHint from '../../components/common/InlineHint';
 
 interface ModalState {
   type: 'create' | 'edit' | null;
@@ -42,11 +45,25 @@ export default function LessonPlanPage() {
   const [modal, setModal] = useState<ModalState>({ type: null });
   const [deleteTarget, setDeleteTarget] = useState<LessonPlanSummary | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [hoveredRowId, setHoveredRowId] = useState<number | null>(null);
+  const [toastMessage, setToastMessage] = useState('');
 
   const [filterGrade, setFilterGrade] = useState('');
   const [filterSubject, setFilterSubject] = useState('');
   const [filterSchoolYear, setFilterSchoolYear] = useState('');
   const schoolYearOptions = Array.from(new Set(plans.map((plan) => `${plan.schoolYearStart}-${plan.schoolYearEnd}`))).sort().reverse();
+
+  // Share dialog state
+  const [shareDialogPlan, setShareDialogPlan] = useState<LessonPlanSummary | null>(null);
+  const [shareCodeResult, setShareCodeResult] = useState<string | null>(null);
+  const [shareCodeCopied, setShareCodeCopied] = useState(false);
+
+  // Join by code state
+  const [joinCode, setJoinCode] = useState('');
+  const [joinLoading, setJoinLoading] = useState(false);
+  const [joinMessage, setJoinMessage] = useState('');
+
+  const { paginatedItems: paginatedPlans, currentPage, pageSize, totalItems, setCurrentPage, setPageSize } = usePagination(plans);
 
   function extractError(err: unknown): string {
     const axiosErr = err as AxiosError<ApiError>;
@@ -126,19 +143,126 @@ export default function LessonPlanPage() {
     }
   }
 
+  function handleFilter() {
+    loadPlans();
+  }
+
+  // Share icon click handler
+  function handleShareClick(plan: LessonPlanSummary) {
+    if (plan.isShared) {
+      // Unshare (public)
+      handleUnshare(plan);
+    } else if (plan.shareCode) {
+      // Already has private code, copy it
+      navigator.clipboard.writeText(plan.shareCode);
+      setToastMessage('Đã sao chép!');
+    } else {
+      // Open share options dialog
+      setShareDialogPlan(plan);
+      setShareCodeResult(null);
+      setShareCodeCopied(false);
+    }
+  }
+
+  function handleCancelPrivateShare(plan: LessonPlanSummary) {
+    // Clear the shareCode locally - user can regenerate if needed
+    setPlans((prev) =>
+      prev.map((p) => (p.id === plan.id ? { ...p, shareCode: null } : p))
+    );
+  }
+
+  async function handleUnshare(plan: LessonPlanSummary) {
+    setActionLoading(true);
+    try {
+      const result = await lessonPlanService.toggleShare(plan.id, false);
+      setPlans((prev) =>
+        prev.map((p) => (p.id === plan.id ? { ...p, isShared: result.isShared } : p))
+      );
+    } catch (err) {
+      setError(extractError(err));
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function handleShareAll(plan: LessonPlanSummary) {
+    setActionLoading(true);
+    try {
+      const result = await lessonPlanService.toggleShare(plan.id, true);
+      setPlans((prev) =>
+        prev.map((p) => (p.id === plan.id ? { ...p, isShared: result.isShared } : p))
+      );
+      setShareDialogPlan(null);
+    } catch (err) {
+      setError(extractError(err));
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function handleSharePrivate(plan: LessonPlanSummary) {
+    setActionLoading(true);
+    try {
+      const result = await lessonPlanService.generateShareCode(plan.id);
+      setShareCodeResult(result.shareCode);
+      setPlans((prev) =>
+        prev.map((p) => (p.id === plan.id ? { ...p, shareCode: result.shareCode } : p))
+      );
+    } catch (err) {
+      setError(extractError(err));
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  function handleCopyShareCode(code: string) {
+    navigator.clipboard.writeText(code);
+    setShareCodeCopied(true);
+    setToastMessage('Đã sao chép!');
+    setTimeout(() => setShareCodeCopied(false), 2000);
+  }
+
+  function handleCopyLink(plan: LessonPlanSummary) {
+    if (plan.shareCode) {
+      navigator.clipboard.writeText(plan.shareCode);
+      setToastMessage('Đã sao chép!');
+    } else {
+      const url = `${window.location.origin}/lecturer/shared-plans?highlight=${plan.id}`;
+      navigator.clipboard.writeText(url);
+      setToastMessage('Đã sao chép!');
+    }
+  }
+  void handleCopyLink; // reserved for future use
+
+  async function handleJoinByCode() {
+    if (!joinCode.trim()) return;
+    setJoinLoading(true);
+    setJoinMessage('');
+    try {
+      const result = await lessonPlanService.joinByCode(joinCode.trim());
+      setJoinMessage(`Đã thêm giáo án "${result.subject}" thành công!`);
+      setJoinCode('');
+      await loadPlans();
+      setTimeout(() => setJoinMessage(''), 3000);
+    } catch (err) {
+      setJoinMessage(extractError(err));
+    } finally {
+      setJoinLoading(false);
+    }
+  }
+
+  function getShareTooltip(plan: LessonPlanSummary): string {
+    if (plan.isShared) return 'Bỏ chia sẻ';
+    if (plan.shareCode) return 'Sao chép mã';
+    return 'Chia sẻ';
+  }
+
   return (
-    <Box
-      sx={{
-        p: { xs: 1.5, md: 2 },
-        bgcolor: 'var(--edub-surface)',
-        color: 'var(--edub-text-primary)',
-        border: '1px solid var(--edub-border)',
-        borderRadius: 2,
-      }}
-    >
-      <Typography variant="h4" sx={{ fontWeight: 800, mb: 3, color: 'var(--edub-text-primary)' }}>
+    <div style={{ padding: 24, backgroundColor: 'var(--edub-surface)', color: 'var(--edub-text-primary)', border: '1px solid var(--edub-border)', borderRadius: 16 }}>
+      <h1 style={{ marginBottom: 24, color: 'var(--edub-text-primary)' }}>
         Giáo án
-      </Typography>
+        <InlineHint text="Tạo giáo án mới hoặc sử dụng mẫu có sẵn từ cộng đồng" />
+      </h1>
 
       {error && (
         <Typography role="alert" color="error" sx={{ mb: 2 }}>
@@ -196,17 +320,49 @@ export default function LessonPlanPage() {
           sx={{ minHeight: 44, alignSelf: { xs: 'stretch', sm: 'auto' } }}
         >
           Lọc
-        </Button>
-      </Box>
+        </button>
 
-      <Button
-        variant="contained"
-        onClick={openCreateModal}
-        className="btn btn-add"
-        sx={{ mb: 2, minHeight: 44 }}
-      >
-        Thêm giáo án
-      </Button>
+        {/* Join by code input */}
+        <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end', marginLeft: 'auto' }}>
+          <div>
+            <label htmlFor="join-code" style={{ display: 'block', marginBottom: 4, fontSize: 14 }}>Nhập mã giáo án</label>
+            <input
+              id="join-code"
+              type="text"
+              placeholder="Mã 6 ký tự"
+              value={joinCode}
+              onChange={(e) => setJoinCode(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleJoinByCode(); }}
+              style={{ padding: 8, width: 120, borderRadius: 8, border: '1px solid var(--edub-input-border)', backgroundColor: 'var(--edub-input-bg)', color: 'var(--edub-text-primary)', textTransform: 'uppercase' }}
+              maxLength={6}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={handleJoinByCode}
+            disabled={joinLoading || !joinCode.trim()}
+            className="btn btn-view"
+            style={{ padding: '8px 12px' }}
+          >
+            {joinLoading ? '...' : 'Nhập'}
+          </button>
+        </div>
+
+        <button
+          type="button"
+          onClick={openCreateModal}
+          style={{ padding: '8px 16px', cursor: 'pointer', borderRadius: 8, backgroundColor: 'green', color: 'white', border: 'none' }}
+          className="btn btn-add"
+        >
+          + Tạo giáo án
+        </button>
+      </div>
+
+      {joinMessage && (
+        <div style={{ marginBottom: 12, padding: '8px 12px', borderRadius: 8, backgroundColor: joinMessage.includes('thành công') ? '#e8f5e9' : '#fce4ec', color: joinMessage.includes('thành công') ? '#2e7d32' : '#c62828', fontSize: 14 }}>
+          {joinMessage}
+        </div>
+      )}
 
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
@@ -217,130 +373,141 @@ export default function LessonPlanPage() {
           Không có giáo án nào
         </Typography>
       ) : (
-        <>
-          {/* Mobile Card View */}
-          <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 2 }}>
-            {plans.map((plan) => (
-              <Card key={plan.id} sx={{ borderRadius: 2 }}>
-                <CardContent sx={{ p: 2 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1.5 }}>
-                    {plan.subject}
-                  </Typography>
-                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mb: 2 }}>
-                    <Box>
-                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                        Khối
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        {plan.grade}
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                        Niên khóa
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        {plan.schoolYearStart} - {plan.schoolYearEnd}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    <Button
-                      fullWidth
-                      variant="outlined"
-                      onClick={() => navigate(`/lecturer/lesson-plans/${plan.id}/lessons`)}
-                      disabled={actionLoading}
-                      sx={{ minHeight: 44 }}
-                    >
-                      Xem
-                    </Button>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Button
-                        fullWidth
-                        variant="outlined"
-                        onClick={() => openEditModal(plan)}
-                        disabled={actionLoading}
-                        sx={{ minHeight: 44 }}
-                      >
-                        Sửa
-                      </Button>
-                      <Button
-                        fullWidth
-                        variant="outlined"
-                        color="error"
-                        onClick={() => setDeleteTarget(plan)}
-                        disabled={actionLoading}
-                        sx={{ minHeight: 44 }}
-                      >
-                        Xóa
-                      </Button>
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
-            ))}
-          </Box>
-
-          {/* Desktop Table View */}
-          <TableContainer component={Paper} variant="outlined" sx={{ display: { xs: 'none', md: 'block' }, overflowX: 'auto' }}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: 700 }}>Môn</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Khối</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Niên khóa</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Hành động</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {plans.map((plan) => (
-                  <TableRow key={plan.id} hover>
-                    <TableCell>{plan.subject}</TableCell>
-                    <TableCell>{plan.grade}</TableCell>
-                    <TableCell>{plan.schoolYearStart} - {plan.schoolYearEnd}</TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          onClick={() => navigate(`/lecturer/lesson-plans/${plan.id}/lessons`)}
-                          disabled={actionLoading}
-                          className="btn btn-view"
-                          sx={{ minHeight: 44 }}
-                        >
-                          Xem
-                        </Button>
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          onClick={() => openEditModal(plan)}
-                          disabled={actionLoading}
-                          className="btn btn-update"
-                          sx={{ minHeight: 44 }}
-                        >
-                          Sửa
-                        </Button>
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          color="error"
-                          onClick={() => setDeleteTarget(plan)}
-                          disabled={actionLoading}
-                          className="btn btn-delete"
-                          sx={{ minHeight: 44 }}
-                        >
-                          Xóa
-                        </Button>
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              <th style={thStyle}>Môn</th>
+              <th style={thStyle}>Khối</th>
+              <th style={thStyle}>Niên khóa</th>
+              <th style={{ ...thStyle, textAlign: 'center' }}>Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            {paginatedPlans.length === 0 ? (
+              <tr>
+                <td colSpan={4} style={{ textAlign: 'center', padding: 16 }}>
+                  Không có giáo án nào
+                </td>
+              </tr>
+            ) : (
+              paginatedPlans.map((plan) => (
+                <tr
+                  key={plan.id}
+                  style={{ cursor: 'pointer', backgroundColor: hoveredRowId === plan.id ? '#f5f5f5' : undefined, transition: 'background-color 0.15s' }}
+                  onMouseEnter={() => setHoveredRowId(plan.id)}
+                  onMouseLeave={() => setHoveredRowId(null)}
+                  onClick={() => navigate(`/lecturer/lesson-plans/${plan.id}/lessons`)}
+                >
+                  <td style={tdStyle}>{plan.subject}</td>
+                  <td style={tdStyle}>{plan.grade}</td>
+                  <td style={tdStyle}>{plan.schoolYearStart} - {plan.schoolYearEnd}</td>
+                  <td style={{ ...tdStyle, textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                    <div style={{ display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap' }}>
+                      <ActionButton icon="share" label={getShareTooltip(plan)} color="primary" onClick={() => handleShareClick(plan)} disabled={actionLoading} />
+                      {!plan.isShared && plan.shareCode && (
+                        <ActionButton icon="close" label="Hủy chia sẻ" color="default" onClick={() => handleCancelPrivateShare(plan)} disabled={actionLoading} />
+                      )}
+                      <ActionButton icon="edit" label="Sửa" color="primary" onClick={() => openEditModal(plan)} disabled={actionLoading} />
+                      <ActionButton icon="delete" label="Xóa" color="error" onClick={() => setDeleteTarget(plan)} disabled={actionLoading} />
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       )}
 
+      <Pagination
+        totalItems={totalItems}
+        currentPage={currentPage}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+      />
+
+      {/* Share Options Dialog */}
+      {shareDialogPlan && !shareCodeResult && (
+        <div style={overlayStyle}>
+          <div style={deleteModalStyle}>
+            <h2 style={{ marginBottom: 16 }}>
+              Chia sẻ giáo án
+              <InlineHint text="Chia sẻ giáo án để đồng nghiệp có thể tham khảo" />
+            </h2>
+            <p style={{ marginBottom: 16, color: 'var(--edub-text-secondary)' }}>
+              Chọn hình thức chia sẻ cho giáo án <strong>{shareDialogPlan.subject}</strong>:
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <button
+                type="button"
+                onClick={() => handleShareAll(shareDialogPlan)}
+                disabled={actionLoading}
+                className="btn btn-update"
+                style={{ padding: '12px 16px', textAlign: 'left' }}
+              >
+                Chia sẻ cho tất cả giáo viên
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSharePrivate(shareDialogPlan)}
+                disabled={actionLoading}
+                className="btn btn-view"
+                style={{ padding: '12px 16px', textAlign: 'left' }}
+              >
+                Chia sẻ riêng tư (tạo mã)
+              </button>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
+              <button
+                type="button"
+                onClick={() => setShareDialogPlan(null)}
+                className="btn btn-neutral"
+              >
+                Hủy
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Share Code Result Dialog */}
+      {shareDialogPlan && shareCodeResult && (
+        <div style={overlayStyle}>
+          <div style={deleteModalStyle}>
+            <h2 style={{ marginBottom: 16 }}>Mã chia sẻ</h2>
+            <p style={{ marginBottom: 12, color: 'var(--edub-text-secondary)' }}>
+              Mã chia sẻ giáo án <strong>{shareDialogPlan.subject}</strong>:
+            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+              <span style={{ fontSize: 24, fontWeight: 700, letterSpacing: 4, padding: '8px 16px', backgroundColor: '#f5f5f5', borderRadius: 8, border: '1px solid #ddd' }}>
+                {shareCodeResult}
+              </span>
+              <button
+                type="button"
+                onClick={() => handleCopyShareCode(shareCodeResult)}
+                className="btn btn-view"
+                style={{ padding: '8px 12px' }}
+              >
+                {shareCodeCopied ? 'Đã sao chép!' : 'Sao chép mã'}
+              </button>
+            </div>
+            <p style={{ fontSize: 13, color: 'var(--edub-text-secondary)', marginBottom: 16 }}>
+              Chia sẻ mã này cho giáo viên khác. Họ có thể nhập mã để nhận giáo án của bạn.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={() => { setShareDialogPlan(null); setShareCodeResult(null); }}
+                className="btn btn-neutral"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create / Edit Modal */}
       {modal.type && (
         <LessonPlanModal
           mode={modal.type}
@@ -351,39 +518,37 @@ export default function LessonPlanPage() {
         />
       )}
 
-      <Dialog
-        open={deleteTarget != null}
-        onClose={() => setDeleteTarget(null)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Xác nhận xóa</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Bạn có chắc chắn muốn xóa giáo án <strong>{deleteTarget?.subject}</strong>?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions sx={{ flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 1, sm: 0 }, p: 2 }}>
-          <Button
-            onClick={() => setDeleteTarget(null)}
-            disabled={actionLoading}
-            fullWidth
-            sx={{ minHeight: 44, m: { xs: 0, sm: undefined } }}
-          >
-            Hủy
-          </Button>
-          <Button
-            onClick={handleDelete}
-            disabled={actionLoading}
-            color="error"
-            variant="contained"
-            fullWidth
-            sx={{ minHeight: 44, m: { xs: 0, sm: undefined } }}
-          >
-            {actionLoading ? 'Đang xử lý...' : 'Xóa'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+      {/* Delete Confirmation */}
+      {deleteTarget && (
+        <div style={overlayStyle}>
+          <div style={deleteModalStyle}>
+            <h2 style={{ marginBottom: 16 }}>Xác nhận xóa</h2>
+            <p style={{ marginBottom: 16 }}>
+              Bạn có chắc chắn muốn xóa giáo án <strong>{deleteTarget.subject}</strong>?
+            </p>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                disabled={actionLoading}
+                className="btn btn-neutral"
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={actionLoading}
+                className="btn btn-delete"
+              >
+                {actionLoading ? 'Đang xử lý...' : 'Xóa'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Toast message={toastMessage} visible={!!toastMessage} onClose={() => setToastMessage('')} />
+    </div>
   );
 }

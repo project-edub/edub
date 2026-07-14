@@ -1,9 +1,28 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Button, Card, CardContent, CircularProgress, TextField, Typography } from '@mui/material';
+import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContentText from '@mui/material/DialogContentText';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
+import CrudIcon from '../../components/common/CrudIcon';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import * as lessonPlanService from '../../services/lessonPlanService';
+import * as lessonSuggestionService from '../../services/lessonSuggestionService';
 import type { LessonPlan } from '../../types/lessonPlan';
+import TemplateSelectionDialog from '../../components/lecturer/lessonPlan/TemplateSelectionDialog';
+import AISuggestionPanel from '../../components/lecturer/lessonPlan/AISuggestionPanel';
+
+function parseGradeNumber(grade: string): number {
+  const match = grade.match(/\d+/);
+  return match ? parseInt(match[0], 10) : 0;
+}
 
 export default function LessonListPage() {
   const { id: idParam } = useParams<{ id: string }>();
@@ -15,7 +34,24 @@ export default function LessonListPage() {
   const [error, setError] = useState('');
   const [adding, setAdding] = useState(false);
   const [newLessonName, setNewLessonName] = useState('');
+  const [newLessonPeriods, setNewLessonPeriods] = useState(1);
   const [actionLoading, setActionLoading] = useState(false);
+  const [deleteLessonTarget, setDeleteLessonTarget] = useState<number | null>(null);
+
+  // Auto-generate state
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+
+  // AI suggestion state
+  const [aiPanelOpen, setAiPanelOpen] = useState(false);
+  const [selectedLessonForAI, setSelectedLessonForAI] = useState<{ id: number; name: string } | null>(null);
+
+  // Batch AI suggestion state
+  const [batchAIOpen, setBatchAIOpen] = useState(false);
+  const [batchDescription, setBatchDescription] = useState('');
+  const [batchCostInfo, setBatchCostInfo] = useState<{ totalLessons: number; uncachedCount: number; totalCost: number } | null>(null);
+  const [batchLoading, setBatchLoading] = useState(false);
+  const [batchResult, setBatchResult] = useState<string | null>(null);
 
   useEffect(() => {
     if (!planId || isNaN(planId)) { setError('ID không hợp lệ.'); setLoading(false); return; }
@@ -47,9 +83,10 @@ export default function LessonListPage() {
         orderIndex: l.orderIndex,
       }));
       await lessonPlanService.update(planId, {
-        lessons: [...existingLessons, { name: newLessonName.trim(), orderIndex: maxOrder + 1 }],
+        lessons: [...existingLessons, { name: newLessonName.trim(), orderIndex: maxOrder + 1, suggestedPeriods: newLessonPeriods }],
       });
       setNewLessonName('');
+      setNewLessonPeriods(1);
       setAdding(false);
       await loadPlan();
     } catch (err: any) {
@@ -59,25 +96,96 @@ export default function LessonListPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <Box sx={{ p: { xs: 1.5, md: 2 }, maxWidth: 900, mx: 'auto', display: 'flex', justifyContent: 'center', py: 6 }}>
-        <CircularProgress />
-      </Box>
-    );
+  function handleAutoGenerateClick() {
+    if (plan && plan.lessons.length > 0) {
+      setConfirmDialogOpen(true);
+    } else {
+      setTemplateDialogOpen(true);
+    }
   }
 
-  if (error && !plan) {
-    return (
-      <Box sx={{ p: { xs: 1.5, md: 2 }, maxWidth: 900, mx: 'auto' }}>
-        <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>
-        <Button variant="outlined" onClick={() => navigate('/lecturer/lesson-plans')} sx={{ minHeight: 44 }}>
-          ← Quay lại
-        </Button>
-      </Box>
-    );
+  function handleConfirmAppend() {
+    setConfirmDialogOpen(false);
+    setTemplateDialogOpen(true);
   }
 
+  async function handleConfirmReplace() {
+    setConfirmDialogOpen(false);
+    // Clear all existing lessons first, then open template dialog
+    if (!plan) return;
+    setActionLoading(true);
+    setError('');
+    try {
+      await lessonPlanService.update(planId, { lessons: [] });
+      await loadPlan();
+      setTemplateDialogOpen(true);
+    } catch (err: any) {
+      setError(err?.message || 'Xóa bài học cũ thất bại.');
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  function handleGenerated() {
+    loadPlan();
+  }
+
+  function handleOpenAISuggestion(lessonId: number, lessonName: string) {
+    setSelectedLessonForAI({ id: lessonId, name: lessonName });
+    setAiPanelOpen(true);
+  }
+
+  function handleCloseAISuggestion() {
+    setAiPanelOpen(false);
+    setSelectedLessonForAI(null);
+  }
+
+  async function handleDeleteLesson(lessonId: number) {
+    if (!plan) return;
+    setDeleteLessonTarget(null);
+    setActionLoading(true);
+    setError('');
+    try {
+      const remainingLessons = plan.lessons
+        .filter((l) => l.id !== lessonId)
+        .map((l) => ({ id: l.id, name: l.name, orderIndex: l.orderIndex }));
+      await lessonPlanService.update(planId, { lessons: remainingLessons });
+      await loadPlan();
+    } catch (err: any) {
+      setError(err?.message || 'Xóa bài học thất bại.');
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  async function openBatchAI() {
+    setBatchAIOpen(true);
+    setBatchDescription('');
+    setBatchResult(null);
+    setBatchCostInfo(null);
+    try {
+      const cost = await lessonSuggestionService.getSuggestAllCost(planId);
+      setBatchCostInfo(cost);
+    } catch {
+      setBatchCostInfo(null);
+    }
+  }
+
+  async function handleBatchAI() {
+    setBatchLoading(true);
+    setBatchResult(null);
+    try {
+      const result = await lessonSuggestionService.suggestAll(planId, batchDescription || undefined);
+      setBatchResult(`Đã tạo gợi ý cho ${result.totalProcessed} bài học (chi phí: ${result.totalCost} ECoin)`);
+    } catch (err: any) {
+      setBatchResult(err?.response?.data?.error?.message || 'Có lỗi xảy ra.');
+    } finally {
+      setBatchLoading(false);
+    }
+  }
+
+  if (loading) return <div style={pageStyle}><p>Đang tải...</p></div>;
+  if (error && !plan) return <div style={pageStyle}><p style={{ color: '#d32f2f' }}>{error}</p><button className="btn btn-neutral" onClick={() => navigate('/lecturer/lesson-plans')}>← Quay lại</button></div>;
   if (!plan) return null;
 
   return (
@@ -103,50 +211,57 @@ export default function LessonListPage() {
         Khối {plan.grade} · Niên khóa {plan.schoolYearStart} – {plan.schoolYearEnd} · {plan.lessons.length} bài học
       </Typography>
 
-      <Box sx={{ mb: 2 }}>
-        {adding ? (
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: { xs: 'column', sm: 'row' },
-              gap: 1,
-              alignItems: { xs: 'stretch', sm: 'center' },
-            }}
-          >
-            <TextField
-              placeholder="Tên bài học"
-              value={newLessonName}
-              onChange={(e) => setNewLessonName(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleAddLesson(); }}
+      {/* Add lesson button */}
+      <div style={{ marginBottom: 16, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <>
+            <button className="btn btn-add" onClick={() => setAdding(true)}>+ Thêm bài học</button>
+            <Button
+              variant="outlined"
+              startIcon={<MenuBookIcon />}
+              onClick={handleAutoGenerateClick}
+              disabled={actionLoading}
               size="small"
-              autoFocus
-              fullWidth
-              sx={{ maxWidth: { sm: 400 } }}
-            />
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <Button
-                variant="contained"
-                onClick={handleAddLesson}
-                disabled={actionLoading || !newLessonName.trim()}
-                sx={{ minHeight: 44, flex: { xs: 1, sm: 'none' } }}
-              >
-                {actionLoading ? 'Đang thêm...' : 'Lưu'}
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={() => { setAdding(false); setNewLessonName(''); }}
-                sx={{ minHeight: 44, flex: { xs: 1, sm: 'none' } }}
-              >
-                Hủy
-              </Button>
-            </Box>
-          </Box>
-        ) : (
-          <Button variant="contained" onClick={() => setAdding(true)} sx={{ minHeight: 44 }}>
-            + Thêm bài học
+            >
+              Sử dụng giáo án có sẵn
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<AutoAwesomeIcon />}
+              onClick={openBatchAI}
+              disabled={actionLoading || plan.lessons.length === 0}
+              size="small"
+            >
+              Gợi ý AI cho toàn bộ
+            </Button>
+          </>
+      </div>
+
+      {/* Add lesson modal */}
+      <Dialog open={adding} onClose={() => { setAdding(false); setNewLessonName(''); setNewLessonPeriods(1); }} maxWidth="xs" fullWidth>
+        <DialogTitle>Thêm bài học</DialogTitle>
+        <DialogContent>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingTop: 8 }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: 4, fontWeight: 600 }}>Tên bài học</label>
+              <input
+                type="text"
+                placeholder="Nhập tên bài học"
+                value={newLessonName}
+                onChange={(e) => setNewLessonName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && newLessonName.trim()) handleAddLesson(); }}
+                style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid var(--edub-border)', boxSizing: 'border-box' }}
+                autoFocus
+              />
+            </div>
+          </div>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => { setAdding(false); setNewLessonName(''); setNewLessonPeriods(1); }}>Hủy</Button>
+          <Button variant="contained" onClick={handleAddLesson} disabled={actionLoading || !newLessonName.trim()}>
+            {actionLoading ? 'Đang thêm...' : 'Lưu'}
           </Button>
-        )}
-      </Box>
+        </DialogActions>
+      </Dialog>
 
       {plan.lessons.length === 0 ? (
         <Box
@@ -177,33 +292,118 @@ export default function LessonListPage() {
                 }}
                 onClick={() => navigate(`/lecturer/lessons/${lesson.id}/edit`)}
               >
-                <CardContent
-                  sx={{
-                    p: 2,
-                    display: 'flex',
-                    flexDirection: { xs: 'column', sm: 'row' },
-                    justifyContent: 'space-between',
-                    alignItems: { xs: 'flex-start', sm: 'center' },
-                    gap: 1,
-                    '&:last-child': { pb: 2 },
-                  }}
-                >
-                  <Box>
-                    <Typography component="span" sx={{ fontWeight: 700, mr: 1, color: 'var(--edub-text-secondary)' }}>
-                      {idx + 1}.
-                    </Typography>
-                    <Typography component="span" sx={{ fontWeight: 600 }}>
-                      {lesson.name}
-                    </Typography>
-                  </Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Xem & sửa →
-                  </Typography>
-                </CardContent>
-              </Card>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{ fontWeight: 700, marginRight: 8, color: 'var(--edub-text-secondary)' }}>
+                    {idx + 1}.
+                  </span>
+                  <span style={{ fontWeight: 600 }}>{lesson.name}</span>
+                  <Tooltip title="Gợi ý AI">
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenAISuggestion(lesson.id, lesson.name);
+                      }}
+                      aria-label={`Gợi ý AI cho bài ${lesson.name}`}
+                      sx={{ ml: 0.5, color: 'primary.main' }}
+                    >
+                      <AutoAwesomeIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span onClick={(e) => e.stopPropagation()}>
+                    <CrudIcon name="delete" tooltip="Xóa bài học" onClick={() => setDeleteLessonTarget(lesson.id)} disabled={actionLoading} />
+                  </span>
+                </div>
+              </div>
             ))}
         </Box>
       )}
-    </Box>
+
+      {/* Template Selection Dialog */}
+      <TemplateSelectionDialog
+        open={templateDialogOpen}
+        onClose={() => setTemplateDialogOpen(false)}
+        lessonPlanId={planId}
+        subject={plan.subject}
+        grade={parseGradeNumber(plan.grade)}
+        onGenerated={handleGenerated}
+      />
+
+      {/* Confirmation Dialog when lessons already exist */}
+      <Dialog
+        open={confirmDialogOpen}
+        onClose={() => setConfirmDialogOpen(false)}
+      >
+        <DialogTitle>Giáo án đã có bài học</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Giáo án hiện tại đã có {plan.lessons.length} bài học. Bạn muốn thêm bài mới từ mẫu vào cuối hay thay thế toàn bộ?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmDialogOpen(false)}>Hủy</Button>
+          <Button onClick={handleConfirmAppend} variant="outlined">
+            Thêm vào cuối
+          </Button>
+          <Button onClick={handleConfirmReplace} variant="contained" color="warning">
+            Thay thế toàn bộ
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* AI Suggestion Panel */}
+      {selectedLessonForAI && (
+        <AISuggestionPanel
+          open={aiPanelOpen}
+          onClose={handleCloseAISuggestion}
+          lessonId={selectedLessonForAI.id}
+          lessonName={selectedLessonForAI.name}
+        />
+      )}
+
+      {/* Batch AI Suggestion Dialog */}
+      <Dialog open={batchAIOpen} onClose={() => setBatchAIOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Gợi ý AI cho toàn bộ bài học</DialogTitle>
+        <DialogContent>
+          {batchCostInfo && (
+            <div style={{ marginBottom: 16, padding: 12, borderRadius: 8, backgroundColor: '#f1f5f9' }}>
+              <p style={{ margin: 0, fontSize: 14 }}>Tổng bài học: <strong>{batchCostInfo.totalLessons}</strong></p>
+              <p style={{ margin: '4px 0 0', fontSize: 14 }}>Bài chưa có gợi ý: <strong>{batchCostInfo.uncachedCount}</strong></p>
+              <p style={{ margin: '4px 0 0', fontSize: 14 }}>Chi phí ước tính: <strong>{batchCostInfo.totalCost} ECoin</strong></p>
+            </div>
+          )}
+          <p style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Mô tả ngắn gọn nội dung môn học:</p>
+          <textarea
+            value={batchDescription}
+            onChange={(e) => setBatchDescription(e.target.value)}
+            placeholder="VD: Toán lớp 9 chương trình mới, tập trung vào hình học..."
+            style={{ width: '100%', minHeight: 80, padding: 10, borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, resize: 'vertical', boxSizing: 'border-box' }}
+          />
+          {batchResult && (
+            <div style={{ marginTop: 12, padding: 10, borderRadius: 8, backgroundColor: batchResult.includes('Đã tạo') ? '#ecfdf5' : '#fef2f2', color: batchResult.includes('Đã tạo') ? '#065f46' : '#991b1b', fontSize: 13 }}>
+              {batchResult}
+            </div>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setBatchAIOpen(false)}>Đóng</Button>
+          <Button variant="contained" onClick={handleBatchAI} disabled={batchLoading || !batchCostInfo || batchCostInfo.uncachedCount === 0}>
+            {batchLoading ? 'Đang xử lý...' : 'Gợi ý AI'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <ConfirmModal
+        open={deleteLessonTarget !== null}
+        title="Xóa bài học"
+        message="Bạn có chắc chắn muốn xóa bài học này?"
+        confirmLabel="Xóa"
+        onConfirm={() => { if (deleteLessonTarget !== null) handleDeleteLesson(deleteLessonTarget); }}
+        onCancel={() => setDeleteLessonTarget(null)}
+      />
+
+    </div>
   );
 }

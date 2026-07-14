@@ -169,6 +169,61 @@ public class QuizGameController : ControllerBase
         return NoContent();
     }
 
+    // POST /api/quiz-game/{id}/duplicate
+    [HttpPost("{id:int}/duplicate")]
+    public async Task<IActionResult> Duplicate(int id)
+    {
+        var userId = GetUserId();
+        var game = await _context.QuizGames
+            .Include(q => q.Questions)
+            .FirstOrDefaultAsync(q => q.Id == id && q.UserId == userId);
+
+        if (game == null)
+            return NotFound(new { error = new { code = "NOT_FOUND", message = "Không tìm thấy bài quiz." } });
+
+        var slug = await GenerateUniqueSlugAsync();
+        var now = DateTime.UtcNow;
+
+        var duplicate = new QuizGame
+        {
+            UserId = userId,
+            Title = $"{game.Title} (Bản sao)",
+            Status = "draft",
+            Slug = slug,
+            ConfigJson = game.ConfigJson,
+            EcoinsSpent = 0,
+            ShowAnswersAfterSubmit = game.ShowAnswersAfterSubmit,
+            RequireStudentName = game.RequireStudentName,
+            CreatedAt = now,
+            UpdatedAt = now,
+            PublishedAt = null,
+        };
+
+        _context.QuizGames.Add(duplicate);
+        await _context.SaveChangesAsync();
+
+        // Duplicate all questions
+        foreach (var q in game.Questions.OrderBy(q => q.Number))
+        {
+            var dupQuestion = new QuizGameQuestion
+            {
+                QuizGameId = duplicate.Id,
+                Number = q.Number,
+                QuestionType = q.QuestionType,
+                QuestionText = q.QuestionText,
+                OptionsJson = q.OptionsJson,
+                CorrectAnswerIndex = q.CorrectAnswerIndex,
+                CorrectAnswerText = q.CorrectAnswerText,
+                Explanation = q.Explanation,
+                Difficulty = q.Difficulty,
+            };
+            _context.QuizGameQuestions.Add(dupQuestion);
+        }
+        await _context.SaveChangesAsync();
+
+        return Ok(new { gameId = duplicate.Id, slug = duplicate.Slug });
+    }
+
     // POST /api/quiz-game/{id}/questions
     [HttpPost("{id:int}/questions")]
     public async Task<IActionResult> AddQuestion(int id)

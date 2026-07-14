@@ -14,6 +14,10 @@ interface EcoinConfig {
   crosswordLanguageRates: Record<string, number>;
   crosswordRegenerateMultiplier: number;
   quizCoinCostPerQuestion: number;
+  freeEcoinOnRegister: number;
+  freeEcoinMaxPerAccount: number;
+  freeEcoinDailyTopUp: number;
+  subscriptionDurationDays: number;
 }
 
 const DEFAULT_CONFIG: EcoinConfig = {
@@ -28,6 +32,10 @@ const DEFAULT_CONFIG: EcoinConfig = {
   crosswordLanguageRates: { vi: 0, en: 2 },
   crosswordRegenerateMultiplier: 0.5,
   quizCoinCostPerQuestion: 1,
+  freeEcoinOnRegister: 10,
+  freeEcoinMaxPerAccount: 50,
+  freeEcoinDailyTopUp: 5,
+  subscriptionDurationDays: 30,
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -43,8 +51,13 @@ export default function GameEcoinConfigPage() {
     setLoading(true);
     setError('');
     try {
-      const response = await api.get<EcoinConfig>('/admin/game-ecoin-config');
-      setConfig(response.data);
+      const response = await api.get<EcoinConfig & { freeEcoinMonthlyTopUp?: number }>('/admin/game-ecoin-config');
+      const data = response.data;
+      // Backward compat: old configs may have freeEcoinMonthlyTopUp instead of freeEcoinDailyTopUp
+      if (data.freeEcoinDailyTopUp == null && data.freeEcoinMonthlyTopUp != null) {
+        data.freeEcoinDailyTopUp = data.freeEcoinMonthlyTopUp;
+      }
+      setConfig({ ...DEFAULT_CONFIG, ...data });
     } catch {
       // If not found, use defaults
       setConfig(DEFAULT_CONFIG);
@@ -96,7 +109,7 @@ export default function GameEcoinConfigPage() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, p: { xs: 1.5, md: 2 } }}>
       <Box>
-        <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>Cấu hình ECoin trò chơi</Typography>
+        <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>Cấu hình chung</Typography>
         <Typography variant="body2" color="text.secondary">
           Quản lý chi phí ECoin cho crossword và quiz.
         </Typography>
@@ -238,6 +251,66 @@ export default function GameEcoinConfigPage() {
           <Typography variant="body2" color="text.secondary">
             ECoin / câu hỏi (tổng = số câu × chi phí)
           </Typography>
+        </Box>
+      </Paper>
+
+      {/* Free ECoin config */}
+      <Paper variant="outlined" sx={{ p: 3 }}>
+        <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>ECoin miễn phí</Typography>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography sx={{ minWidth: 220 }}>Cấp khi tạo tài khoản:</Typography>
+            <TextField
+              type="number"
+              size="small"
+              value={config.freeEcoinOnRegister}
+              onChange={(e) => setConfig(prev => ({ ...prev, freeEcoinOnRegister: Number(e.target.value) }))}
+              sx={{ width: 100 }}
+              slotProps={{ input: { inputProps: { min: 0 } } }}
+            />
+            <Typography variant="body2" color="text.secondary">ECoin</Typography>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography sx={{ minWidth: 220 }}>Tối đa mỗi tài khoản:</Typography>
+            <TextField
+              type="number"
+              size="small"
+              value={config.freeEcoinMaxPerAccount}
+              onChange={(e) => setConfig(prev => ({ ...prev, freeEcoinMaxPerAccount: Number(e.target.value) }))}
+              sx={{ width: 100 }}
+              slotProps={{ input: { inputProps: { min: 0 } } }}
+            />
+            <Typography variant="body2" color="text.secondary">ECoin</Typography>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography sx={{ minWidth: 220 }}>Cộng thêm mỗi ngày:</Typography>
+            <TextField
+              type="number"
+              size="small"
+              value={config.freeEcoinDailyTopUp}
+              onChange={(e) => setConfig(prev => ({ ...prev, freeEcoinDailyTopUp: Number(e.target.value) }))}
+              sx={{ width: 100 }}
+              slotProps={{ input: { inputProps: { min: 0 } } }}
+            />
+            <Typography variant="body2" color="text.secondary">ECoin</Typography>
+          </Box>
+        </Box>
+      </Paper>
+
+      {/* Subscription duration */}
+      <Paper variant="outlined" sx={{ p: 3 }}>
+        <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>Gói đăng ký — Thời hạn</Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Typography sx={{ minWidth: 220 }}>Số ngày mỗi gói:</Typography>
+          <TextField
+            type="number"
+            size="small"
+            value={config.subscriptionDurationDays}
+            onChange={(e) => setConfig(prev => ({ ...prev, subscriptionDurationDays: Number(e.target.value) }))}
+            sx={{ width: 100 }}
+            slotProps={{ input: { inputProps: { min: 1 } } }}
+          />
+          <Typography variant="body2" color="text.secondary">ngày</Typography>
         </Box>
       </Paper>
 

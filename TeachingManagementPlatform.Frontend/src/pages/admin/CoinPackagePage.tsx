@@ -20,6 +20,7 @@ import type { ApiError } from '../../types/common';
 import type { CoinPackage, CreateCoinPackageRequest, UpdateCoinPackageRequest } from '../../types/coin';
 import * as coinService from '../../services/coinService';
 import { formatCurrency } from '../../utils/formatters';
+import Pagination, { usePagination } from '../../components/common/Pagination';
 
 interface ModalState {
   type: 'create' | 'edit' | null;
@@ -41,6 +42,8 @@ export default function CoinPackagePage() {
   const [formIsActive, setFormIsActive] = useState(true);
   const [formError, setFormError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const { paginatedItems, currentPage, pageSize, totalItems, setCurrentPage, setPageSize } = usePagination(packages);
 
   const loadPackages = useCallback(async () => {
     setLoading(true);
@@ -262,71 +265,42 @@ export default function CoinPackagePage() {
         <Typography sx={emptyStateStyle as object}>Chưa có gói ECoin nào. Tạo gói đầu tiên để giảng viên có thể nạp coin.</Typography>
       ) : (
         <>
-          <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 2 }}>
-            {packages.map((pkg) => (
-              <Card key={pkg.id} sx={{ borderRadius: 2 }}>
-                <CardContent sx={{ p: 2 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>{pkg.name}</Typography>
-                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mb: 1.5 }}>
-                    <Box>
-                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>Giá</Typography>
-                      <Typography variant="body2">{formatCurrency(pkg.price)}</Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>ECoin</Typography>
-                      <Typography variant="body2">{pkg.coinAmount.toLocaleString('vi-VN')}</Typography>
-                    </Box>
-                  </Box>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-                    {pkg.description || '—'}
-                  </Typography>
-                  <Chip
-                    label={pkg.isActive ? 'Đang mở bán' : 'Tạm ẩn'}
-                    color={pkg.isActive ? 'success' : 'default'}
-                    size="small"
-                    variant="outlined"
-                    sx={{ mb: 2 }}
-                  />
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Button fullWidth variant="outlined" onClick={() => openEditModal(pkg)} disabled={actionLoading} sx={{ minHeight: 44 }}>Sửa</Button>
-                    <Button fullWidth variant="outlined" color="error" onClick={() => setDeleteTarget(pkg)} disabled={actionLoading} sx={{ minHeight: 44 }}>Xóa</Button>
-                  </Box>
-                </CardContent>
-              </Card>
-            ))}
-          </Box>
-
-          <TableContainer component={Paper} variant="outlined" sx={{ display: { xs: 'none', md: 'block' }, overflowX: 'auto' }}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: 700 }}>Gói</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Giá</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>ECoin</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Mô tả</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Trạng thái</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Hành động</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {packages.map((pkg) => (
-                  <TableRow key={pkg.id} hover>
-                    <TableCell>{pkg.name}</TableCell>
-                    <TableCell>{formatCurrency(pkg.price)}</TableCell>
-                    <TableCell>{pkg.coinAmount.toLocaleString('vi-VN')}</TableCell>
-                    <TableCell>{pkg.description || '—'}</TableCell>
-                    <TableCell>{pkg.isActive ? 'Đang mở bán' : 'Tạm ẩn'}</TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                        <button type="button" onClick={() => openEditModal(pkg)} disabled={actionLoading} className="btn btn-update" style={{ minHeight: 44 }}>Sửa</button>
-                        <button type="button" onClick={() => setDeleteTarget(pkg)} disabled={actionLoading} className="btn btn-delete" style={{ minHeight: 44 }}>Xóa</button>
-                      </Box>
-                    </TableCell>
-                  </TableRow>
+          <div style={tableShellStyle}>
+            <table style={tableStyle}>
+              <thead>
+                <tr>
+                  <th style={thStyle}>Gói</th>
+                  <th style={thStyle}>Giá</th>
+                  <th style={thStyle}>ECoin</th>
+                  <th style={thStyle}>Mô tả</th>
+                  <th style={thStyle}>Trạng thái</th>
+                  <th style={{ ...thStyle, textAlign: 'center' }}>Hành động</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedItems.map((pkg) => (
+                  <tr key={pkg.id}>
+                    <td style={tdStyle}>{pkg.name}</td>
+                    <td style={tdStyle}>{formatCurrency(pkg.price)}</td>
+                    <td style={tdStyle}>{pkg.coinAmount.toLocaleString('vi-VN')}</td>
+                    <td style={tdStyle}>{pkg.description || '—'}</td>
+                    <td style={tdStyle}>{pkg.isActive ? 'Đang mở bán' : 'Tạm ẩn'}</td>
+                    <td style={tdStyle}>
+                      <div style={actionButtonsStyle}>
+                        <button type="button" onClick={() => openEditModal(pkg)} disabled={actionLoading} className="btn btn-update">
+                          Sửa
+                        </button>
+                        <button type="button" onClick={() => setDeleteTarget(pkg)} disabled={actionLoading} className="btn btn-delete">
+                          Xóa
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
                 ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+              </tbody>
+            </table>
+          </div>
+          <Pagination totalItems={totalItems} currentPage={currentPage} pageSize={pageSize} onPageChange={setCurrentPage} onPageSizeChange={setPageSize} />
         </>
       )}
 
