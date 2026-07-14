@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
+  Card,
+  CardContent,
   Chip,
   CircularProgress,
   Dialog,
@@ -93,7 +95,7 @@ export default function CrosswordListPage() {
   }, [deleteTarget, loadList]);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, p: { xs: 1.5, md: 2 } }}>
       {/* Header */}
       <Box
         sx={{
@@ -117,6 +119,7 @@ export default function CrosswordListPage() {
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => navigate('/lecturer/crossword/new')}
+          sx={{ minHeight: 44, minWidth: 44, whiteSpace: 'nowrap' }}
         >
           Tạo ô chữ mới
         </Button>
@@ -124,7 +127,7 @@ export default function CrosswordListPage() {
 
       {/* Error */}
       {error && (
-        <Typography role="alert" color="error">
+        <Typography role="alert" color="error" sx={{ p: 2, bgcolor: 'error.lighter', borderRadius: 1 }}>
           {error}
         </Typography>
       )}
@@ -143,7 +146,7 @@ export default function CrosswordListPage() {
             border: '1px dashed',
             borderColor: 'divider',
             borderRadius: 3,
-            p: 4,
+            p: { xs: 2, md: 4 },
             textAlign: 'center',
             bgcolor: 'action.hover',
           }}
@@ -158,13 +161,14 @@ export default function CrosswordListPage() {
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => navigate('/lecturer/crossword/new')}
+            sx={{ minHeight: 44 }}
           >
             Tạo ô chữ mới
           </Button>
         </Box>
       )}
 
-      {/* Table */}
+      {/* Mobile Card View */}
       {!loading && items.length > 0 && (
         <>
           <TableContainer component={Paper} variant="outlined">
@@ -269,6 +273,8 @@ export default function CrosswordListPage() {
         open={deleteTarget != null}
         onClose={() => setDeleteTarget(null)}
         aria-labelledby="delete-dialog-title"
+        maxWidth="sm"
+        fullWidth
       >
         <DialogTitle id="delete-dialog-title">Xác nhận xóa</DialogTitle>
         <DialogContent>

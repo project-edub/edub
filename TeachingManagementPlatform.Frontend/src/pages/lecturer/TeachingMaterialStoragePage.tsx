@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { AxiosError } from 'axios';
+import { Box, Button, Drawer, IconButton, List, ListItemButton, ListItemText, Typography, useMediaQuery, useTheme } from '@mui/material';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import type { StorageItem, StorageFilter, StorageQuota } from '../../types/storage';
 import type { ApiError } from '../../types/common';
 import { ItemType } from '../../types/common';
@@ -13,6 +15,8 @@ interface BreadcrumbEntry {
 }
 
 export default function TeachingMaterialStoragePage() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [items, setItems] = useState<StorageItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -36,6 +40,7 @@ export default function TeachingMaterialStoragePage() {
   const [renameTarget, setRenameTarget] = useState<StorageItem | null>(null);
   const [renameName, setRenameName] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<StorageItem | null>(null);
+  const [mobileActionTarget, setMobileActionTarget] = useState<StorageItem | null>(null);
   const [quota, setQuota] = useState<StorageQuota | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [hoveredRowId, setHoveredRowId] = useState<number | null>(null);
@@ -238,7 +243,7 @@ export default function TeachingMaterialStoragePage() {
   }
 
   return (
-    <div style={{ padding: 24 }}>
+    <Box sx={{ p: { xs: 1.5, md: 3 } }}>
       <h1 style={{ marginBottom: 24, color: 'var(--edub-text-primary)' }}>Kho tài liệu giảng dạy</h1>
 
       {error && (
@@ -378,7 +383,29 @@ export default function TeachingMaterialStoragePage() {
       {loading ? (
         <p>Đang tải...</p>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <>
+        {isMobile ? <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          {items.length === 0 ? (
+            <Typography sx={{ py: 4, textAlign: 'center' }} color="text.secondary">Không có tệp hoặc thư mục nào</Typography>
+          ) : items.map((item) => (
+            <Box key={item.id} sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1.5, borderBottom: '1px solid', borderColor: 'divider' }}>
+              <Box sx={{ minWidth: 0, flex: 1 }}>
+                {item.itemType === ItemType.Folder ? (
+                  <Button variant="text" onClick={() => openFolder(item)} sx={{ p: 0, minWidth: 0, minHeight: 32, textTransform: 'none', justifyContent: 'flex-start' }}>{`📁 ${item.name}`}</Button>
+                ) : (
+                  <Typography noWrap>{`📄 ${item.name}`}</Typography>
+                )}
+                <Typography variant="caption" color="text.secondary">
+                  {formatDate(item.modifiedAt)}{item.itemType === ItemType.File ? ` · ${formatFileSize(item.fileSize)}` : ''}
+                </Typography>
+              </Box>
+              <IconButton aria-label={`Thao tác với ${item.name}`} onClick={() => setMobileActionTarget(item)} disabled={actionLoading} sx={{ minWidth: 44, minHeight: 44 }}>
+                <MoreVertIcon />
+              </IconButton>
+            </Box>
+          ))}
+        </Box> : <Box sx={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', minWidth: 640, borderCollapse: 'collapse' }}>
           <thead>
             <tr>
               <th style={thStyle}>Tên</th>
@@ -437,6 +464,8 @@ export default function TeachingMaterialStoragePage() {
             )}
           </tbody>
         </table>
+        </Box>}
+        </>
       )}
 
       {/* Create folder modal */}
@@ -464,6 +493,18 @@ export default function TeachingMaterialStoragePage() {
           </div>
         </div>
       )}
+
+      <Drawer anchor="bottom" open={mobileActionTarget !== null} onClose={() => setMobileActionTarget(null)}>
+        <Box sx={{ p: 1, pb: 2 }}>
+          <Typography sx={{ px: 2, py: 1, fontWeight: 700 }} noWrap>{mobileActionTarget?.name}</Typography>
+          <List disablePadding>
+            <ListItemButton onClick={() => { if (mobileActionTarget) startRename(mobileActionTarget); setMobileActionTarget(null); }} sx={{ minHeight: 48 }}><ListItemText primary="Đổi tên" /></ListItemButton>
+            {mobileActionTarget?.itemType === ItemType.File && <ListItemButton onClick={() => { if (mobileActionTarget) handleOpen(mobileActionTarget); setMobileActionTarget(null); }} disabled={!mobileActionTarget.fileUrl} sx={{ minHeight: 48 }}><ListItemText primary="Mở" /></ListItemButton>}
+            {mobileActionTarget?.itemType === ItemType.File && <ListItemButton onClick={() => { if (mobileActionTarget) handleDownload(mobileActionTarget); setMobileActionTarget(null); }} sx={{ minHeight: 48 }}><ListItemText primary="Tải xuống" /></ListItemButton>}
+            <ListItemButton onClick={() => { setDeleteTarget(mobileActionTarget); setMobileActionTarget(null); }} sx={{ minHeight: 48, color: 'error.main' }}><ListItemText primary="Xóa" /></ListItemButton>
+          </List>
+        </Box>
+      </Drawer>
 
       {/* Rename modal */}
       {renameTarget && (
@@ -509,7 +550,7 @@ export default function TeachingMaterialStoragePage() {
           </div>
         </div>
       )}
-    </div>
+    </Box>
   );
 }
 
@@ -540,6 +581,10 @@ const modalStyle: React.CSSProperties = {
   border: '1px solid var(--edub-border)',
   padding: 24,
   borderRadius: 8,
-  minWidth: 400,
+  // Retain the desktop dialog width without letting it exceed a phone viewport.
+  width: 'min(400px, calc(100% - 24px))',
   maxWidth: 500,
+  maxHeight: 'calc(100dvh - 24px)',
+  boxSizing: 'border-box',
+  overflowY: 'auto',
 };

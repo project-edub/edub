@@ -210,11 +210,11 @@ export default function ClassLessonPlanTab({ classId }: ClassLessonPlanTabProps)
       )}
 
       {/* Lesson plan selector */}
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 16 }}>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 16 }}>
         <select
           value={selectedPlanId}
           onChange={(e) => setSelectedPlanId(e.target.value ? Number(e.target.value) : '')}
-          style={{ padding: 8, minWidth: 300, backgroundColor: 'var(--edub-input-bg)', border: '1px solid var(--edub-input-border)', color: 'var(--edub-text-primary)', borderRadius: 8 }}
+          style={{ padding: 8, width: 300, maxWidth: '100%', boxSizing: 'border-box', backgroundColor: 'var(--edub-input-bg)', border: '1px solid var(--edub-input-border)', color: 'var(--edub-text-primary)', borderRadius: 8 }}
           aria-label="Chọn giáo án"
         >
           <option value="">Chọn giáo án</option>
@@ -254,7 +254,7 @@ export default function ClassLessonPlanTab({ classId }: ClassLessonPlanTabProps)
             background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
           }}
         >
-          <div style={{ background: '#fff', borderRadius: 8, padding: 24, maxWidth: 420 }}>
+          <div style={{ background: '#fff', borderRadius: 8, padding: 24, width: 'min(420px, calc(100% - 24px))', maxHeight: 'calc(100dvh - 24px)', boxSizing: 'border-box', overflowY: 'auto' }}>
             <h3 style={{ marginTop: 0, color: '#d32f2f' }}>Bỏ gán giáo án?</h3>
             <p style={{ color: 'var(--edub-text-secondary)', marginBottom: 16 }}>
               ⚠️ Tất cả lưu trữ tiến độ giảng dạy (ngày dạy, trạng thái bài học) sẽ bị mất và không thể hoàn tác.
@@ -296,7 +296,7 @@ export default function ClassLessonPlanTab({ classId }: ClassLessonPlanTabProps)
               placeholder="Tìm kiếm bài học"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              style={{ padding: 8, width: 300, backgroundColor: 'var(--edub-input-bg)', border: '1px solid var(--edub-input-border)', color: 'var(--edub-text-primary)', borderRadius: 8 }}
+              style={{ padding: 8, width: 300, maxWidth: '100%', boxSizing: 'border-box', backgroundColor: 'var(--edub-input-bg)', border: '1px solid var(--edub-input-border)', color: 'var(--edub-text-primary)', borderRadius: 8 }}
             />
           </div>
 

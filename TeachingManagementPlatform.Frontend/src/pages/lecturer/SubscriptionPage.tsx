@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { Box } from '@mui/material';
 import type { SubscriptionPackage } from '../../types/subscription';
 import type { CoinWalletResponse } from '../../types/coin';
 import * as subscriptionService from '../../services/subscriptionService';
@@ -106,16 +107,16 @@ export default function SubscriptionPage() {
   }
 
   return (
-    <div style={pageStyle}>
-      <div style={heroStyle}>
+    <Box sx={{ ...pageStyle, p: { xs: 1.5, sm: 2, md: 3 } }}>
+      <Box sx={{ ...heroStyle, p: { xs: 2, sm: 2.5, md: 3 }, mb: { xs: 2, md: 3 }, borderRadius: { xs: 3, md: 5 }, overflow: 'hidden' }}>
         <div>
           <p style={eyebrowStyle}>Gói đăng ký</p>
-          <h1 style={titleStyle}>Nâng cấp tài khoản</h1>
-          <p style={subtitleStyle}>
+          <Box component="h1" sx={{ ...titleStyle, fontSize: { xs: 28, md: 36 }, lineHeight: { xs: 1.2, md: 1.1 }, overflowWrap: 'anywhere' }}>Nâng cấp tài khoản</Box>
+          <Box component="p" sx={{ ...subtitleStyle, fontSize: { xs: 15, md: 16 }, lineHeight: { xs: 1.55, md: 1.6 } }}>
             Chọn gói phù hợp để mở khóa thêm tính năng tạo quiz, ô chữ và tăng hạn mức sử dụng.
-          </p>
+          </Box>
         </div>
-      </div>
+      </Box>
 
       {error && <div role="alert" style={alertStyle}>{error}</div>}
       {successMessage && <div role="status" style={successStyle}>{successMessage}</div>}
@@ -125,7 +126,7 @@ export default function SubscriptionPage() {
       ) : packages.length === 0 ? (
         <div style={emptyStateStyle}>Chưa có gói đăng ký nào khả dụng.</div>
       ) : (
-        <div style={gridStyle}>
+        <Box sx={{ ...gridStyle, gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'repeat(auto-fit, minmax(280px, 1fr))' }, gap: { xs: 1.5, md: 2.5 } }}>
           {packages.map((pkg) => {
             const currentPrice = wallet?.subscriptionPackagePrice ?? 0;
             const isCurrentPlan = wallet?.subscriptionPackageName === pkg.name;
@@ -140,12 +141,12 @@ export default function SubscriptionPage() {
               : pkg.price;
 
             return (
-            <article key={pkg.id} style={{ ...cardStyle, ...(isCurrentPlan ? { border: '2px solid #1976d2' } : {}) }}>
-              <div style={cardHeaderStyle}>
+            <Box component="article" key={pkg.id} sx={{ ...cardStyle, ...(isCurrentPlan ? { border: '2px solid #1976d2' } : {}), p: { xs: 2, md: 3 } }}>
+              <Box sx={{ ...cardHeaderStyle, flexWrap: 'wrap' }}>
                 <h2 style={cardTitleStyle}>{pkg.name}</h2>
                 {pkg.isDefault && <span style={defaultBadge}>Mặc định</span>}
                 {isCurrentPlan && <span style={{ ...defaultBadge, backgroundColor: '#e8f5e9', color: '#2e7d32' }}>Gói hiện tại</span>}
-              </div>
+              </Box>
 
               <div style={priceRowStyle}>
                 {isUpgradeFromPaid && discountPercent > 0 ? (
@@ -188,7 +189,7 @@ export default function SubscriptionPage() {
                 <button
                   type="button"
                   className="btn btn-add"
-                  style={{ width: '100%', marginTop: 12 }}
+                  style={{ width: '100%', marginTop: 12, minHeight: 44 }}
                   disabled={actionLoading === pkg.id}
                   onClick={() => void handlePurchase(pkg)}
                 >
@@ -197,16 +198,16 @@ export default function SubscriptionPage() {
               ) : (
                 <p style={freeNote}></p>
               )}
-            </article>
+            </Box>
             );
           })}
-        </div>
+        </Box>
       )}
-    </div>
+    </Box>
   );
 }
 
-const pageStyle: React.CSSProperties = { padding: 24 };
+const pageStyle: React.CSSProperties = {};
 const heroStyle: React.CSSProperties = { marginBottom: 24, padding: 24, borderRadius: 20, background: 'linear-gradient(135deg, #0f172a 0%, #334155 100%)', color: '#fff' };
 const eyebrowStyle: React.CSSProperties = { margin: 0, textTransform: 'uppercase', letterSpacing: '0.14em', fontSize: 12, color: 'rgba(255,255,255,0.72)' };
 const titleStyle: React.CSSProperties = { margin: '8px 0 8px' };

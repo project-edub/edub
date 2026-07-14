@@ -128,8 +128,11 @@ const modalStyle: React.CSSProperties = {
   border: '1px solid var(--edub-border)',
   padding: 24,
   borderRadius: 8,
-  minWidth: 450,
+  width: 'min(450px, calc(100% - 24px))',
   maxWidth: 550,
+  maxHeight: 'calc(100dvh - 24px)',
+  boxSizing: 'border-box',
+  overflowY: 'auto',
 };
 
 const labelStyle: React.CSSProperties = { display: 'block', marginBottom: 4 };

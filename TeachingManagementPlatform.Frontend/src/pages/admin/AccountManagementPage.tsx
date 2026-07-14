@@ -1,5 +1,20 @@
 import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { AxiosError } from 'axios';
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  CircularProgress,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from '@mui/material';
 import type { AccountResponse, CreateAccountRequest, UpdateAccountRequest } from '../../types/account';
 import type { SubscriptionPackage } from '../../types/subscription';
 import { AccountStatus, type ApiError } from '../../types/common';
@@ -192,27 +207,51 @@ export default function AccountManagementPage() {
   }
 
   return (
-    <div style={{ padding: 24 }}>
-      <h1 style={{ marginBottom: 24, color: '#000' }}>Quản lý tài khoản giáo viên</h1>
+    <Box sx={{ p: { xs: 1.5, md: 2 } }}>
+      <Typography variant="h4" sx={{ fontWeight: 800, mb: 3, color: '#000' }}>
+        Quản lý tài khoản giáo viên
+      </Typography>
 
       {error && (
-        <div role="alert" style={{ color: '#d32f2f', marginBottom: 16 }}>
+        <Typography role="alert" color="error" sx={{ mb: 2 }}>
           {error}
-        </div>
+        </Typography>
       )}
 
-      <button
-        type="button"
+      <Button
+        variant="contained"
         onClick={openCreateModal}
         className="btn btn-add"
-        style={{ marginBottom: 16 }}
+        sx={{ mb: 2, minHeight: 44 }}
       >
         Thêm tài khoản
-      </button>
+      </Button>
 
       {loading ? (
-        <p>Đang tải...</p>
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+          <CircularProgress />
+        </Box>
+      ) : accounts.length === 0 ? (
+        <Typography sx={{ textAlign: 'center', py: 4 }} color="text.secondary">
+          Không có tài khoản nào
+        </Typography>
       ) : (
+        <>
+          <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 1.5 }}>
+            {accounts.map((account) => (
+              <Card key={account.id}><CardContent sx={{ p: 2 }}>
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>{account.fullName}</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-all', mb: 1 }}>{account.email}</Typography>
+                <Typography variant="body2">ECoin: {((account.freeEcoinBalance ?? 0) + account.coinBalance).toLocaleString('vi-VN')}</Typography>
+                <Typography variant="body2" sx={{ mb: 1.5 }}>Trạng thái: {account.status === AccountStatus.Active ? 'Hoạt động' : 'Vô hiệu hóa'}</Typography>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Button fullWidth variant="outlined" onClick={() => openEditModal(account)} disabled={actionLoading} sx={{ minHeight: 44 }}>Sửa</Button>
+                  <Button fullWidth variant="outlined" color="error" onClick={() => setDeleteTarget(account)} disabled={actionLoading} sx={{ minHeight: 44 }}>Xóa</Button>
+                </Box>
+              </CardContent></Card>
+            ))}
+          </Box>
+          <Box sx={{ display: { xs: 'none', md: 'block' } }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
@@ -277,10 +316,46 @@ export default function AccountManagementPage() {
                     </button>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ))) }
+            </tbody>
+          </table>
+          </Box>
+
+          <TableContainer component={Paper} variant="outlined" sx={{ display: 'none' }}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 700 }}>Email</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Họ và tên</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>ECoin</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Trạng thái</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>Hành động</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {accounts.map((account) => (
+                  <TableRow key={account.id} hover>
+                    <TableCell>{account.email}</TableCell>
+                    <TableCell>{account.fullName}</TableCell>
+                    <TableCell>{account.coinBalance.toLocaleString('vi-VN')}</TableCell>
+                    <TableCell>
+                      {account.status === AccountStatus.Active ? 'Hoạt động' : 'Vô hiệu hóa'}
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                        <button type="button" onClick={() => openEditModal(account)} disabled={actionLoading} className="btn btn-update" style={{ marginRight: 8, minHeight: 44 }}>Sửa</button>
+                        <button type="button" onClick={() => setDeleteTarget(account)} disabled={actionLoading} className="btn btn-delete" style={{ marginRight: 8, minHeight: 44 }}>Xóa</button>
+                        <button type="button" onClick={() => handleToggleStatus(account)} disabled={actionLoading} className="btn btn-view" style={{ minHeight: 44 }}>
+                          {account.status === AccountStatus.Active ? 'Vô hiệu hóa' : 'Kích hoạt'}
+                        </button>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </>
       )}
 
       <Pagination
@@ -459,20 +534,9 @@ export default function AccountManagementPage() {
           </div>
         </div>
       )}
-    </div>
+    </Box>
   );
 }
-
-const thStyle: React.CSSProperties = {
-  textAlign: 'left',
-  padding: '8px 12px',
-  borderBottom: '2px solid #ccc',
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: '8px 12px',
-  borderBottom: '1px solid #eee',
-};
 
 const overlayStyle: React.CSSProperties = {
   position: 'fixed',
@@ -488,7 +552,7 @@ const modalStyle: React.CSSProperties = {
   backgroundColor: '#fff',
   padding: 24,
   borderRadius: 8,
-  minWidth: 400,
+  width: '100%',
   maxWidth: 500,
 };
 
@@ -497,3 +561,6 @@ const inputStyle: React.CSSProperties = {
   padding: 8,
   boxSizing: 'border-box',
 };
+
+const thStyle: React.CSSProperties = { textAlign: 'left', padding: '12px', borderBottom: '2px solid var(--edub-border)' };
+const tdStyle: React.CSSProperties = { padding: '12px', borderBottom: '1px solid var(--edub-border)' };

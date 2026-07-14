@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { AxiosError } from 'axios';
+import { Box, Button, Typography } from '@mui/material';
+import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined';
 import type { ApiError } from '../../types/common';
 import type { CoinPackage, CoinWalletResponse } from '../../types/coin';
 import * as coinService from '../../services/coinService';
@@ -34,8 +36,8 @@ export default function CoinPurchasePage() {
       ]);
       setWallet(walletData);
       setPackages(packageData);
-    } catch (err) {
-      setError(extractError(err));
+    } catch {
+      setError('Không tải được danh sách gói ECoin. Kiểm tra kết nối mạng và thử lại.');
     } finally {
       setLoading(false);
     }
@@ -165,9 +167,10 @@ export default function CoinPurchasePage() {
       </div>
 
       {error && (
-        <div role="alert" style={alertStyle}>
-          {error}
-        </div>
+        <Box role="alert" sx={{ ...alertStyle, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'stretch', sm: 'center' }, justifyContent: 'space-between', gap: 1.5 }}>
+          <Typography variant="body2">{error}</Typography>
+          <Button variant="outlined" color="error" onClick={() => void loadData()} disabled={loading} sx={{ minHeight: 44, flexShrink: 0, whiteSpace: 'nowrap' }}>Thử lại</Button>
+        </Box>
       )}
 
       {successMessage && (
@@ -179,19 +182,23 @@ export default function CoinPurchasePage() {
       {loading ? (
         <div style={emptyStateStyle}>Đang tải gói ECoin...</div>
       ) : packages.length === 0 ? (
-        <div style={emptyStateStyle}>Chưa có gói ECoin nào khả dụng.</div>
+        <Box sx={{ ...emptyStateStyle, py: { xs: 3, md: 4 }, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+          <AccountBalanceWalletOutlinedIcon color="action" sx={{ fontSize: 32 }} />
+          <Typography sx={{ fontWeight: 600 }}>Chưa có gói ECoin nào khả dụng.</Typography>
+          <Typography variant="body2" color="text.secondary">Vui lòng kiểm tra lại sau hoặc liên hệ quản trị viên.</Typography>
+        </Box>
       ) : (
         <div style={gridStyle}>
           {[...packages].sort((a, b) => a.price - b.price).map((pkg) => (
             <article key={pkg.id} style={cardStyle}>
-              <div style={cardHeaderStyle}>
+              <Box sx={{ ...cardHeaderStyle, flexDirection: { xs: 'column', sm: 'row' } }}>
                 <div>
                   <h2 style={cardTitleStyle}>{pkg.name}</h2>
                   <strong style={priceValueStyle}>{formatCurrency(pkg.price)}</strong>
                   <p style={cardSubtitleStyle}>{pkg.description || 'Gói nạp coin cho AI quiz.'}</p>
                 </div>
                 <span style={coinBadgeStyle}>{pkg.coinAmount.toLocaleString('vi-VN')} ECoin</span>
-              </div>
+              </Box>
 
               <button
                 type="button"
@@ -211,7 +218,6 @@ export default function CoinPurchasePage() {
 }
 
 const pageStyle: React.CSSProperties = {
-  padding: 24,
 };
 
 const heroStyle: React.CSSProperties = {

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { AxiosError } from 'axios';
+import { Box } from '@mui/material';
 import type {
   SubscriptionPackage,
   CreateSubscriptionPackageRequest,
@@ -242,8 +243,8 @@ export default function SubscriptionPackagePage() {
   const activeCount = packages.filter((p) => p.isActive).length;
 
   return (
-    <div style={pageStyle}>
-      <div style={heroStyle}>
+    <Box sx={{ ...pageStyle, p: { xs: 1.5, md: 3 } }}>
+      <Box sx={{ ...heroStyle, flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 2, md: 3 }, p: { xs: 2, md: 3 } }}>
         <div>
           <p style={eyebrowStyle}>Gói đăng ký</p>
           <h1 style={titleStyle}>Quản lý gói đăng ký</h1>
@@ -252,7 +253,7 @@ export default function SubscriptionPackagePage() {
           </p>
         </div>
 
-        <div style={heroActionsStyle}>
+        <Box sx={{ ...heroActionsStyle, width: { xs: '100%', md: 'auto' }, minWidth: { xs: 0, md: 240 } }}>
           <div style={statsGridStyle}>
             <div style={statCardStyle}>
               <span style={statValueStyle}>{packages.length}</span>
@@ -264,11 +265,11 @@ export default function SubscriptionPackagePage() {
             </div>
           </div>
 
-          <button type="button" onClick={openCreateModal} className="btn btn-add">
+          <button type="button" onClick={openCreateModal} className="btn btn-add" style={{ minHeight: 44 }}>
             Thêm gói mới
           </button>
-        </div>
-      </div>
+        </Box>
+      </Box>
 
       {error && <div role="alert" style={alertErrorStyle}>{error}</div>}
 
@@ -350,14 +351,14 @@ export default function SubscriptionPackagePage() {
       {/* Create/Edit Modal */}
       {modal.type && (
         <div style={overlayStyle}>
-          <div style={modalStyle}>
-            <div style={modalHeaderStyle}>
+          <Box sx={{ ...modalStyle, width: { xs: '100%', md: 'min(920px, 100%)' }, maxHeight: { xs: 'calc(100dvh - 24px)', md: '90vh' }, p: { xs: 2, md: 3 } }}>
+            <Box sx={{ ...modalHeaderStyle, gap: { xs: 1, md: 2 } }}>
               <div>
                 <h2 style={modalTitleStyle}>{modal.type === 'create' ? 'Tạo gói mới' : 'Chỉnh sửa gói'}</h2>
                 <p style={modalSubtitleStyle}>Cấu hình hạn mức và chức năng mở khóa theo từng gói.</p>
               </div>
-              <button type="button" onClick={closeModal} style={closeButtonStyle} aria-label="Đóng">×</button>
-            </div>
+              <button type="button" onClick={closeModal} style={{ ...closeButtonStyle, minWidth: 44, minHeight: 44 }} aria-label="Đóng">×</button>
+            </Box>
 
             {formError && <div role="alert" style={alertErrorStyle}>{formError}</div>}
 
@@ -445,8 +446,8 @@ export default function SubscriptionPackagePage() {
                 <span style={helperTextStyle}>Cấu hình % giảm giá khi người dùng nâng cấp từ gói khác lên gói này.</span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
                   {/* Free plan (id=0) */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <span style={{ minWidth: 140, fontSize: 13 }}>Từ gói Miễn phí:</span>
+                  <Box component="div" sx={{ display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 0.75, sm: 1.5 } }}>
+                    <span style={{ fontSize: 13 }}>Từ gói Miễn phí:</span>
                     <input
                       type="number"
                       min={0}
@@ -456,13 +457,13 @@ export default function SubscriptionPackagePage() {
                       style={{ width: 60, padding: 6, borderRadius: 6, border: '1px solid #cbd5e1', textAlign: 'center' }}
                     />
                     <span style={{ fontSize: 13, color: '#64748b' }}>%</span>
-                  </div>
+                  </Box>
                   {/* Other packages */}
                   {packages
                     .filter((p) => p.id !== modal.pkg?.id && p.price > 0)
                     .map((p) => (
-                      <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <span style={{ minWidth: 140, fontSize: 13 }}>Từ gói {p.name}:</span>
+                      <Box key={p.id} component="div" sx={{ display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 0.75, sm: 1.5 } }}>
+                        <span style={{ fontSize: 13 }}>Từ gói {p.name}:</span>
                         <input
                           type="number"
                           min={0}
@@ -472,43 +473,43 @@ export default function SubscriptionPackagePage() {
                           style={{ width: 60, padding: 6, borderRadius: 6, border: '1px solid #cbd5e1', textAlign: 'center' }}
                         />
                         <span style={{ fontSize: 13, color: '#64748b' }}>%</span>
-                      </div>
+                      </Box>
                     ))}
                 </div>
               </section>
               )}
 
-              <div style={footerActionsStyle}>
-                <button type="button" onClick={closeModal} disabled={actionLoading} className="btn btn-neutral">Hủy</button>
-                <button type="submit" disabled={actionLoading} className="btn btn-update">
+              <Box sx={{ ...footerActionsStyle, flexDirection: { xs: 'column-reverse', sm: 'row' } }}>
+                <button type="button" onClick={closeModal} disabled={actionLoading} className="btn btn-neutral" style={{ minHeight: 44 }}>Hủy</button>
+                <button type="submit" disabled={actionLoading} className="btn btn-update" style={{ minHeight: 44 }}>
                   {actionLoading ? 'Đang xử lý...' : modal.type === 'create' ? 'Tạo gói' : 'Lưu thay đổi'}
                 </button>
-              </div>
+              </Box>
             </form>
-          </div>
+          </Box>
         </div>
       )}
 
       {/* Delete confirmation */}
       {deleteTarget && (
         <div style={overlayStyle}>
-          <div style={modalStyle}>
+          <Box sx={{ ...modalStyle, width: { xs: '100%', md: 'min(920px, 100%)' }, maxHeight: { xs: 'calc(100dvh - 24px)', md: '90vh' }, p: { xs: 2, md: 3 } }}>
             <h2 style={modalTitleStyle}>Xác nhận xóa</h2>
             <p style={{ ...modalSubtitleStyle, marginBottom: 20 }}>
               {deleteTarget.isDefault
                 ? 'Gói mặc định không thể xóa.'
                 : `Bạn có chắc chắn muốn xóa gói "${deleteTarget.name}"?`}
             </p>
-            <div style={footerActionsStyle}>
-              <button type="button" onClick={() => setDeleteTarget(null)} disabled={actionLoading} className="btn btn-neutral">Hủy</button>
-              <button type="button" onClick={handleDelete} disabled={actionLoading || deleteTarget.isDefault} className="btn btn-delete">
+            <Box sx={{ ...footerActionsStyle, flexDirection: { xs: 'column-reverse', sm: 'row' } }}>
+              <button type="button" onClick={() => setDeleteTarget(null)} disabled={actionLoading} className="btn btn-neutral" style={{ minHeight: 44 }}>Hủy</button>
+              <button type="button" onClick={handleDelete} disabled={actionLoading || deleteTarget.isDefault} className="btn btn-delete" style={{ minHeight: 44 }}>
                 {actionLoading ? 'Đang xử lý...' : 'Xóa'}
               </button>
-            </div>
-          </div>
+            </Box>
+          </Box>
         </div>
       )}
-    </div>
+    </Box>
   );
 }
 
@@ -549,7 +550,7 @@ function checkboxCardStyle(checked: boolean): CSSProperties {
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
-const pageStyle: CSSProperties = { padding: 24, background: 'linear-gradient(180deg, #f8fbff 0%, #ffffff 100%)' };
+const pageStyle: CSSProperties = { background: 'linear-gradient(180deg, #f8fbff 0%, #ffffff 100%)' };
 const heroStyle: CSSProperties = { display: 'flex', justifyContent: 'space-between', gap: 24, alignItems: 'flex-start', marginBottom: 20, padding: 24, borderRadius: 20, background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', color: '#fff', boxShadow: '0 18px 40px rgba(15, 23, 42, 0.16)' };
 const heroActionsStyle: CSSProperties = { display: 'flex', flexDirection: 'column', gap: 16, minWidth: 240 };
 const statsGridStyle: CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 };
@@ -570,6 +571,7 @@ const limitMetaStyle: CSSProperties = { fontSize: 13, color: '#6b7280' };
 const featureStackStyle: CSSProperties = { display: 'flex', flexWrap: 'wrap', gap: 8 };
 const featureChipStyle: CSSProperties = { display: 'inline-flex', alignItems: 'center', padding: '6px 10px', borderRadius: 999, backgroundColor: '#edf7f1', color: '#1f7a4d', fontSize: 12, fontWeight: 600 };
 const mutedTextStyle: CSSProperties = { color: '#9ca3af', fontSize: 13 };
+const mobileLabelStyle: CSSProperties = { display: 'block', marginBottom: 2, color: '#6b7280', fontSize: 12, fontWeight: 600 };
 const defaultBadgeStyle: CSSProperties = { display: 'inline-flex', width: 'fit-content', padding: '4px 10px', borderRadius: 999, backgroundColor: '#e3f2fd', color: '#d49a00', fontSize: 12, fontWeight: 600 };
 const activeBadgeStyle: CSSProperties = { display: 'inline-flex', padding: '6px 10px', borderRadius: 999, backgroundColor: '#e8f5e9', color: '#2e7d32', fontSize: 12, fontWeight: 600 };
 const inactiveBadgeStyle: CSSProperties = { display: 'inline-flex', padding: '6px 10px', borderRadius: 999, backgroundColor: '#fff8e1', color: '#8d6e63', fontSize: 12, fontWeight: 600 };

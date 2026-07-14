@@ -1,4 +1,19 @@
 import { useCallback, useEffect, useState } from 'react';
+import {
+  Box,
+  Card,
+  CardContent,
+  Chip,
+  CircularProgress,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from '@mui/material';
 import * as coinService from '../../services/coinService';
 import * as subscriptionService from '../../services/subscriptionService';
 import { formatCurrency } from '../../utils/formatters';
@@ -13,11 +28,11 @@ interface Transaction {
   paidAt: string | null;
 }
 
-const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
-  paid: { label: 'Thành công', color: '#166534', bg: '#dcfce7' },
-  pending: { label: 'Đang chờ', color: '#92400e', bg: '#fef3c7' },
-  failed: { label: 'Thất bại', color: '#991b1b', bg: '#fee2e2' },
-  cancelled: { label: 'Đã hủy', color: '#64748b', bg: '#f1f5f9' },
+const STATUS_MAP: Record<string, { label: string; color: 'success' | 'warning' | 'error' | 'default' }> = {
+  paid: { label: 'Thành công', color: 'success' },
+  pending: { label: 'Đang chờ', color: 'warning' },
+  failed: { label: 'Thất bại', color: 'error' },
+  cancelled: { label: 'Đã hủy', color: 'default' },
 };
 
 export default function TransactionHistoryPage() {
@@ -29,7 +44,6 @@ export default function TransactionHistoryPage() {
     setLoading(true);
     setError('');
     try {
-      // Auto-sync any pending transactions before displaying
       await coinService.syncLatestLecturerCoinPurchase().catch(() => {});
       await subscriptionService.syncLatestSubscriptionPurchase().catch(() => {});
       const data = await coinService.getLecturerTransactions();
@@ -56,61 +70,135 @@ export default function TransactionHistoryPage() {
   }
 
   return (
-    <div style={{ padding: 24 }}>
-      <h1 style={{ marginBottom: 8 }}>Lịch sử giao dịch</h1>
-      <p style={{ color: '#64748b', marginBottom: 24 }}>
-        Danh sách các giao dịch mua ECoin qua PayOS.
-      </p>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, p: { xs: 1.5, md: 2 } }}>
+      <Box>
+        <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>
+          Lịch sử giao dịch
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Danh sách các giao dịch mua ECoin qua PayOS.
+        </Typography>
+      </Box>
 
-      {error && <div role="alert" style={alertStyle}>{error}</div>}
+      {error && (
+        <Typography role="alert" color="error" sx={{ p: 2, bgcolor: 'error.lighter', borderRadius: 1 }}>
+          {error}
+        </Typography>
+      )}
 
-      {loading ? (
-        <div style={emptyStyle}>Đang tải lịch sử giao dịch...</div>
-      ) : transactions.length === 0 ? (
-        <div style={emptyStyle}>Chưa có giao dịch nào.</div>
-      ) : (
-        <div style={tableShellStyle}>
-          <table style={tableStyle}>
-            <thead>
-              <tr>
-                <th style={thStyle}>Mã đơn hàng</th>
-                <th style={thStyle}>Số tiền</th>
-                <th style={thStyle}>ECoin</th>
-                <th style={thStyle}>Trạng thái</th>
-                <th style={thStyle}>Ngày tạo</th>
-                <th style={thStyle}>Ngày thanh toán</th>
-              </tr>
-            </thead>
-            <tbody>
+      {loading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+          <CircularProgress />
+        </Box>
+      )}
+
+      {!loading && transactions.length === 0 && (
+        <Box
+          sx={{
+            border: '1px dashed',
+            borderColor: 'divider',
+            borderRadius: 3,
+            p: { xs: 2, md: 4 },
+            textAlign: 'center',
+            bgcolor: 'action.hover',
+          }}
+        >
+          <Typography variant="body1" color="text.secondary">
+            Chưa có giao dịch nào.
+          </Typography>
+        </Box>
+      )}
+
+      {/* Mobile Card View */}
+      {!loading && transactions.length > 0 && (
+        <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 2 }}>
+          {transactions.map((tx) => {
+            const statusCfg = STATUS_MAP[tx.status.toLowerCase()] ?? STATUS_MAP.pending;
+            return (
+              <Card key={tx.id} sx={{ borderRadius: 2 }}>
+                <CardContent sx={{ p: 2 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5, gap: 1 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                      #{tx.orderCode}
+                    </Typography>
+                    <Chip label={statusCfg.label} color={statusCfg.color} size="small" variant="outlined" />
+                  </Box>
+
+                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mb: 1 }}>
+                    <Box>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                        Số tiền
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        {formatCurrency(tx.amount)}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                        ECoin
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        {tx.coinAmount.toLocaleString('vi-VN')}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                        Ngày tạo
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        {formatDate(tx.createdAt)}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                        Ngày thanh toán
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        {tx.paidAt ? formatDate(tx.paidAt) : '—'}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </Box>
+      )}
+
+      {/* Desktop Table View */}
+      {!loading && transactions.length > 0 && (
+        <TableContainer component={Paper} variant="outlined" sx={{ display: { xs: 'none', md: 'block' }, overflowX: 'auto' }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 700 }}>Mã đơn hàng</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Số tiền</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>ECoin</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Trạng thái</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Ngày tạo</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Ngày thanh toán</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
               {transactions.map((tx) => {
                 const statusCfg = STATUS_MAP[tx.status.toLowerCase()] ?? STATUS_MAP.pending;
                 return (
-                  <tr key={tx.id}>
-                    <td style={tdStyle}>#{tx.orderCode}</td>
-                    <td style={tdStyle}>{formatCurrency(tx.amount)}</td>
-                    <td style={tdStyle}>{tx.coinAmount.toLocaleString('vi-VN')} ECoin</td>
-                    <td style={tdStyle}>
-                      <span style={{ ...statusBadgeStyle, color: statusCfg.color, backgroundColor: statusCfg.bg }}>
-                        {statusCfg.label}
-                      </span>
-                    </td>
-                    <td style={tdStyle}>{formatDate(tx.createdAt)}</td>
-                    <td style={tdStyle}>{tx.paidAt ? formatDate(tx.paidAt) : '—'}</td>
-                  </tr>
+                  <TableRow key={tx.id} hover>
+                    <TableCell>#{tx.orderCode}</TableCell>
+                    <TableCell>{formatCurrency(tx.amount)}</TableCell>
+                    <TableCell>{tx.coinAmount.toLocaleString('vi-VN')} ECoin</TableCell>
+                    <TableCell>
+                      <Chip label={statusCfg.label} color={statusCfg.color} size="small" variant="outlined" />
+                    </TableCell>
+                    <TableCell>{formatDate(tx.createdAt)}</TableCell>
+                    <TableCell>{tx.paidAt ? formatDate(tx.paidAt) : '—'}</TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        </TableContainer>
       )}
-    </div>
+    </Box>
   );
 }
-
-const alertStyle: React.CSSProperties = { marginBottom: 16, padding: 12, borderRadius: 12, backgroundColor: '#fff1f2', border: '1px solid #fecdd3', color: '#9f1239' };
-const emptyStyle: React.CSSProperties = { padding: 24, borderRadius: 16, border: '1px dashed #cbd5e1', backgroundColor: '#f8fafc', color: '#475569', textAlign: 'center' };
-const tableShellStyle: React.CSSProperties = { overflowX: 'auto', borderRadius: 16, border: '1px solid #e2e8f0', backgroundColor: '#fff' };
-const tableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse' };
-const thStyle: React.CSSProperties = { textAlign: 'left', padding: '12px 14px', borderBottom: '1px solid #e2e8f0', backgroundColor: '#f8fafc', fontSize: 13, fontWeight: 600 };
-const tdStyle: React.CSSProperties = { padding: '12px 14px', borderBottom: '1px solid #f1f5f9' };
-const statusBadgeStyle: React.CSSProperties = { display: 'inline-flex', padding: '4px 10px', borderRadius: 999, fontSize: 12, fontWeight: 600 };

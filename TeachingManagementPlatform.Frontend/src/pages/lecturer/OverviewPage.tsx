@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { Box } from '@mui/material';
 import { AxiosError } from 'axios';
 // Inline SVG icons from react-crud-icons paths (avoids CJS/ESM interop issues)
 function CrudIcon({ name, size = 24 }: { name: 'image' | 'delete'; size?: number }) {
@@ -196,35 +197,47 @@ export default function OverviewPage() {
 
   // Helpers
 
-  if (loading) return <div style={{ padding: 24 }}>Đang tải...</div>;
-  if (error) return <div style={{ padding: 24 }}><div role="alert" style={{ color: '#d32f2f' }}>{error}</div></div>;
+  if (loading) return <Box sx={{ p: { xs: 1.5, md: 2 } }}>Đang tải...</Box>;
+  if (error) return <Box sx={{ p: { xs: 1.5, md: 2 } }}><Box role="alert" sx={{ color: '#d32f2f' }}>{error}</Box></Box>;
   if (!profile) return null;
 
   const avatarSrc = profile.avatarUrl ? profileService.getImageUrl(profile.avatarUrl) : null;
 
   return (
-    <div
-      style={{
-        padding: 24,
+    <Box
+      sx={{
+        p: { xs: 1.5, md: 2 },
         maxHeight: 'calc(100vh - 220px)',
         overflowY: 'auto',
         overflowX: 'hidden',
       }}
     >
 
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 24, position: 'relative' }}>
-        <h1 style={{ color: 'var(--edub-text-primary)' }}>Thông tin cá nhân</h1>
-        <div style={{ position: 'absolute', right: 0 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          justifyContent: 'center',
+          alignItems: { xs: 'stretch', md: 'center' },
+          gap: 2,
+          mb: 3,
+          position: 'relative',
+        }}
+      >
+        <Box component="h1" sx={{ color: 'var(--edub-text-primary)', m: 0, textAlign: { xs: 'left', md: 'center' } }}>
+          Thông tin cá nhân
+        </Box>
+        <Box sx={{ display: 'flex', justifyContent: { xs: 'stretch', md: 'flex-end' }, position: { md: 'absolute' }, right: { md: 0 } }}>
         {!editing ? (
-          <button type="button" className="btn btn-update" onClick={startEditing} >Chỉnh sửa</button>
+          <button type="button" className="btn btn-update" onClick={startEditing} style={{ minHeight: 44, width: '100%' }}>Chỉnh sửa</button>
         ) : (
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button type="button" className="btn btn-cancel" onClick={cancelEditing} disabled={saving} >Hủy</button>
-            <button type="button" className="btn btn-save" onClick={handleSave} disabled={saving || !fullName.trim()} >{saving ? 'Đang lưu...' : 'Lưu'}</button>
-          </div>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1, width: '100%' }}>
+            <button type="button" className="btn btn-cancel" onClick={cancelEditing} disabled={saving} style={{ minHeight: 44, flex: 1 }}>Hủy</button>
+            <button type="button" className="btn btn-save" onClick={handleSave} disabled={saving || !fullName.trim()} style={{ minHeight: 44, flex: 1 }}>{saving ? 'Đang lưu...' : 'Lưu'}</button>
+          </Box>
         )}
-        </div>
-      </div>
+        </Box>
+      </Box>
       {editError && <div role="alert" style={{ color: '#d32f2f', marginBottom: 12 }}>{editError}</div>}
 
       {/* Avatar */}
@@ -239,14 +252,47 @@ export default function OverviewPage() {
         {editing && (
           <>
             <input ref={avatarInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} style={{ display: 'none' }} />
-            <button type="button" className="btn btn-update" onClick={() => avatarInputRef.current?.click()} disabled={uploadingAvatar}>
+            <button type="button" className="btn btn-update" onClick={() => avatarInputRef.current?.click()} disabled={uploadingAvatar} style={{ minHeight: 44 }}>
               {uploadingAvatar ? 'Đang tải...' : 'Đổi ảnh đại diện'}
             </button>
           </>
         )}
       </div>
 
-      <table style={infoTableStyle}>
+      <Box
+        component="table"
+        sx={{
+          width: '100%',
+          borderCollapse: 'collapse',
+          tableLayout: 'fixed',
+          mb: 2.5,
+          '& tr': {
+            display: { xs: 'block', md: 'table-row' },
+            mb: { xs: 2, md: 0 },
+            borderBottom: { xs: '1px solid var(--edub-border)', md: 'none' },
+            pb: { xs: 2, md: 0 },
+          },
+          '& th': {
+            display: { xs: 'block', md: 'table-cell' },
+            width: { xs: '100%', md: '25%' },
+            p: { xs: '0 0 8px', md: '12px 16px' },
+            textAlign: 'left',
+            verticalAlign: 'top',
+            borderBottom: { md: '1px solid var(--edub-border)' },
+            color: 'var(--edub-text-primary)',
+            fontSize: { xs: 16, md: 20 },
+            fontWeight: 700,
+          },
+          '& td': {
+            display: { xs: 'block', md: 'table-cell' },
+            width: { xs: '100%', md: '75%' },
+            p: { xs: 0, md: '12px 16px' },
+            verticalAlign: 'top',
+            borderBottom: { md: '1px solid var(--edub-border)' },
+            color: 'var(--edub-text-primary)',
+          },
+        }}
+      >
         <tbody>
           {/* Họ và tên */}
           <Section label="Họ và tên">
@@ -275,7 +321,7 @@ export default function OverviewPage() {
               <>
                 {expertises.map((ex, i) => (
                   <div key={`expertise-${i}`} style={{ marginBottom: 8, padding: 8, border: '1px solid #ddd', borderRadius: 8 }}>
-                    <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1, mb: 0.5 }}>
                       <input type="text" value={ex.specialty} onChange={(e) => { const u = [...expertises]; u[i] = { ...u[i], specialty: e.target.value }; setExpertises(u); }} style={{ ...inputStyle, flex: 1 }} placeholder="Chuyên ngành" />
                       <input type="text" value={ex.degree} onChange={(e) => { const u = [...expertises]; u[i] = { ...u[i], degree: e.target.value }; setExpertises(u); }} style={{ ...inputStyle, flex: 1 }} placeholder="Bằng cấp" />
                       <label style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }} title="Thêm ảnh">
@@ -285,7 +331,7 @@ export default function OverviewPage() {
                       <button type="button" onClick={() => { if (expertises.length > 1) setExpertises(expertises.filter((_, j) => j !== i)); }} disabled={expertises.length <= 1} style={{ background: 'none', border: 'none', cursor: expertises.length <= 1 ? 'not-allowed' : 'pointer', opacity: expertises.length <= 1 ? 0.4 : 1, display: 'inline-flex', alignItems: 'center' }} title="Xóa">
                         <CrudIcon name="delete" size={20} />
                       </button>
-                    </div>
+                    </Box>
                     {ex.certificateImageUrls.length > 0 && (
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
                         {ex.certificateImageUrls.map((url, imgIdx) => (
@@ -427,7 +473,7 @@ export default function OverviewPage() {
             ) : <p style={plainTextStyle}>—</p>}
           </Section>
         </tbody>
-      </table>
+        </Box>
 
       {/* Image lightbox */}
       {expandedImage && (
@@ -437,30 +483,27 @@ export default function OverviewPage() {
       )}
 
       <AlertModal open={!!alertMessage} message={alertMessage || ''} onClose={() => setAlertMessage(null)} />
-    </div>
+    </Box>
   );
 }
 
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <tr>
-      <th scope="row" style={infoLabelStyle}>{label}</th>
-      <td style={infoValueStyle}>{children}</td>
+      <th scope="row">{label}</th>
+      <td>{children}</td>
     </tr>
   );
 }
 
-const infoTableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', marginBottom: 20 };
-const infoLabelStyle: React.CSSProperties = { width: '25%', padding: '12px 16px', textAlign: 'left', verticalAlign: 'top', borderBottom: '1px solid var(--edub-border)', color: 'var(--edub-text-primary)', fontSize: 20, fontWeight: 700 };
-const infoValueStyle: React.CSSProperties = { width: '75%', padding: '12px 16px', verticalAlign: 'top', borderBottom: '1px solid var(--edub-border)', color: 'var(--edub-text-primary)' };
 const plainTextStyle: React.CSSProperties = { margin: 0 };
+const thStyle: React.CSSProperties = { textAlign: 'left', padding: '12px 16px', color: 'var(--edub-text-secondary)' };
+const tdStyle: React.CSSProperties = { padding: '12px 16px' };
 const inputStyle: React.CSSProperties = { width: '100%', padding: 8, boxSizing: 'border-box', backgroundColor: 'var(--edub-input-bg)', border: '1px solid var(--edub-input-border)', color: 'var(--edub-text-primary)', borderRadius: 8};
 const rowStyle: React.CSSProperties = { display: 'flex', gap: 8, marginBottom: 4, alignItems: 'center' };
 const listStyle: React.CSSProperties = { margin: 0, paddingLeft: 20 };
-const thStyle: React.CSSProperties = { textAlign: 'left', padding: '8px 12px', borderBottom: '2px solid var(--edub-border)' };
-const tdStyle: React.CSSProperties = { padding: '8px 12px', borderBottom: '1px solid var(--edub-border)' };
-const addBtn: React.CSSProperties = { padding: '4px 12px', cursor: 'pointer', marginTop: 4, backgroundColor: '#2e7d32', color: '#fff', border: '1px solid #2e7d32', borderRadius: 8 };
-const delBtn: React.CSSProperties = { padding: '4px 10px', cursor: 'pointer', backgroundColor: '#dc2626', color: '#fff', border: 'none', borderRadius: 8 };
+const addBtn: React.CSSProperties = { padding: '4px 12px', cursor: 'pointer', marginTop: 4, backgroundColor: '#2e7d32', color: '#fff', border: '1px solid #2e7d32', borderRadius: 8, minHeight: 44 };
+const delBtn: React.CSSProperties = { padding: '4px 10px', cursor: 'pointer', backgroundColor: '#dc2626', color: '#fff', border: 'none', borderRadius: 8, minHeight: 44 };
 const delBtnDisabled: React.CSSProperties = { ...delBtn, backgroundColor: '#9ca3af', cursor: 'not-allowed' };
 const imgRemoveBtn: React.CSSProperties = { position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: '50%', backgroundColor: '#dc2626', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 12, lineHeight: '20px', textAlign: 'center', padding: 0 };
 const thumbStyle: React.CSSProperties = { maxWidth: 80, maxHeight: 60, borderRadius: 4, objectFit: 'cover' };
