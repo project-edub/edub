@@ -141,7 +141,25 @@ export default function SubscriptionPage() {
               : pkg.price;
 
             return (
-            <Box component="article" key={pkg.id} sx={{ ...cardStyle, ...(isCurrentPlan ? { border: '2px solid #1976d2' } : {}), display: 'flex', flexDirection: 'column', height: { xs: 'auto', md: '100%' }, minHeight: 0, boxSizing: 'border-box', p: { xs: 2, md: 3 }, pt: { xs: 2.5, md: 3 } }}>
+            <Box
+              component="section"
+              key={pkg.id}
+              aria-label={`Gói ${pkg.name}`}
+              sx={{
+                ...cardStyle,
+                border: isCurrentPlan ? '2px solid #1976d2' : '1px solid #e2e8f0',
+                borderRadius: '16px !important',
+                display: 'flex',
+                flexDirection: 'column',
+                height: { xs: 'auto', md: '100%' },
+                minHeight: 0,
+                minWidth: 0,
+                boxSizing: 'border-box',
+                overflow: 'hidden',
+                p: { xs: 2, md: 3 },
+                pt: { xs: 2.5, md: 3 },
+              }}
+            >
               <Box sx={cardHeaderStyle}>
                 <h2 style={cardTitleStyle}>{pkg.name}</h2>
                 {(pkg.isDefault || isCurrentPlan) && (
