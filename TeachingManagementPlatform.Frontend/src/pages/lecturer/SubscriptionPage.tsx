@@ -126,7 +126,7 @@ export default function SubscriptionPage() {
       ) : packages.length === 0 ? (
         <div style={emptyStateStyle}>Chưa có gói đăng ký nào khả dụng.</div>
       ) : (
-        <Box sx={{ ...gridStyle, gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'repeat(auto-fit, minmax(280px, 1fr))' }, gap: { xs: 1.5, md: 2.5 } }}>
+        <Box sx={{ ...gridStyle, gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'repeat(auto-fit, minmax(280px, 1fr))' }, alignItems: 'stretch', gap: { xs: 2, md: 2.5 } }}>
           {packages.map((pkg) => {
             const currentPrice = wallet?.subscriptionPackagePrice ?? 0;
             const isCurrentPlan = wallet?.subscriptionPackageName === pkg.name;
@@ -141,8 +141,8 @@ export default function SubscriptionPage() {
               : pkg.price;
 
             return (
-            <Box component="article" key={pkg.id} sx={{ ...cardStyle, ...(isCurrentPlan ? { border: '2px solid #1976d2' } : {}), p: { xs: 2, md: 3 } }}>
-              <Box sx={{ ...cardHeaderStyle, flexWrap: 'wrap' }}>
+            <Box component="article" key={pkg.id} sx={{ ...cardStyle, ...(isCurrentPlan ? { border: '2px solid #1976d2' } : {}), display: 'flex', flexDirection: 'column', height: { xs: 'auto', md: '100%' }, minHeight: 0, p: { xs: 2, md: 3 } }}>
+              <Box sx={cardHeaderStyle}>
                 <h2 style={cardTitleStyle}>{pkg.name}</h2>
                 {pkg.isDefault && <span style={defaultBadge}>Mặc định</span>}
                 {isCurrentPlan && <span style={{ ...defaultBadge, backgroundColor: '#e8f5e9', color: '#2e7d32' }}>Gói hiện tại</span>}
@@ -183,21 +183,25 @@ export default function SubscriptionPage() {
                 )}
               </ul>
 
+              <Box sx={{ mt: 'auto', pt: 1.5 }}>
               {isCurrentPlan ? (
-                <p style={freeNote}>Đang sử dụng gói này</p>
+                <button type="button" className="btn btn-add" style={ctaStyle} disabled>
+                  Đang sử dụng gói này
+                </button>
               ) : isDowngrade ? null : pkg.price > 0 ? (
                 <button
                   type="button"
                   className="btn btn-add"
-                  style={{ width: '100%', marginTop: 12, minHeight: 44 }}
+                  style={ctaStyle}
                   disabled={actionLoading === pkg.id}
                   onClick={() => void handlePurchase(pkg)}
                 >
                   {actionLoading === pkg.id ? 'Đang xử lý...' : isUpgradeFromPaid ? 'Nâng cấp gói' : 'Mua gói này'}
                 </button>
               ) : (
-                <p style={freeNote}></p>
+                <Box sx={{ minHeight: 44 }} />
               )}
+              </Box>
             </Box>
             );
           })}
@@ -216,12 +220,12 @@ const alertStyle: React.CSSProperties = { marginBottom: 16, padding: 12, borderR
 const successStyle: React.CSSProperties = { marginBottom: 16, padding: 12, borderRadius: 12, backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', color: '#065f46' };
 const emptyStateStyle: React.CSSProperties = { padding: 24, borderRadius: 16, border: '1px dashed #cbd5e1', backgroundColor: '#f8fafc', color: '#475569', textAlign: 'center' };
 const gridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 };
-const cardStyle: React.CSSProperties = { padding: 24, borderRadius: 18, backgroundColor: '#fff', border: '1px solid #e2e8f0', boxShadow: '0 10px 30px rgba(15, 23, 42, 0.06)' };
-const cardHeaderStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 };
+const cardStyle: React.CSSProperties = { padding: 24, borderRadius: 16, backgroundColor: '#fff', border: '1px solid #e2e8f0', boxShadow: '0 10px 30px rgba(15, 23, 42, 0.06)', overflow: 'hidden' };
+const cardHeaderStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8, marginBottom: 16 };
 const cardTitleStyle: React.CSSProperties = { margin: 0, fontSize: 20 };
 const defaultBadge: React.CSSProperties = { padding: '4px 10px', borderRadius: 999, backgroundColor: '#e3f2fd', color: '#1565c0', fontSize: 12, fontWeight: 600 };
 const priceRowStyle: React.CSSProperties = { marginBottom: 16 };
 const priceValueStyle: React.CSSProperties = { fontSize: 24, color: '#0f172a' };
 const featureListStyle: React.CSSProperties = { listStyle: 'none', padding: 0, margin: '0 0 16px', display: 'flex', flexDirection: 'column', gap: 6, fontSize: 14 };
 const limitStyle: React.CSSProperties = { color: '#64748b', paddingLeft: 16 };
-const freeNote: React.CSSProperties = { margin: '12px 0 0', fontSize: 13, color: '#94a3b8', fontStyle: 'italic' };
+const ctaStyle: React.CSSProperties = { width: '100%', minHeight: 44, margin: 0 };
