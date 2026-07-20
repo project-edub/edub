@@ -140,7 +140,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </Typography>
           </Box>
 
-          <Box sx={{ display: 'flex', gap: { xs: 0.5, sm: 1.5 }, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <Box sx={{ display: 'flex', gap: { xs: 0.5, sm: 1.5 }, alignItems: 'center', flexWrap: 'nowrap', justifyContent: 'flex-end', minWidth: 0 }}>
             <Button
               component={Link}
               to="/"
@@ -175,7 +175,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               variant="outlined"
               color="error"
               startIcon={<LogoutRoundedIcon />}
-              sx={{ whiteSpace: 'nowrap', fontSize: { xs: 0.75, sm: 1 }, px: { xs: 1, sm: 1.5 }, minHeight: 44, minWidth: 'auto', flexShrink: 0 }}
+              aria-label="Đăng xuất"
+              sx={{
+                whiteSpace: 'nowrap',
+                minHeight: 44,
+                width: { xs: 44, sm: 132 },
+                minWidth: { xs: 44, sm: 132 },
+                px: { xs: 0, sm: 1.5 },
+                flexShrink: 0,
+                '& .MuiButton-startIcon': { m: { xs: 0, sm: '0 8px 0 -4px' } },
+                '& > span:last-of-type': { display: { xs: 'none', sm: 'inline' } },
+              }}
             >
               <Box component="span">Đăng xuất</Box>
             </Button>
