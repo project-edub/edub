@@ -140,7 +140,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </Typography>
           </Box>
 
-          <Box sx={{ display: 'flex', gap: { xs: 0.5, sm: 1.5 }, alignItems: 'center', flexWrap: 'nowrap', justifyContent: 'flex-end', minWidth: 0 }}>
+          <Box sx={{ display: 'flex', gap: { xs: 1, sm: 1.5 }, alignItems: 'center', flexWrap: 'nowrap', justifyContent: 'flex-end', minWidth: 0 }}>
             <Button
               component={Link}
               to="/"

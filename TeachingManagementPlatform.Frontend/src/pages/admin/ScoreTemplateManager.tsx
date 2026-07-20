@@ -8,6 +8,7 @@ import type {
   ScoreTemplateColumn,
 } from '../../services/scoreTemplateService';
 import Pagination, { usePagination } from '../../components/common/Pagination';
+import AdminPanelBanner from '../../components/common/AdminPanelBanner';
 
 interface ModalState {
   type: 'create' | 'edit' | null;
@@ -225,7 +226,7 @@ export default function ScoreTemplateManager() {
 
   return (
     <Box sx={{ ...pageStyle, p: { xs: 1.5, md: 3 } }}>
-      <Box sx={{ ...heroStyle, flexDirection: { xs: 'column', md: 'row' }, p: { xs: 2, md: 3 }, gap: { xs: 2, md: 3 } }}>
+      <AdminPanelBanner>
         <div>
           <p style={eyebrowStyle}>Score Template</p>
           <h1 style={titleStyle}>Quản lý Template Điểm</h1>
@@ -246,7 +247,7 @@ export default function ScoreTemplateManager() {
             Thêm template
           </button>
         </Box>
-      </Box>
+      </AdminPanelBanner>
 
       {error && (
         <div role="alert" style={alertErrorStyle}>

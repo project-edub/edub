@@ -10,6 +10,7 @@ import type { ApiError } from '../../types/common';
 import * as subscriptionService from '../../services/subscriptionService';
 import { formatCurrency } from '../../utils/formatters';
 import Pagination, { usePagination } from '../../components/common/Pagination';
+import AdminPanelBanner from '../../components/common/AdminPanelBanner';
 
 const BYTES_PER_GB = 1024 * 1024 * 1024;
 const AVAILABLE_FEATURES = [
@@ -244,7 +245,7 @@ export default function SubscriptionPackagePage() {
 
   return (
     <Box sx={{ ...pageStyle, p: { xs: 1.5, md: 3 } }}>
-      <Box sx={{ ...heroStyle, flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 2, md: 3 }, p: { xs: 2, md: 3 } }}>
+      <AdminPanelBanner>
         <div>
           <p style={eyebrowStyle}>Gói đăng ký</p>
           <h1 style={titleStyle}>Quản lý gói đăng ký</h1>
@@ -269,7 +270,7 @@ export default function SubscriptionPackagePage() {
             Thêm gói mới
           </button>
         </Box>
-      </Box>
+      </AdminPanelBanner>
 
       {error && <div role="alert" style={alertErrorStyle}>{error}</div>}
 
