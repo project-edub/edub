@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AxiosError } from 'axios';
-import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
+import { User } from 'lucide-react';
 import {
   Alert,
   AppBar,
@@ -481,7 +481,7 @@ export default function HomePage() {
                     src={selectedLecturer.avatarUrl || undefined}
                     sx={{ width: 56, height: 56, bgcolor: 'secondary.main' }}
                   >
-                    <PersonRoundedIcon />
+                    <User size={24} />
                   </Avatar>
                   <Box>
                     <Typography variant="h6" sx={{ lineHeight: 1.2 }}>{selectedLecturer.fullName}</Typography>
@@ -611,7 +611,7 @@ function LecturerCard({ lecturer, onViewProfile }: LecturerCardProps) {
       <CardContent sx={{ pb: 1.5, pt: { xs: 2.5, md: 3 }, px: { xs: 2, md: 2.5 } }}>
         <Stack direction="row" spacing={1.5} sx={{ mb: 1.5, alignItems: 'center' }}>
           <Avatar src={lecturer.avatarUrl || undefined} sx={{ width: 48, height: 48, bgcolor: 'secondary.main' }}>
-            <PersonRoundedIcon />
+            <User size={24} />
           </Avatar>
           <Box>
             <Typography

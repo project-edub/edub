@@ -9,8 +9,7 @@ import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Divider from '@mui/material/Divider';
 import Tooltip from '@mui/material/Tooltip';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
+import { Trash2, Plus } from 'lucide-react';
 import type { ClassificationRange } from '../../utils/scoreCalculation';
 
 // ── Preset colors for common classifications ──────────────────────────────────
@@ -287,7 +286,7 @@ export default function ClassificationConfigPanel(props: ClassificationConfigPan
                     disabled={ranges.length <= 1 || saving}
                     aria-label={`Xóa khoảng ${index + 1}`}
                   >
-                    <DeleteIcon fontSize="small" />
+                    <Trash2 size={18} />
                   </IconButton>
                 </span>
               </Tooltip>
@@ -428,7 +427,7 @@ export default function ClassificationConfigPanel(props: ClassificationConfigPan
       {/* Add range button */}
       <Button
         size="small"
-        startIcon={<AddIcon />}
+        startIcon={<Plus size={18} />}
         onClick={handleAddRange}
         disabled={saving}
         sx={{ mb: 2 }}

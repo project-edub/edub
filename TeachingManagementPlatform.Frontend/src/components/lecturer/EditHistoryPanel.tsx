@@ -8,9 +8,7 @@ import Alert from '@mui/material/Alert';
 import Divider from '@mui/material/Divider';
 import Stack from '@mui/material/Stack';
 import Chip from '@mui/material/Chip';
-import CloseIcon from '@mui/icons-material/Close';
-import HistoryIcon from '@mui/icons-material/History';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import { X, History, ArrowRight } from 'lucide-react';
 import api from '../../services/api';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -112,12 +110,12 @@ export default function EditHistoryPanel({ entryId, open, onClose }: EditHistory
           borderColor: 'divider',
         }}
       >
-        <HistoryIcon color="primary" />
+        <History size={20} color="inherit" />
         <Typography variant="h6" sx={{ flex: 1, fontWeight: 600 }}>
           Lịch sử chỉnh sửa
         </Typography>
         <IconButton onClick={onClose} aria-label="Đóng panel lịch sử">
-          <CloseIcon />
+          <X size={20} />
         </IconButton>
       </Box>
 
@@ -179,7 +177,7 @@ export default function EditHistoryPanel({ entryId, open, onClose }: EditHistory
                     {record.oldValue ?? '(trống)'}
                   </Typography>
 
-                  <ArrowForwardIcon fontSize="small" color="action" />
+                  <ArrowRight size={16} />
 
                   <Typography variant="body2" sx={{ fontWeight: 500 }}>
                     {record.newValue}

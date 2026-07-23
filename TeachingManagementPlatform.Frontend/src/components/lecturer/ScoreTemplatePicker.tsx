@@ -24,7 +24,7 @@ import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { CheckCircle2 } from 'lucide-react';
 import type { SelectChangeEvent } from '@mui/material/Select';
 import api from '../../services/api';
 
@@ -217,7 +217,7 @@ export default function ScoreTemplatePicker({
                         secondary={template.subject}
                       />
                       {selectedTemplate?.id === template.id && (
-                        <CheckCircleIcon color="primary" fontSize="small" />
+                        <CheckCircle2 size={18} color="currentColor" />
                       )}
                     </ListItemButton>
                   ))}
@@ -276,7 +276,7 @@ export default function ScoreTemplatePicker({
                               </TableCell>
                               <TableCell align="center">
                                 {col.isAverageColumn ? (
-                                  <CheckCircleIcon color="success" fontSize="small" />
+                                  <CheckCircle2 size={18} color="green" />
                                 ) : (
                                   '–'
                                 )}

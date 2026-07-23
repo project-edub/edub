@@ -18,7 +18,7 @@ import {
 import { register } from '../../services/authService';
 import type { ApiError } from '../../types/common';
 import { AxiosError } from 'axios';
-import WestRoundedIcon from '@mui/icons-material/WestRounded';
+import { ArrowLeft } from 'lucide-react';
 import { getApiRootUrl } from '../../services/apiConfig';
 import { useColorMode } from '../../theme/ColorModeContext';
 
@@ -110,7 +110,7 @@ export default function RegisterPage() {
         }}
       >
         <Toolbar sx={{ gap: 1.5 }}>
-          <Button component={Link} to="/" variant="text" startIcon={<WestRoundedIcon />} sx={{ mr: 'auto' }}>
+          <Button component={Link} to="/" variant="text" startIcon={<ArrowLeft size={20} />} sx={{ mr: 'auto' }}>
             Về trang chủ
           </Button>
           <Button

@@ -28,9 +28,7 @@ import ListItemText from '@mui/material/ListItemText';
 import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
 import InputAdornment from '@mui/material/InputAdornment';
-import SearchIcon from '@mui/icons-material/Search';
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import { Search, ArrowUp, ArrowDown } from 'lucide-react';
 import type { SelectChangeEvent } from '@mui/material/Select';
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
@@ -717,7 +715,7 @@ export default function ScoreGrid({
             input: {
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon fontSize="small" />
+                  <Search size={18} />
                 </InputAdornment>
               ),
             },
@@ -806,9 +804,9 @@ export default function ScoreGrid({
                     </span>
                     {isSorted && (
                       sortConfig!.direction === 'asc' ? (
-                        <ArrowUpwardIcon sx={{ fontSize: 16, color: '#1976d2' }} />
+                        <ArrowUp size={16} style={{ color: '#1976d2' }} />
                       ) : (
-                        <ArrowDownwardIcon sx={{ fontSize: 16, color: '#1976d2' }} />
+                        <ArrowDown size={16} style={{ color: '#1976d2' }} />
                       )
                     )}
                   </span>

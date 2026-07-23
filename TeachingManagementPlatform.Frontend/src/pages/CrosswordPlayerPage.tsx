@@ -16,10 +16,7 @@ import {
   Backdrop,
   Fade,
 } from '@mui/material';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import TimerIcon from '@mui/icons-material/Timer';
-import BlockIcon from '@mui/icons-material/Block';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { ChevronUp, Clock, Ban, CheckCircle2 } from 'lucide-react';
 import * as crosswordService from '../services/crosswordService';
 import { PlayerGrid } from '../components/crossword';
 import { normalize } from '../utils/viNormalizer';
@@ -566,7 +563,7 @@ export default function CrosswordPlayerPage() {
           textAlign: 'center',
         }}
       >
-        <BlockIcon sx={{ fontSize: 80, color: 'text.secondary', mb: 2 }} />
+        <Ban size={80} style={{ color: 'inherit', marginBottom: 16 }} />
         <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
           Trò chơi đã kết thúc
         </Typography>
@@ -631,7 +628,7 @@ export default function CrosswordPlayerPage() {
         fullWidth
         onClick={handleCheckAnswers}
         disabled={isCheckDisabled}
-        startIcon={isChecking ? <CircularProgress size={20} color="inherit" /> : <CheckCircleIcon />}
+        startIcon={isChecking ? <CircularProgress size={20} color="inherit" /> : <CheckCircle2 size={20} />}
         aria-label="Kiểm tra đáp án"
         sx={{ py: 1.5, fontWeight: 600, fontSize: '1rem' }}
       >
@@ -708,7 +705,7 @@ export default function CrosswordPlayerPage() {
       </Typography>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <TimerIcon fontSize="small" color="action" />
+          <Clock size={18} />
           <Typography variant="body2" sx={{ fontFamily: 'monospace', fontWeight: 600 }}>
             {formatTime(timer)}
           </Typography>
@@ -858,7 +855,7 @@ export default function CrosswordPlayerPage() {
         }}
       >
         <IconButton onClick={() => setBottomSheetOpen(true)} aria-label="Mở câu gợi ý">
-          <ExpandLessIcon />
+          <ChevronUp size={24} />
         </IconButton>
         <Typography variant="body2" sx={{ ml: 1, color: 'text.secondary' }}>
           Xem gợi ý ({(game?.words ?? []).length} từ)

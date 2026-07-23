@@ -11,7 +11,7 @@ import Stepper from '@mui/material/Stepper';
 import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';
 import Alert from '@mui/material/Alert';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { Sparkles } from 'lucide-react';
 import type { Lesson } from '../../../types/lessonPlan';
 import type { LessonSuggestionResponse } from '../../../types/lessonSuggestion';
 import * as lessonSuggestionService from '../../../services/lessonSuggestionService';
@@ -129,7 +129,7 @@ export default function BatchAISuggestionDialog({
       fullWidth
     >
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <AutoAwesomeIcon color="primary" />
+        <Sparkles size={24} color="currentColor" />
         Gợi ý AI cho toàn bộ giáo án
       </DialogTitle>
 
@@ -224,7 +224,7 @@ export default function BatchAISuggestionDialog({
             <Button
               variant="contained"
               onClick={handleStart}
-              startIcon={<AutoAwesomeIcon />}
+              startIcon={<Sparkles size={20} />}
               disabled={totalLessons === 0}
             >
               Bắt đầu ({totalLessons} bài)

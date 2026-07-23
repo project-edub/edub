@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { AxiosError } from 'axios';
 import { Box } from '@mui/material';
+import { Pencil, Trash2 } from 'lucide-react';
 import type {
   SubscriptionPackage,
   CreateSubscriptionPackageRequest,
@@ -334,10 +335,8 @@ export default function SubscriptionPackagePage() {
                   </td>
                   <td style={tdStyle}>
                     <div style={actionButtonsStyle}>
-                      <button type="button" onClick={() => openEditModal(pkg)} disabled={actionLoading} className="btn btn-update">Sửa</button>
-                      <button type="button" onClick={() => setDeleteTarget(pkg)} disabled={actionLoading || pkg.isDefault} className="btn btn-delete">
-                        {pkg.isDefault ? 'Không xóa' : 'Xóa'}
-                      </button>
+                      <button type="button" onClick={() => openEditModal(pkg)} title="Sửa" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'inline-flex', alignItems: 'center', opacity: 0.7 }} onMouseEnter={e => (e.currentTarget.style.opacity = '1')} onMouseLeave={e => (e.currentTarget.style.opacity = '0.7')}><Pencil size={18} /></button>
+                      {!pkg.isDefault && <button type="button" onClick={() => setDeleteTarget(pkg)} title="Xóa" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'inline-flex', alignItems: 'center', opacity: 0.7 }} onMouseEnter={e => (e.currentTarget.style.opacity = '1')} onMouseLeave={e => (e.currentTarget.style.opacity = '0.7')}><Trash2 size={18} /></button>}
                     </div>
                   </td>
                 </tr>
@@ -552,7 +551,6 @@ function checkboxCardStyle(checked: boolean): CSSProperties {
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const pageStyle: CSSProperties = { background: 'linear-gradient(180deg, #f8fbff 0%, #ffffff 100%)' };
-const heroStyle: CSSProperties = { display: 'flex', justifyContent: 'space-between', gap: 24, alignItems: 'flex-start', marginBottom: 20, padding: 24, borderRadius: 20, background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', color: '#fff', boxShadow: '0 18px 40px rgba(15, 23, 42, 0.16)' };
 const heroActionsStyle: CSSProperties = { display: 'flex', flexDirection: 'column', gap: 16, minWidth: 240 };
 const statsGridStyle: CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 };
 const statCardStyle: CSSProperties = { backgroundColor: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 14, display: 'flex', flexDirection: 'column', gap: 4, textAlign: 'center' };
@@ -572,7 +570,6 @@ const limitMetaStyle: CSSProperties = { fontSize: 13, color: '#6b7280' };
 const featureStackStyle: CSSProperties = { display: 'flex', flexWrap: 'wrap', gap: 8 };
 const featureChipStyle: CSSProperties = { display: 'inline-flex', alignItems: 'center', padding: '6px 10px', borderRadius: 999, backgroundColor: '#edf7f1', color: '#1f7a4d', fontSize: 12, fontWeight: 600 };
 const mutedTextStyle: CSSProperties = { color: '#9ca3af', fontSize: 13 };
-const mobileLabelStyle: CSSProperties = { display: 'block', marginBottom: 2, color: '#6b7280', fontSize: 12, fontWeight: 600 };
 const defaultBadgeStyle: CSSProperties = { display: 'inline-flex', width: 'fit-content', padding: '4px 10px', borderRadius: 999, backgroundColor: '#e3f2fd', color: '#d49a00', fontSize: 12, fontWeight: 600 };
 const activeBadgeStyle: CSSProperties = { display: 'inline-flex', padding: '6px 10px', borderRadius: 999, backgroundColor: '#e8f5e9', color: '#2e7d32', fontSize: 12, fontWeight: 600 };
 const inactiveBadgeStyle: CSSProperties = { display: 'inline-flex', padding: '6px 10px', borderRadius: 999, backgroundColor: '#fff8e1', color: '#8d6e63', fontSize: 12, fontWeight: 600 };

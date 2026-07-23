@@ -1,20 +1,7 @@
 import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { AxiosError } from 'axios';
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CircularProgress,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Card, CardContent, CircularProgress, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
+import { Pencil, Trash2, Lock, LockOpen } from 'lucide-react';
 import type { AccountResponse, CreateAccountRequest, UpdateAccountRequest } from '../../types/account';
 import type { SubscriptionPackage } from '../../types/subscription';
 import { AccountStatus, type ApiError } from '../../types/common';
@@ -257,7 +244,8 @@ export default function AccountManagementPage() {
             <tr>
               <th style={thStyle}>Email</th>
               <th style={thStyle}>Họ và tên</th>
-              <th style={thStyle}>ECoin</th>
+              <th style={thStyle}>ECoin miễn phí</th>
+              <th style={thStyle}>ECoin trả phí</th>
               <th style={thStyle}>Còn lại</th>
               <th style={thStyle}>Trạng thái</th>
               <th style={{ ...thStyle, textAlign: 'center' }}>Hành động</th>
@@ -266,7 +254,7 @@ export default function AccountManagementPage() {
           <tbody>
             {paginatedAccounts.length === 0 ? (
               <tr>
-                <td colSpan={6} style={{ textAlign: 'center', padding: 16 }}>
+                <td colSpan={7} style={{ textAlign: 'center', padding: 16 }}>
                   Không có tài khoản nào
                 </td>
               </tr>
@@ -275,7 +263,8 @@ export default function AccountManagementPage() {
                 <tr key={account.id}>
                   <td style={tdStyle}>{account.email}</td>
                   <td style={tdStyle}>{account.fullName}</td>
-                  <td style={tdStyle}>{((account.freeEcoinBalance ?? 0) + account.coinBalance).toLocaleString('vi-VN')}</td>
+                  <td style={tdStyle}>{(account.freeEcoinBalance ?? 0).toLocaleString('vi-VN')}</td>
+                  <td style={tdStyle}>{account.coinBalance.toLocaleString('vi-VN')}</td>
                   <td style={tdStyle}>
                     {(() => {
                       if (!account.subscriptionExpiresAt) return 'Chưa có';
@@ -288,32 +277,9 @@ export default function AccountManagementPage() {
                     {account.status === AccountStatus.Active ? 'Hoạt động' : 'Vô hiệu hóa'}
                   </td>
                   <td style={tdStyle}>
-                    <button
-                      type="button"
-                      onClick={() => openEditModal(account)}
-                      disabled={actionLoading}
-                      className="btn btn-update"
-                      style={{ marginRight: 8 }}
-                    >
-                      Sửa
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDeleteTarget(account)}
-                      disabled={actionLoading}
-                      className="btn btn-delete"
-                      style={{ marginRight: 8 }}
-                    >
-                      Xóa
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleToggleStatus(account)}
-                      disabled={actionLoading}
-                      className="btn btn-view"
-                    >
-                      {account.status === AccountStatus.Active ? 'Vô hiệu hóa' : 'Kích hoạt'}
-                    </button>
+                    <button type="button" onClick={() => openEditModal(account)} title="Sửa" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'inline-flex', alignItems: 'center', opacity: 0.7 }} onMouseEnter={e => (e.currentTarget.style.opacity = '1')} onMouseLeave={e => (e.currentTarget.style.opacity = '0.7')}><Pencil size={18} /></button>
+                    <button type="button" onClick={() => setDeleteTarget(account)} title="Xóa" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'inline-flex', alignItems: 'center', opacity: 0.7 }} onMouseEnter={e => (e.currentTarget.style.opacity = '1')} onMouseLeave={e => (e.currentTarget.style.opacity = '0.7')}><Trash2 size={18} /></button>
+                    <button type="button" onClick={() => handleToggleStatus(account)} title={account.status === AccountStatus.Active ? 'Vô hiệu hóa' : 'Kích hoạt'} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'inline-flex', alignItems: 'center', opacity: 0.7 }} onMouseEnter={e => (e.currentTarget.style.opacity = '1')} onMouseLeave={e => (e.currentTarget.style.opacity = '0.7')}>{account.status === AccountStatus.Active ? <Lock size={18} /> : <LockOpen size={18} />}</button>
                   </td>
                 </tr>
               ))) }

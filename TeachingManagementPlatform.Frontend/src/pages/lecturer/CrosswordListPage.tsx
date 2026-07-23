@@ -21,11 +21,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { Plus, Pencil, Trash2, Play, Copy } from 'lucide-react';
 import type { CrosswordListItemDto, GameStatus } from '../../types/crossword';
 import { GameStatus as GameStatusEnum } from '../../types/crossword';
 import * as crosswordService from '../../services/crosswordService';
@@ -117,7 +113,7 @@ export default function CrosswordListPage() {
 
         <Button
           variant="contained"
-          startIcon={<AddIcon />}
+          startIcon={<Plus size={18} />}
           onClick={() => navigate('/lecturer/crossword/new')}
           sx={{ minHeight: 44, minWidth: 44, whiteSpace: 'nowrap' }}
         >
@@ -159,7 +155,7 @@ export default function CrosswordListPage() {
           </Typography>
           <Button
             variant="contained"
-            startIcon={<AddIcon />}
+            startIcon={<Plus size={18} />}
             onClick={() => navigate('/lecturer/crossword/new')}
             sx={{ minHeight: 44 }}
           >
@@ -219,7 +215,7 @@ export default function CrosswordListPage() {
                               size="small"
                               variant="outlined"
                               color="success"
-                              startIcon={<PlayArrowIcon />}
+                              startIcon={<Play size={18} />}
                               onClick={() => window.open(`/play/${item.slug}`, '_blank')}
                             >
                               Chơi
@@ -229,7 +225,7 @@ export default function CrosswordListPage() {
                             <Button
                               size="small"
                               variant="outlined"
-                              startIcon={<ContentCopyIcon />}
+                              startIcon={<Copy size={18} />}
                               onClick={async () => {
                                 await navigator.clipboard.writeText(`${window.location.origin}/play/${item.slug}`);
                                 setCopiedId(item.id);
@@ -242,7 +238,7 @@ export default function CrosswordListPage() {
                           <Button
                             size="small"
                             variant="outlined"
-                            startIcon={<EditIcon />}
+                            startIcon={<Pencil size={18} />}
                             onClick={() => navigate(`/lecturer/crossword/${item.id}/edit`)}
                           >
                             Chỉnh sửa
@@ -251,7 +247,7 @@ export default function CrosswordListPage() {
                             size="small"
                             variant="outlined"
                             color="error"
-                            startIcon={<DeleteIcon />}
+                            startIcon={<Trash2 size={18} />}
                             onClick={() => setDeleteTarget(item)}
                           >
                             Xóa

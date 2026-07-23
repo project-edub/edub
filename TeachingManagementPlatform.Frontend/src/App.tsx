@@ -11,6 +11,8 @@ import ScoreTemplateManager from './pages/admin/ScoreTemplateManager';
 import GameEcoinConfigPage from './pages/admin/GameEcoinConfigPage';
 import CurriculumTemplateManagementPage from './pages/admin/CurriculumTemplateManagementPage';
 import AdminSettingsPage from './pages/admin/AdminSettingsPage';
+import AdminTransactionsPage from './pages/admin/AdminTransactionsPage';
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import OverviewPage from './pages/lecturer/OverviewPage';
 import ClassListPage from './pages/lecturer/ClassListPage';
 import ClassDetailPage from './pages/lecturer/ClassDetailPage';
@@ -53,12 +55,14 @@ export default function App() {
 
         {/* Admin routes */}
         <Route element={<AdminRoute />}>
+          <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
           <Route path="/admin/accounts" element={<AccountManagementPage />} />
           <Route path="/admin/subscriptions" element={<SubscriptionPackagePage />} />
           <Route path="/admin/coin-packages" element={<CoinPackagePage />} />
           <Route path="/admin/score-templates" element={<ScoreTemplateManager />} />
           <Route path="/admin/game-ecoin-config" element={<GameEcoinConfigPage />} />
           <Route path="/admin/curriculum-templates" element={<CurriculumTemplateManagementPage />} />
+          <Route path="/admin/transactions" element={<AdminTransactionsPage />} />
           <Route path="/admin/settings" element={<AdminSettingsPage />} />
         </Route>
 

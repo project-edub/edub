@@ -3,7 +3,7 @@ import {
   Box,
   Typography,
 } from '@mui/material';
-import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
+import { Check } from 'lucide-react';
 
 /** Preset theme colors available for selection */
 const PRESET_COLORS = [
@@ -89,7 +89,7 @@ export default function ColorPicker({ value, onChange, label }: ColorPickerProps
             }}
           >
             {value === color && (
-              <CheckRoundedIcon sx={{ fontSize: 18, color: '#fff' }} />
+              <Check size={18} color="#fff" />
             )}
           </Box>
         ))}

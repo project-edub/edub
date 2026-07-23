@@ -10,7 +10,7 @@ import Button from '@mui/material/Button';
 import Alert from '@mui/material/Alert';
 import CircularProgress from '@mui/material/CircularProgress';
 import Divider from '@mui/material/Divider';
-import TuneIcon from '@mui/icons-material/Tune';
+import { SlidersHorizontal } from 'lucide-react';
 import type { StudentListColumn } from '../../types/studentList';
 import type { ScoreColumnConfig } from '../../utils/scoreCalculation';
 import { updateScoreColumnMetadata } from '../../services/scoreMetadataService';
@@ -286,7 +286,7 @@ export default function ScoreColumnConfigMenu({
             <Button
               size="small"
               fullWidth
-              startIcon={<TuneIcon />}
+              startIcon={<SlidersHorizontal size={18} />}
               onClick={() => {
                 onOpenClassificationConfig(column.id);
                 onClose();

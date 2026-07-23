@@ -1,10 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import AccountCircleRoundedIcon from '@mui/icons-material/AccountCircleRounded';
-import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
-import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
-import MenuIcon from '@mui/icons-material/Menu';
-import CloseIcon from '@mui/icons-material/Close';
+import { CircleUser, LogOut, GraduationCap, Menu, X } from 'lucide-react';
 import {
   AppBar,
   Avatar,
@@ -43,9 +39,11 @@ const lecturerMenuItems = [
 ];
 
 const adminMenuItems = [
+  { to: '/admin/dashboard', label: 'Bảng quản lí' },
   { to: '/admin/accounts', label: 'Quản lý tài khoản' },
   { to: '/admin/subscriptions', label: 'Gói đăng ký' },
   { to: '/admin/coin-packages', label: 'Gói ECoin' },
+  { to: '/admin/transactions', label: 'Giao dịch' },
   { to: '/admin/game-ecoin-config', label: 'Cấu hình chung' },
   { to: '/admin/score-templates', label: 'Template điểm' },
   { to: '/admin/curriculum-templates', label: 'Mẫu giáo án' },
@@ -124,11 +122,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               sx={{ display: { xs: 'flex', md: 'none' }, p: 0.5 }}
               aria-label="Open navigation menu"
             >
-              <MenuIcon />
+              <Menu size={24} />
             </IconButton>
 
             <Avatar sx={{ bgcolor: 'primary.main', width: 36, height: 36 }}>
-              <SchoolOutlinedIcon fontSize="small" />
+              <GraduationCap size={18} />
             </Avatar>
             <Typography
               variant="h6"
@@ -159,8 +157,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {mode === 'light' ? '🌙' : '☀️'}
             </IconButton>
 
-            <Avatar sx={{ width: 40, height: 40, bgcolor: 'primary.main', color: 'primary.contrastText', display: { xs: 'none', sm: 'flex' } }}>
-              <AccountCircleRoundedIcon />
+            <Avatar sx={{ width: 40, height: 40, bgcolor: 'primary.main', color: 'primary.contrastText' }}>
+              <CircleUser size={24} />
             </Avatar>
 
             <Typography
@@ -174,18 +172,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               onClick={handleLogout}
               variant="outlined"
               color="error"
-              startIcon={<LogoutRoundedIcon />}
-              aria-label="Đăng xuất"
-              sx={{
-                whiteSpace: 'nowrap',
-                minHeight: 44,
-                width: { xs: 44, sm: 132 },
-                minWidth: { xs: 44, sm: 132 },
-                px: { xs: 0, sm: 1.5 },
-                flexShrink: 0,
-                '& .MuiButton-startIcon': { m: { xs: 0, sm: '0 8px 0 -4px' } },
-                '& > span:last-of-type': { display: { xs: 'none', sm: 'inline' } },
-              }}
+              startIcon={<LogOut size={18} />}
+              sx={{ whiteSpace: 'nowrap' }}
             >
               <Box component="span">Đăng xuất</Box>
             </Button>
@@ -212,7 +200,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             Menu
           </Typography>
           <IconButton onClick={handleDrawerClose} size="small">
-            <CloseIcon />
+            <X size={20} />
           </IconButton>
         </Box>
 

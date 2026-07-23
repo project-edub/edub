@@ -15,9 +15,7 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Link from '@mui/material/Link';
 import IconButton from '@mui/material/IconButton';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import LinkIcon from '@mui/icons-material/Link';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { Sparkles, Link as LinkIcon, Copy } from 'lucide-react';
 import type { LessonSuggestionResponse } from '../../../types/lessonSuggestion';
 import * as lessonSuggestionService from '../../../services/lessonSuggestionService';
 
@@ -119,7 +117,7 @@ function SuggestionContent({
   return (
     <Box sx={{ p: 2 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-        <AutoAwesomeIcon color="primary" fontSize="small" />
+        <Sparkles size={18} color="inherit" />
         <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
           Gợi ý AI cho: {lessonName}
         </Typography>
@@ -181,7 +179,7 @@ function SuggestionContent({
       {suggestion.suggestedLinks && suggestion.suggestedLinks.length > 0 && (
         <Box sx={{ mb: 2 }}>
           <Typography variant="subtitle2" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <LinkIcon fontSize="small" />
+            <LinkIcon size={18} />
             Đường dẫn tham khảo gợi ý
           </Typography>
           {suggestion.suggestedLinks.map((link, i) => (
@@ -243,7 +241,7 @@ function SuggestionContent({
               title="Sao chép"
               sx={{ ml: 0.5 }}
             >
-              <ContentCopyIcon sx={{ fontSize: 14 }} />
+              <Copy size={14} />
             </IconButton>
           </Typography>
           <Button variant="outlined" size="small" onClick={() => window.open('/lecturer/quiz-generator', '_blank')}>
@@ -264,7 +262,7 @@ function SuggestionContent({
               title="Sao chép"
               sx={{ ml: 0.5 }}
             >
-              <ContentCopyIcon sx={{ fontSize: 14 }} />
+              <Copy size={14} />
             </IconButton>
           </Typography>
           <Button variant="outlined" size="small" onClick={() => window.open('/lecturer/crossword/new', '_blank')}>
@@ -355,7 +353,7 @@ function AISuggestionDialog({ open, onClose, lessonId, lessonName }: DialogModeP
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <AutoAwesomeIcon color="primary" fontSize="small" />
+        <Sparkles size={18} />
         Gợi ý AI
       </DialogTitle>
       <DialogContent dividers>

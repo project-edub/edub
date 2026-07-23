@@ -6,8 +6,7 @@ import {
   IconButton, Chip, Tabs, Tab, Paper, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, Tooltip,
 } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { Trash2, Copy } from 'lucide-react';
 import * as quizService from '../../services/quizService';
 import type { QuizGameDetail, QuizQuestionDetail, QuizSubmission } from '../../services/quizService';
 
@@ -170,10 +169,10 @@ export default function QuizEditorPage() {
 
       {/* Published link */}
       {game.status === 'published' && (
-        <Box sx={{ p: 2, mb: 2, borderRadius: 2, bgcolor: '#f0fdf4', border: '1px solid #bbf7d0', display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'stretch', sm: 'center' }, gap: 1 }}>
-          <Typography variant="body2" sx={{ color: '#166534', fontWeight: 600 }}>🔗 Link quiz:</Typography>
-          <Typography variant="body2" sx={{ flex: 1, color: '#166534', overflowWrap: 'anywhere' }}>{shareUrl}</Typography>
-          <IconButton size="small" onClick={() => void handleCopy()} sx={{ minWidth: 44, minHeight: 44, alignSelf: { xs: 'flex-end', sm: 'auto' } }}><ContentCopyIcon fontSize="small" /></IconButton>
+        <Box sx={{ p: 2, mb: 2, borderRadius: 2, bgcolor: '#f0fdf4', border: '1px solid #bbf7d0', display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="body2" sx={{ color: '#166534', fontWeight: 600 }}>🔗 Link trắc nghiệm:</Typography>
+          <Typography variant="body2" sx={{ flex: 1, color: '#166534' }}>{shareUrl}</Typography>
+          <IconButton size="small" onClick={() => void handleCopy()}><Copy size={18} /></IconButton>
           {copied && <Chip label="Đã sao chép" size="small" color="success" />}
         </Box>
       )}
@@ -193,16 +192,12 @@ export default function QuizEditorPage() {
             return (
               <Box key={q.id} sx={{ p: { xs: 1.5, md: 2 }, borderRadius: 2, border: '1px solid', borderColor: 'divider', position: 'relative' }}>
                 <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.5 }}>
-                  <Tooltip title="Nhân bản">
-                    <IconButton aria-label={`Nhân bản câu hỏi ${idx + 1}`} size="small" sx={{ minWidth: 44, minHeight: 44 }} onClick={() => void handleDuplicateQuestion(q)}>
-                      <ContentCopyIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Xóa câu hỏi">
-                    <IconButton aria-label={`Xóa câu hỏi ${idx + 1}`} size="small" color="error" sx={{ minWidth: 44, minHeight: 44 }} onClick={() => handleDeleteQuestion(q.id)}>
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
+                  <IconButton size="small" onClick={() => void handleDuplicateQuestion(q)} title="Nhân bản câu hỏi">
+                    <Copy size={18} />
+                  </IconButton>
+                  <IconButton size="small" onClick={() => handleDeleteQuestion(q.id)} title="Xóa câu hỏi">
+                    <Trash2 size={18} />
+                  </IconButton>
                 </Box>
                 <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>Câu {idx + 1}</Typography>
                 <TextField
@@ -319,7 +314,7 @@ export default function QuizEditorPage() {
           <Typography variant="body2" sx={{ mb: 2 }}>Chia sẻ link này cho học sinh:</Typography>
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
             <TextField value={shareUrl} fullWidth size="small" slotProps={{ input: { readOnly: true } }} />
-            <IconButton onClick={() => void handleCopy()} sx={{ minWidth: 44, minHeight: 44 }}><ContentCopyIcon /></IconButton>
+            <IconButton onClick={() => void handleCopy()}><Copy size={20} /></IconButton>
           </Box>
         </DialogContent>
         <DialogActions>
