@@ -39,13 +39,13 @@ export default function QuizPlayerPage() {
   }, [quiz, slug, studentName, answers]);
 
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}><CircularProgress /></Box>;
-  if (error && !quiz) return <Box sx={{ p: 3, maxWidth: 600, mx: 'auto', mt: 8 }}><Alert severity="error">{error}</Alert></Box>;
+  if (error && !quiz) return <Box sx={{ p: { xs: 1.5, md: 3 }, maxWidth: 600, mx: 'auto', mt: { xs: 3, md: 8 } }}><Alert severity="error">{error}</Alert></Box>;
   if (!quiz) return null;
 
   // ── Result screen ──
   if (result) {
     return (
-      <Box sx={{ maxWidth: 700, mx: 'auto', p: 3, mt: 4 }}>
+      <Box sx={{ maxWidth: 700, mx: 'auto', p: { xs: 1.5, md: 3 }, mt: { xs: 2, md: 4 } }}>
         <Typography variant="h4" sx={{ fontWeight: 800, mb: 2, textAlign: 'center' }}>Kết quả</Typography>
         <Box sx={{ textAlign: 'center', mb: 3, p: 3, borderRadius: 3, bgcolor: result.correctCount === result.totalQuestions ? '#ecfdf5' : '#f8fafc', border: '1px solid', borderColor: 'divider' }}>
           <Typography variant="h2" sx={{ fontWeight: 800, color: 'primary.main' }}>{result.correctCount}/{result.totalQuestions}</Typography>
@@ -77,14 +77,14 @@ export default function QuizPlayerPage() {
   // ── Name entry screen ──
   if (!started) {
     return (
-      <Box sx={{ maxWidth: 500, mx: 'auto', p: 3, mt: 8, textAlign: 'center' }}>
+      <Box sx={{ maxWidth: 500, mx: 'auto', p: { xs: 1.5, md: 3 }, mt: { xs: 3, md: 8 }, textAlign: 'center' }}>
         <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>{quiz.title}</Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>{quiz.questions.length} câu hỏi</Typography>
         {quiz.requireStudentName && (
           <TextField label="Họ và tên" value={studentName} onChange={e => setStudentName(e.target.value)} fullWidth sx={{ mb: 2 }} />
         )}
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        <Button variant="contained" size="large" fullWidth onClick={() => { if (quiz.requireStudentName && !studentName.trim()) { setError('Vui lòng nhập tên.'); return; } setError(null); setStarted(true); }}>
+        <Button variant="contained" size="large" fullWidth sx={{ minHeight: 44 }} onClick={() => { if (quiz.requireStudentName && !studentName.trim()) { setError('Vui lòng nhập tên.'); return; } setError(null); setStarted(true); }}>
           Bắt đầu làm bài
         </Button>
       </Box>
@@ -93,7 +93,7 @@ export default function QuizPlayerPage() {
 
   // ── Quiz questions ──
   return (
-    <Box sx={{ maxWidth: 700, mx: 'auto', p: 3, mt: 2 }}>
+    <Box sx={{ maxWidth: 700, mx: 'auto', p: { xs: 1.5, md: 3 }, mt: 2 }}>
       <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>{quiz.title}</Typography>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -111,7 +111,7 @@ export default function QuizPlayerPage() {
           );
         })}
       </Box>
-      <Button variant="contained" size="large" fullWidth sx={{ mt: 3 }} disabled={submitting} onClick={() => void handleSubmit()}>
+      <Button variant="contained" size="large" fullWidth sx={{ mt: 3, minHeight: 44 }} disabled={submitting} onClick={() => void handleSubmit()}>
         {submitting ? 'Đang nộp...' : 'Nộp bài'}
       </Button>
     </Box>

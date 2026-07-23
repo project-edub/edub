@@ -1,6 +1,28 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AxiosError } from 'axios';
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Typography,
+  MenuItem,
+} from '@mui/material';
 import type { LessonPlanSummary, LessonPlan, CreateLessonPlanRequest } from '../../types/lessonPlan';
 import type { ApiError } from '../../types/common';
 import * as lessonPlanService from '../../services/lessonPlanService';
@@ -9,11 +31,17 @@ import ActionButton from '../../components/common/ActionButton';
 import Toast from '../../components/common/Toast';
 import Pagination, { usePagination } from '../../components/common/Pagination';
 import InlineHint from '../../components/common/InlineHint';
+import { GRADE_OPTIONS } from '../../constants/lessonPlanOptions';
 
 interface ModalState {
   type: 'create' | 'edit' | null;
   plan?: LessonPlan | null;
 }
+
+const thStyle: React.CSSProperties = { textAlign: 'left', padding: '12px', borderBottom: '2px solid var(--edub-border)' };
+const tdStyle: React.CSSProperties = { padding: '12px', borderBottom: '1px solid var(--edub-border)' };
+const overlayStyle: React.CSSProperties = { position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.4)' };
+const deleteModalStyle: React.CSSProperties = { width: 'min(420px, calc(100% - 24px))', boxSizing: 'border-box', padding: 24, borderRadius: 12, backgroundColor: 'var(--edub-surface)', border: '1px solid var(--edub-border)' };
 
 export default function LessonPlanPage() {
   const navigate = useNavigate();
@@ -26,10 +54,10 @@ export default function LessonPlanPage() {
   const [hoveredRowId, setHoveredRowId] = useState<number | null>(null);
   const [toastMessage, setToastMessage] = useState('');
 
-  // Filter state
   const [filterGrade, setFilterGrade] = useState('');
   const [filterSubject, setFilterSubject] = useState('');
   const [filterSchoolYear, setFilterSchoolYear] = useState('');
+  const schoolYearOptions = Array.from(new Set(plans.map((plan) => `${plan.schoolYearStart}-${plan.schoolYearEnd}`))).sort().reverse();
 
   // Share dialog state
   const [shareDialogPlan, setShareDialogPlan] = useState<LessonPlanSummary | null>(null);
@@ -243,49 +271,62 @@ export default function LessonPlanPage() {
       </h1>
 
       {error && (
-        <div role="alert" style={{ color: '#d32f2f', marginBottom: 16 }}>
+        <Typography role="alert" color="error" sx={{ mb: 2 }}>
           {error}
-        </div>
+        </Typography>
       )}
 
-      {/* Filter controls */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-        <div>
-          <label htmlFor="filter-subject" style={{ display: 'block', marginBottom: 4, fontSize: 14 }}>Môn học</label>
-          <input
-            id="filter-subject"
-            type="text"
-            placeholder="Tìm kiếm môn học"
-            value={filterSubject}
-            onChange={(e) => setFilterSubject(e.target.value)}
-            style={{ padding: 8, width: 160, borderRadius: 8, border: '1px solid var(--edub-input-border)', backgroundColor: 'var(--edub-input-bg)', color: 'var(--edub-text-primary)' }}
-          />
-        </div>
-        <div>
-          <label htmlFor="filter-grade" style={{ display: 'block', marginBottom: 4, fontSize: 14 }}>Khối lớp</label>
-          <input
-            id="filter-grade"
-            type="text"
-            placeholder="Tìm kiếm khối"
-            value={filterGrade}
-            onChange={(e) => setFilterGrade(e.target.value)}
-            style={{ padding: 8, width: 160, borderRadius: 8, border: '1px solid var(--edub-input-border)', backgroundColor: 'var(--edub-input-bg)', color: 'var(--edub-text-primary)' }}
-          />
-        </div>
-        <div>
-          <label htmlFor="filter-year" style={{ display: 'block', marginBottom: 4, fontSize: 14 }}>Năm học</label>
-          <input
-            id="filter-year"
-            type="text"
-            placeholder="Tìm kiếm năm học"
-            value={filterSchoolYear}
-            onChange={(e) => setFilterSchoolYear(e.target.value)}
-            style={{ padding: 8, width: 160, borderRadius: 8, border: '1px solid var(--edub-input-border)', backgroundColor: 'var(--edub-input-bg)', color: 'var(--edub-text-primary)' }}
-          />
-        </div>
-        <button type="button" onClick={handleFilter} className="btn btn-view" style={{ padding: '8px 16px' }}>
+      {/* Filter controls — stack on mobile */}
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          gap: 1.5,
+          mb: 2,
+          flexWrap: 'wrap',
+          alignItems: { xs: 'stretch', sm: 'flex-end' },
+        }}
+      >
+        <TextField
+          id="filter-subject"
+          label="Môn học"
+          placeholder="Tìm kiếm môn học"
+          value={filterSubject}
+          onChange={(e) => setFilterSubject(e.target.value)}
+          size="small"
+          sx={{ flex: { xs: '1 1 100%', sm: '0 1 160px' } }}
+        />
+        <TextField
+          id="filter-grade"
+          label="Khối lớp"
+          select
+          value={filterGrade}
+          onChange={(e) => setFilterGrade(e.target.value)}
+          size="small"
+          sx={{ flex: { xs: '1 1 100%', sm: '0 1 160px' } }}
+        >
+          <MenuItem value="">Tất cả khối</MenuItem>
+          {GRADE_OPTIONS.map((grade) => <MenuItem key={grade} value={grade}>{grade}</MenuItem>)}
+        </TextField>
+        <TextField
+          id="filter-year"
+          label="Năm học"
+          select
+          value={filterSchoolYear}
+          onChange={(e) => setFilterSchoolYear(e.target.value)}
+          size="small"
+          sx={{ flex: { xs: '1 1 100%', sm: '0 1 160px' } }}
+        >
+          <MenuItem value="">Tất cả năm học</MenuItem>
+          {schoolYearOptions.map((schoolYear) => <MenuItem key={schoolYear} value={schoolYear}>{schoolYear}</MenuItem>)}
+        </TextField>
+        <Button
+          variant="outlined"
+          onClick={() => loadPlans()}
+          sx={{ minHeight: 44, alignSelf: { xs: 'stretch', sm: 'auto' } }}
+        >
           Lọc
-        </button>
+        </Button>
 
         {/* Join by code input */}
         <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end', marginLeft: 'auto' }}>
@@ -321,7 +362,7 @@ export default function LessonPlanPage() {
         >
           + Tạo giáo án
         </button>
-      </div>
+      </Box>
 
       {joinMessage && (
         <div style={{ marginBottom: 12, padding: '8px 12px', borderRadius: 8, backgroundColor: joinMessage.includes('thành công') ? '#e8f5e9' : '#fce4ec', color: joinMessage.includes('thành công') ? '#2e7d32' : '#c62828', fontSize: 14 }}>
@@ -330,7 +371,13 @@ export default function LessonPlanPage() {
       )}
 
       {loading ? (
-        <p>Đang tải...</p>
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+          <CircularProgress />
+        </Box>
+      ) : plans.length === 0 ? (
+        <Typography sx={{ textAlign: 'center', py: 4 }} color="text.secondary">
+          Không có giáo án nào
+        </Typography>
       ) : (
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
@@ -511,34 +558,3 @@ export default function LessonPlanPage() {
     </div>
   );
 }
-
-const thStyle: React.CSSProperties = {
-  textAlign: 'left',
-  padding: '8px 12px',
-  borderBottom: '2px solid var(--edub-border)',
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: '8px 12px',
-  borderBottom: '1px solid var(--edub-border)',
-};
-
-const overlayStyle: React.CSSProperties = {
-  position: 'fixed',
-  inset: 0,
-  backgroundColor: 'rgba(0,0,0,0.4)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  zIndex: 1000,
-};
-
-const deleteModalStyle: React.CSSProperties = {
-  backgroundColor: 'var(--edub-surface)',
-  color: 'var(--edub-text-primary)',
-  border: '1px solid var(--edub-border)',
-  padding: 24,
-  borderRadius: 8,
-  minWidth: 400,
-  maxWidth: 500,
-};

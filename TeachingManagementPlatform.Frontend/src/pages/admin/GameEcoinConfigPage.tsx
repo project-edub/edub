@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   Box, Button, Typography, TextField, Paper, Alert, CircularProgress,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  Card, CardContent,
 } from '@mui/material';
 import api from '../../services/api';
 
@@ -106,7 +107,7 @@ export default function GameEcoinConfigPage() {
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}><CircularProgress /></Box>;
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, p: { xs: 1.5, md: 2 } }}>
       <Box>
         <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>Cấu hình chung</Typography>
         <Typography variant="body2" color="text.secondary">
@@ -118,9 +119,33 @@ export default function GameEcoinConfigPage() {
       {success && <Alert severity="success">{success}</Alert>}
 
       {/* Crossword base rates */}
-      <Paper variant="outlined" sx={{ p: 3 }}>
+      <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 } }}>
         <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>Crossword — Chi phí theo số từ</Typography>
-        <TableContainer>
+
+        {/* Mobile card view */}
+        <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 1.5 }}>
+          {config.crosswordBaseRates.map((rate, idx) => (
+            <Card key={idx} variant="outlined" sx={{ borderRadius: 2 }}>
+              <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+                  {rate.minWords} – {rate.maxWords} từ
+                </Typography>
+                <TextField
+                  type="number"
+                  size="small"
+                  label="Chi phí (ECoin)"
+                  value={rate.baseCost}
+                  onChange={(e) => updateBaseRate(idx, 'baseCost', Number(e.target.value))}
+                  fullWidth
+                  slotProps={{ input: { inputProps: { min: 0 } } }}
+                />
+              </CardContent>
+            </Card>
+          ))}
+        </Box>
+
+        {/* Desktop table view */}
+        <TableContainer sx={{ display: { xs: 'none', md: 'block' } }}>
           <Table size="small">
             <TableHead>
               <TableRow>
@@ -150,12 +175,12 @@ export default function GameEcoinConfigPage() {
       </Paper>
 
       {/* Crossword clue style rates */}
-      <Paper variant="outlined" sx={{ p: 3 }}>
+      <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 } }}>
         <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>Crossword — Phụ phí kiểu gợi ý</Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
           {Object.entries(config.crosswordClueStyleRates).map(([key, value]) => (
-            <Box key={key} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Typography sx={{ minWidth: 160 }}>
+            <Box key={key} sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'stretch', sm: 'center' }, gap: 1.5 }}>
+              <Typography sx={{ minWidth: { sm: 160 } }}>
                 {key === 'definition' ? 'Định nghĩa' : key === 'fill-in-blank' ? 'Điền vào chỗ trống' : 'Trắc nghiệm'}
               </Typography>
               <TextField
@@ -173,12 +198,12 @@ export default function GameEcoinConfigPage() {
       </Paper>
 
       {/* Crossword language rates */}
-      <Paper variant="outlined" sx={{ p: 3 }}>
+      <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 } }}>
         <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>Crossword — Phụ phí ngôn ngữ</Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
           {Object.entries(config.crosswordLanguageRates).map(([key, value]) => (
-            <Box key={key} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Typography sx={{ minWidth: 120 }}>{key === 'vi' ? 'Tiếng Việt' : 'Tiếng Anh'}</Typography>
+            <Box key={key} sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'stretch', sm: 'center' }, gap: 1.5 }}>
+              <Typography sx={{ minWidth: { sm: 120 } }}>{key === 'vi' ? 'Tiếng Việt' : 'Tiếng Anh'}</Typography>
               <TextField
                 type="number"
                 size="small"
@@ -194,9 +219,9 @@ export default function GameEcoinConfigPage() {
       </Paper>
 
       {/* Crossword regenerate multiplier */}
-      <Paper variant="outlined" sx={{ p: 3 }}>
+      <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 } }}>
         <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>Crossword — Hệ số tạo lại</Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'stretch', sm: 'center' }, gap: 1.5 }}>
           <TextField
             type="number"
             size="small"
@@ -212,9 +237,9 @@ export default function GameEcoinConfigPage() {
       </Paper>
 
       {/* Quiz cost per question */}
-      <Paper variant="outlined" sx={{ p: 3 }}>
+      <Paper variant="outlined" sx={{ p: { xs: 2, md: 3 } }}>
         <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>Quiz — Chi phí mỗi câu hỏi</Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'stretch', sm: 'center' }, gap: 1.5 }}>
           <TextField
             type="number"
             size="small"
@@ -293,7 +318,7 @@ export default function GameEcoinConfigPage() {
         variant="contained"
         onClick={() => void handleSave()}
         disabled={saving}
-        sx={{ alignSelf: 'flex-start' }}
+        sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' }, minHeight: 44 }}
       >
         {saving ? 'Đang lưu...' : 'Lưu cấu hình'}
       </Button>

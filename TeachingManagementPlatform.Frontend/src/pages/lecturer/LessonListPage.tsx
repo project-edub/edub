@@ -2,6 +2,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Button from '@mui/material/Button';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import Dialog from '@mui/material/Dialog';
@@ -17,6 +20,8 @@ import * as lessonSuggestionService from '../../services/lessonSuggestionService
 import type { LessonPlan } from '../../types/lessonPlan';
 import TemplateSelectionDialog from '../../components/lecturer/lessonPlan/TemplateSelectionDialog';
 import AISuggestionPanel from '../../components/lecturer/lessonPlan/AISuggestionPanel';
+
+const pageStyle: React.CSSProperties = { maxWidth: 960, margin: '0 auto' };
 
 function parseGradeNumber(grade: string): number {
   const match = grade.match(/\d+/);
@@ -188,17 +193,27 @@ export default function LessonListPage() {
   if (!plan) return null;
 
   return (
-    <div style={pageStyle}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <button type="button" className="btn btn-neutral" onClick={() => navigate('/lecturer/lesson-plans')}>← Quay lại danh sách giáo án</button>
-      </div>
+    <Box sx={{ p: { xs: 1.5, md: 2 }, maxWidth: 900, mx: 'auto' }}>
+      <Button
+        variant="outlined"
+        onClick={() => navigate('/lecturer/lesson-plans')}
+        sx={{ mb: 2.5, minHeight: 44 }}
+      >
+        ← Quay lại danh sách giáo án
+      </Button>
 
-      {error && <div role="alert" style={{ color: '#d32f2f', marginBottom: 12 }}>{error}</div>}
+      {error && (
+        <Typography role="alert" color="error" sx={{ mb: 1.5 }}>
+          {error}
+        </Typography>
+      )}
 
-      <h1 style={{ marginBottom: 4 }}>{plan.subject}</h1>
-      <p style={{ color: 'var(--edub-text-secondary)', marginBottom: 20 }}>
+      <Typography variant="h4" sx={{ fontWeight: 800, mb: 0.5 }}>
+        {plan.subject}
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5 }}>
         Khối {plan.grade} · Niên khóa {plan.schoolYearStart} – {plan.schoolYearEnd} · {plan.lessons.length} bài học
-      </p>
+      </Typography>
 
       {/* Add lesson button */}
       <div style={{ marginBottom: 16, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -253,31 +268,33 @@ export default function LessonListPage() {
       </Dialog>
 
       {plan.lessons.length === 0 ? (
-        <div style={{ padding: 24, textAlign: 'center', color: 'var(--edub-text-secondary)', border: '1px dashed var(--edub-border)', borderRadius: 12 }}>
+        <Box
+          sx={{
+            p: 3,
+            textAlign: 'center',
+            color: 'var(--edub-text-secondary)',
+            border: '1px dashed var(--edub-border)',
+            borderRadius: 2,
+          }}
+        >
           Chưa có bài học nào. Nhấn "+ Thêm bài học" để bắt đầu.
-        </div>
+        </Box>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           {plan.lessons
             .slice()
             .sort((a, b) => a.orderIndex - b.orderIndex)
             .map((lesson, idx) => (
-              <div
+              <Card
                 key={lesson.id}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '12px 16px',
-                  borderRadius: 10,
-                  border: '1px solid var(--edub-border)',
-                  background: 'var(--edub-surface)',
+                variant="outlined"
+                sx={{
+                  borderRadius: 2,
                   cursor: 'pointer',
                   transition: 'box-shadow 150ms ease',
+                  '&:hover': { boxShadow: 2 },
                 }}
                 onClick={() => navigate(`/lecturer/lessons/${lesson.id}/edit`)}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = 'none'; }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                   <span style={{ fontWeight: 700, marginRight: 8, color: 'var(--edub-text-secondary)' }}>
@@ -303,9 +320,9 @@ export default function LessonListPage() {
                     <CrudIcon name="delete" tooltip="Xóa bài học" onClick={() => setDeleteLessonTarget(lesson.id)} disabled={actionLoading} />
                   </span>
                 </div>
-              </div>
+              </Card>
             ))}
-        </div>
+        </Box>
       )}
 
       {/* Template Selection Dialog */}
@@ -391,8 +408,6 @@ export default function LessonListPage() {
         onCancel={() => setDeleteLessonTarget(null)}
       />
 
-    </div>
+    </Box>
   );
 }
-
-const pageStyle: React.CSSProperties = { padding: 24, maxWidth: 900, margin: '0 auto' };

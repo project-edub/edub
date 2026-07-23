@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AxiosError } from 'axios';
+import { Box, Button, Card, CardContent, CircularProgress, Typography } from '@mui/material';
 import type { ClassDetail } from '../../types/class';
 import type { ApiError } from '../../types/common';
 import * as classService from '../../services/classService';
@@ -42,7 +43,6 @@ export default function ClassDetailPage() {
     loadClass();
   }, [loadClass]);
 
-  // Reload class detail when switching to basic tab (to refresh studentCount)
   useEffect(() => {
     if (activeTab === 'basic' && id) {
       classService.getById(Number(id)).then(setClassDetail).catch(() => {});
@@ -51,20 +51,26 @@ export default function ClassDetailPage() {
 
   if (loading) {
     return (
-      <div style={{ padding: 24 }}>
-        <p>Đang tải...</p>
-      </div>
+      <Box sx={{ p: { xs: 1.5, md: 2 }, display: 'flex', justifyContent: 'center', py: 6 }}>
+        <CircularProgress />
+      </Box>
     );
   }
 
   if (error) {
     return (
-      <div style={{ padding: 24 }}>
-        <div role="alert" style={{ color: '#d32f2f', marginBottom: 16 }}>{error}</div>
-        <button type="button" onClick={() => navigate('/lecturer/classes')} className="btn btn-view">
+      <Box sx={{ p: { xs: 1.5, md: 2 } }}>
+        <Typography role="alert" color="error" sx={{ mb: 2 }}>
+          {error}
+        </Typography>
+        <Button
+          variant="outlined"
+          onClick={() => navigate('/lecturer/classes')}
+          sx={{ minHeight: 44 }}
+        >
           Quay lại danh sách
-        </button>
-      </div>
+        </Button>
+      </Box>
     );
   }
 
@@ -72,48 +78,61 @@ export default function ClassDetailPage() {
     return null;
   }
 
+  const basicInfo = [
+    { label: 'Tên lớp', value: classDetail.name },
+    { label: 'Năm học', value: classDetail.year },
+    { label: 'Số học sinh', value: String(classDetail.studentCount) },
+  ];
+
   return (
-    <div style={{ padding: 24 }}>
-      <button
-        type="button"
+    <Box sx={{ p: { xs: 1.5, md: 2 } }}>
+      <Button
+        variant="outlined"
         onClick={() => navigate('/lecturer/classes')}
-        className="btn btn-view"
-        style={{ marginBottom: 16, padding: '6px 12px' }}
+        sx={{ mb: 2, minHeight: 44 }}
       >
         ← Quay lại danh sách
-      </button>
+      </Button>
 
-      <h1 style={{ marginBottom: 24, color: 'var(--edub-text-primary)' }}>{classDetail.name}</h1>
+      <Typography variant="h4" sx={{ fontWeight: 800, mb: 3, color: 'var(--edub-text-primary)' }}>
+        {classDetail.name}
+      </Typography>
 
-      {/* Google-style tab navigation - equal width tabs */}
-      <div style={{ display: 'flex', borderBottom: '2px solid var(--edub-border)', marginBottom: 24 }}>
+      {/* Tab navigation — scrollable on mobile */}
+      <Box
+        sx={{
+          display: 'flex',
+          borderBottom: '2px solid var(--edub-border)',
+          mb: 3,
+          overflowX: 'auto',
+          WebkitOverflowScrolling: 'touch',
+        }}
+      >
         {tabs.map((tab) => (
-          <button
+          <Button
             key={tab.key}
-            type="button"
             onClick={() => setActiveTab(tab.key)}
-            style={{
-              flex: 1,
-              padding: '14px 20px',
-              border: 'none',
+            sx={{
+              flex: { xs: '0 0 auto', md: 1 },
+              minWidth: { xs: 'max-content', md: 0 },
+              px: { xs: 2, md: 2.5 },
+              py: 1.75,
+              minHeight: 44,
+              borderRadius: 0,
               borderBottom: activeTab === tab.key ? '3px solid #1a73e8' : '3px solid transparent',
-              background: 'transparent',
               color: activeTab === tab.key ? '#1a73e8' : 'var(--edub-text-secondary)',
               fontWeight: activeTab === tab.key ? 600 : 500,
               fontSize: '0.875rem',
-              cursor: 'pointer',
-              transition: 'color 200ms ease, border-color 200ms ease',
-              textAlign: 'center',
-              marginBottom: -2,
-              fontFamily: '"Roboto Flex", "Segoe UI", sans-serif',
+              textTransform: 'none',
+              mb: '-2px',
+              whiteSpace: 'nowrap',
             }}
           >
             {tab.label}
-          </button>
+          </Button>
         ))}
-      </div>
+      </Box>
 
-      {/* Tab content */}
       {activeTab === 'basic' && (
         <div>
           <table style={{ borderCollapse: 'collapse' }}>
@@ -142,17 +161,9 @@ export default function ClassDetailPage() {
       {activeTab === 'lessonPlan' && (
         <ClassLessonPlanTab classId={classDetail.id} />
       )}
-    </div>
+    </Box>
   );
 }
 
-const labelStyle: React.CSSProperties = {
-  padding: '8px 16px 8px 0',
-  fontWeight: 600,
-  color: 'var(--edub-text-secondary)',
-  verticalAlign: 'top',
-};
-
-const valueStyle: React.CSSProperties = {
-  padding: '8px 0',
-};
+const labelStyle: React.CSSProperties = { padding: '10px 12px', fontWeight: 600, color: 'var(--edub-text-secondary)' };
+const valueStyle: React.CSSProperties = { padding: '10px 12px' };

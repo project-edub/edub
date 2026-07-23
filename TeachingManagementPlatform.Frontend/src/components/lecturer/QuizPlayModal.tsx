@@ -163,8 +163,9 @@ const modalStyle: React.CSSProperties = {
   border: '1px solid var(--edub-border)',
   padding: 24,
   borderRadius: 8,
-  minWidth: 600,
+  width: 'min(600px, calc(100% - 24px))',
   maxWidth: 750,
-  maxHeight: '85vh',
+  maxHeight: 'calc(100dvh - 24px)',
+  boxSizing: 'border-box',
   overflowY: 'auto',
 };

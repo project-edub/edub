@@ -1,11 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import type { LessonPlan, CreateLessonPlanRequest } from '../../types/lessonPlan';
-
-const GRADE_OPTIONS = [
-  'Lớp 1', 'Lớp 2', 'Lớp 3', 'Lớp 4', 'Lớp 5', 'Lớp 6',
-  'Lớp 7', 'Lớp 8', 'Lớp 9', 'Lớp 10', 'Lớp 11', 'Lớp 12',
-  'Đại học',
-];
+import { GRADE_OPTIONS } from '../../constants/lessonPlanOptions';
 
 interface LessonPlanModalProps {
   mode: 'create' | 'edit';
@@ -144,9 +139,11 @@ const modalStyle: React.CSSProperties = {
   border: '1px solid var(--edub-border)',
   padding: 24,
   borderRadius: 8,
-  minWidth: 500,
+  // Keep the existing 500px desktop dialog, while allowing a 12px gutter on phones.
+  width: 'min(500px, calc(100% - 24px))',
   maxWidth: 600,
-  maxHeight: '80vh',
+  maxHeight: 'calc(100dvh - 24px)',
+  boxSizing: 'border-box',
   overflowY: 'auto',
 };
 

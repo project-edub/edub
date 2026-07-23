@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { AxiosError } from 'axios';
+import { Box } from '@mui/material';
 import { Pencil, Trash2 } from 'lucide-react';
 import type { ApiError } from '../../types/common';
 import * as scoreTemplateService from '../../services/scoreTemplateService';
@@ -8,6 +9,7 @@ import type {
   ScoreTemplateColumn,
 } from '../../services/scoreTemplateService';
 import Pagination, { usePagination } from '../../components/common/Pagination';
+import AdminPanelBanner from '../../components/common/AdminPanelBanner';
 
 interface ModalState {
   type: 'create' | 'edit' | null;
@@ -224,8 +226,8 @@ export default function ScoreTemplateManager() {
   }
 
   return (
-    <div style={pageStyle}>
-      <div style={heroStyle}>
+    <Box sx={{ ...pageStyle, p: { xs: 1.5, md: 3 } }}>
+      <AdminPanelBanner>
         <div>
           <p style={eyebrowStyle}>Score Template</p>
           <h1 style={titleStyle}>Quản lý Template Điểm</h1>
@@ -234,7 +236,7 @@ export default function ScoreTemplateManager() {
           </p>
         </div>
 
-        <div style={heroActionsStyle}>
+        <Box sx={{ ...heroActionsStyle, width: { xs: '100%', md: 'auto' } }}>
           <div style={statsGridStyle}>
             <div style={statCardStyle}>
               <span style={statValueStyle}>{templates.length}</span>
@@ -242,11 +244,11 @@ export default function ScoreTemplateManager() {
             </div>
           </div>
 
-          <button type="button" onClick={openCreateModal} className="btn btn-add">
+          <button type="button" onClick={openCreateModal} className="btn btn-add" style={{ minHeight: 44 }}>
             Thêm template
           </button>
-        </div>
-      </div>
+        </Box>
+      </AdminPanelBanner>
 
       {error && (
         <div role="alert" style={alertErrorStyle}>
@@ -489,7 +491,7 @@ export default function ScoreTemplateManager() {
           </div>
         </div>
       )}
-    </div>
+    </Box>
   );
 }
 
@@ -506,7 +508,6 @@ function Field({ label, error, children }: { label: string; error?: string; chil
 // ─── Styles ──────────────────────────────────────────────────────
 
 const pageStyle: React.CSSProperties = {
-  padding: 24,
   background: 'linear-gradient(180deg, #f8fbff 0%, #ffffff 100%)',
 };
 

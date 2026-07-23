@@ -965,7 +965,7 @@ export default function StudentListTabs({ classId, className = 'lop-hoc' }: Prop
           {/* Copy Column Dialog */}
           {showCopyColumnDialog && (
             <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-              <div style={{ backgroundColor: 'var(--edub-surface, #fff)', padding: 24, borderRadius: 12, minWidth: 400, maxWidth: 500, border: '1px solid var(--edub-border)' }}>
+              <div style={{ backgroundColor: 'var(--edub-surface, #fff)', padding: 24, borderRadius: 12, width: 'min(400px, calc(100% - 24px))', maxWidth: 500, maxHeight: 'calc(100dvh - 24px)', boxSizing: 'border-box', overflowY: 'auto', border: '1px solid var(--edub-border)' }}>
                 <h3 style={{ margin: '0 0 16px' }}>Copy cột điểm</h3>
                 <p style={{ fontSize: 13, color: 'var(--edub-text-secondary)', marginBottom: 16 }}>
                   Sao chép điểm từ cột nguồn sang cột đích. Có thể cộng thêm hệ số bonus.

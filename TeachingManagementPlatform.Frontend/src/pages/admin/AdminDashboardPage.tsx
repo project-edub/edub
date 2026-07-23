@@ -420,8 +420,8 @@ function ChartTab() {
     <Box sx={{ mt: 1 }}>
       {/* Controls */}
       <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', alignItems: 'center', mb: 3 }}>
-        <TextField size="small" type="date" label="Từ ngày" value={fromDate} onChange={e => setFromDate(e.target.value)} InputLabelProps={{ shrink: true }} />
-        <TextField size="small" type="date" label="Đến ngày" value={toDate} onChange={e => setToDate(e.target.value)} InputLabelProps={{ shrink: true }} />
+        <TextField size="small" type="date" label="Từ ngày" value={fromDate} onChange={e => setFromDate(e.target.value)} slotProps={{ inputLabel: { shrink: true } }} />
+        <TextField size="small" type="date" label="Đến ngày" value={toDate} onChange={e => setToDate(e.target.value)} slotProps={{ inputLabel: { shrink: true } }} />
         <TextField select size="small" label="Nhóm theo" value={groupBy} onChange={e => setGroupBy(e.target.value as ChartGroupBy)} sx={{ minWidth: 110 }}>
           <MenuItem value="day">Ngày</MenuItem>
           {daysDiff >= 7 && <MenuItem value="week">Tuần</MenuItem>}

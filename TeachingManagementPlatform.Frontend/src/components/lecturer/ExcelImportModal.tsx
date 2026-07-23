@@ -40,7 +40,7 @@ export default function ExcelImportModal({ listId, onSuccess, onClose }: Props) 
         background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
       }}
     >
-      <div style={{ background: '#fff', borderRadius: 8, padding: 24, minWidth: 400, maxWidth: 500 }}>
+      <div style={{ background: '#fff', borderRadius: 8, padding: 24, width: 'min(400px, calc(100% - 24px))', maxWidth: 500, maxHeight: 'calc(100dvh - 24px)', boxSizing: 'border-box', overflowY: 'auto' }}>
         <h3 style={{ marginTop: 0 }}>Nhập Excel</h3>
 
         <p style={{ color: 'var(--edub-text-secondary)', fontSize: 13, marginBottom: 16 }}>

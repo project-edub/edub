@@ -4,7 +4,7 @@ import {
   Box, Button, Alert, CircularProgress, Typography, TextField, Switch,
   FormControlLabel, Dialog, DialogTitle, DialogContent, DialogActions,
   IconButton, Chip, Tabs, Tab, Paper, Table, TableBody, TableCell,
-  TableContainer, TableHead, TableRow,
+  TableContainer, TableHead, TableRow, Tooltip,
 } from '@mui/material';
 import { Trash2, Copy } from 'lucide-react';
 import * as quizService from '../../services/quizService';
@@ -151,15 +151,15 @@ export default function QuizEditorPage() {
   if (!game) return null;
 
   return (
-    <Box sx={{ p: 3, maxWidth: 1000, mx: 'auto' }}>
+    <Box sx={{ p: { xs: 1.5, md: 3 }, maxWidth: 1000, mx: 'auto' }}>
       {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
-        <Button variant="text" onClick={() => navigate('/lecturer/quiz-generator')}>← Quay lại</Button>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button variant="outlined" onClick={() => void handleSave()} disabled={saving}>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'stretch', md: 'center' }, mb: 3, gap: 2 }}>
+        <Button variant="text" onClick={() => navigate('/lecturer/quiz-generator')} sx={{ minHeight: 44, alignSelf: { xs: 'flex-start', md: 'auto' } }}>← Quay lại</Button>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1 }}>
+          <Button variant="outlined" onClick={() => void handleSave()} disabled={saving} sx={{ minHeight: 44, flex: 1 }}>
             {saving ? 'Đang lưu...' : 'Lưu'}
           </Button>
-          <Button variant="contained" onClick={() => void handlePublish()} disabled={publishing}>
+          <Button variant="contained" onClick={() => void handlePublish()} disabled={publishing} sx={{ minHeight: 44, flex: 1 }}>
             {publishing ? 'Đang xuất bản...' : game.status === 'published' ? 'Tái xuất bản' : 'Xuất bản'}
           </Button>
         </Box>
@@ -178,7 +178,7 @@ export default function QuizEditorPage() {
       )}
 
       {/* Tabs */}
-      <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} sx={{ mb: 3 }}>
+      <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} variant="scrollable" allowScrollButtonsMobile sx={{ mb: 3 }}>
         <Tab label={`Câu hỏi (${questions.length})`} />
         <Tab label={`Bài nộp (${game.status === 'published' ? submissions.length || '...' : 0})`} />
         <Tab label="Cài đặt" />
@@ -190,7 +190,7 @@ export default function QuizEditorPage() {
           {questions.map((q, idx) => {
             const options: string[] = JSON.parse(q.optionsJson);
             return (
-              <Box key={q.id} sx={{ p: 2, borderRadius: 2, border: '1px solid', borderColor: 'divider', position: 'relative' }}>
+              <Box key={q.id} sx={{ p: { xs: 1.5, md: 2 }, borderRadius: 2, border: '1px solid', borderColor: 'divider', position: 'relative' }}>
                 <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.5 }}>
                   <IconButton size="small" onClick={() => void handleDuplicateQuestion(q)} title="Nhân bản câu hỏi">
                     <Copy size={18} />
@@ -249,7 +249,20 @@ export default function QuizEditorPage() {
           ) : submissions.length === 0 ? (
             <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>Chưa có bài nộp nào.</Typography>
           ) : (
-            <TableContainer component={Paper} variant="outlined">
+            <>
+            <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 1.5 }}>
+              {submissions.map(s => (
+                <Box key={s.id} sx={{ p: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+                  <Typography sx={{ fontWeight: 600, mb: 1 }}>{s.studentName}</Typography>
+                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
+                    <Typography variant="body2">Đúng: {s.correctCount}/{s.totalQuestions}</Typography>
+                    <Chip label={`${s.scorePercent.toFixed(0)}%`} size="small" color={s.scorePercent >= 80 ? 'success' : s.scorePercent >= 50 ? 'warning' : 'error'} sx={{ justifySelf: 'start' }} />
+                  </Box>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>{new Date(s.submittedAt).toLocaleString('vi-VN')}</Typography>
+                </Box>
+              ))}
+            </Box>
+            <TableContainer component={Paper} variant="outlined" sx={{ display: { xs: 'none', md: 'block' } }}>
               <Table>
                 <TableHead>
                   <TableRow>
@@ -275,6 +288,7 @@ export default function QuizEditorPage() {
                 </TableBody>
               </Table>
             </TableContainer>
+            </>
           )}
         </Box>
       )}
@@ -304,7 +318,7 @@ export default function QuizEditorPage() {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowPublishModal(false)} variant="contained">Đóng</Button>
+          <Button onClick={() => setShowPublishModal(false)} variant="contained" sx={{ minHeight: 44 }}>Đóng</Button>
         </DialogActions>
       </Dialog>
     </Box>
