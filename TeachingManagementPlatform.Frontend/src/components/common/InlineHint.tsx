@@ -1,6 +1,6 @@
 import Tooltip from '@mui/material/Tooltip';
 import type { TooltipProps } from '@mui/material/Tooltip';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutlined';
+import { HelpCircle } from 'lucide-react';
 
 interface InlineHintProps {
   text: string;
@@ -21,7 +21,7 @@ export default function InlineHint({ text, placement = 'right' }: InlineHintProp
           cursor: 'help',
         }}
       >
-        <HelpOutlineIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+        <HelpCircle size={18} style={{ color: 'inherit' }} />
       </span>
     </Tooltip>
   );

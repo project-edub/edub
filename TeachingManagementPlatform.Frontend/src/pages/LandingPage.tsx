@@ -14,10 +14,7 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material';
-import SchoolIcon from '@mui/icons-material/School';
-import ClassIcon from '@mui/icons-material/Class';
-import FolderIcon from '@mui/icons-material/Folder';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { GraduationCap, BookOpen, Folder, Sparkles } from 'lucide-react';
 import { useColorMode } from '../theme/ColorModeContext';
 import { useAuth } from '../hooks/useAuth';
 import { Role } from '../types/auth';
@@ -33,25 +30,25 @@ const FEATURES: FeatureCard[] = [
   {
     title: 'Hồ sơ giảng dạy',
     description: 'Chia sẻ hồ sơ giảng dạy công khai để học viên dễ dàng tìm thấy bạn.',
-    icon: <SchoolIcon sx={{ fontSize: 40 }} />,
+    icon: <GraduationCap size={40} />,
     path: '/lecturer/overview',
   },
   {
     title: 'Quản lý lớp học',
     description: 'Quản lý danh sách học viên, điểm số và điểm danh một cách hiệu quả.',
-    icon: <ClassIcon sx={{ fontSize: 40 }} />,
+    icon: <BookOpen size={40} />,
     path: '/lecturer/classes',
   },
   {
     title: 'Kho tài liệu',
     description: 'Lưu trữ tài liệu giảng dạy trên đám mây, truy cập mọi lúc mọi nơi.',
-    icon: <FolderIcon sx={{ fontSize: 40 }} />,
+    icon: <Folder size={40} />,
     path: '/lecturer/storage',
   },
   {
     title: 'Tạo Quiz & Ô chữ bằng AI',
     description: 'Tạo bài quiz trắc nghiệm và ô chữ tự động từ tài liệu bài giảng với AI.',
-    icon: <AutoAwesomeIcon sx={{ fontSize: 40 }} />,
+    icon: <Sparkles size={40} />,
     path: '/lecturer/quiz-generator',
   },
 ];

@@ -5,14 +5,7 @@ import {
   DialogContentText, DialogTitle, Paper, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, TextField, Typography,
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import CreateIcon from '@mui/icons-material/Create';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import FileCopyOutlinedIcon from '@mui/icons-material/FileCopyOutlined';
+import { Plus, Pencil, Trash2, Play, Sparkles, PenLine, Copy } from 'lucide-react';
 import * as quizService from '../../services/quizService';
 import type { QuizListItem } from '../../services/quizService';
 import Pagination, { usePagination } from '../../components/common/Pagination';
@@ -100,7 +93,7 @@ export default function QuizListPage() {
           <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>Quiz</Typography>
           <Typography variant="body2" color="text.secondary">Quản lý bài quiz trắc nghiệm của bạn.</Typography>
         </Box>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreateDialogOpen(true)}>
+        <Button variant="contained" startIcon={<Plus size={18} />} onClick={() => setCreateDialogOpen(true)}>
           Tạo quiz mới
         </Button>
       </Box>
@@ -112,7 +105,7 @@ export default function QuizListPage() {
       {!loading && items.length === 0 && (
         <Box sx={{ border: '1px dashed', borderColor: 'divider', borderRadius: 3, p: 4, textAlign: 'center', bgcolor: 'action.hover' }}>
           <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>Chưa có quiz nào</Typography>
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreateDialogOpen(true)}>Tạo quiz mới</Button>
+          <Button variant="contained" startIcon={<Plus size={18} />} onClick={() => setCreateDialogOpen(true)}>Tạo quiz mới</Button>
         </Box>
       )}
 
@@ -141,7 +134,7 @@ export default function QuizListPage() {
                     <TableCell align="center">
                       <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
                         {item.status === 'published' && (
-                          <Button size="small" variant="outlined" color="success" startIcon={<PlayArrowIcon />} onClick={() => window.open(`/quiz/${item.slug}`, '_blank')}>
+                          <Button size="small" variant="outlined" color="success" startIcon={<Play size={18} />} onClick={() => window.open(`/quiz/${item.slug}`, '_blank')}>
                             Chơi
                           </Button>
                         )}
@@ -149,7 +142,7 @@ export default function QuizListPage() {
                           <Button
                             size="small"
                             variant="outlined"
-                            startIcon={<ContentCopyIcon />}
+                            startIcon={<Copy size={18} />}
                             onClick={async () => {
                               await navigator.clipboard.writeText(`${window.location.origin}/quiz/${item.slug}`);
                               setCopiedId(item.id);
@@ -159,19 +152,19 @@ export default function QuizListPage() {
                             {copiedId === item.id ? 'Đã copy!' : 'Copy link'}
                           </Button>
                         )}
-                        <Button size="small" variant="outlined" startIcon={<EditIcon />} onClick={() => navigate(`/lecturer/quiz/${item.id}/edit`)}>
+                        <Button size="small" variant="outlined" startIcon={<Pencil size={18} />} onClick={() => navigate(`/lecturer/quiz/${item.id}/edit`)}>
                           Quản lý
                         </Button>
                         <Button
                           size="small"
                           variant="outlined"
-                          startIcon={<FileCopyOutlinedIcon />}
+                          startIcon={<Copy size={18} />}
                           onClick={() => void handleDuplicate(item.id)}
                           disabled={duplicating === item.id}
                         >
                           {duplicating === item.id ? 'Đang nhân bản...' : 'Nhân bản'}
                         </Button>
-                        <Button size="small" variant="outlined" color="error" startIcon={<DeleteIcon />} onClick={() => setDeleteTarget(item)}>
+                        <Button size="small" variant="outlined" color="error" startIcon={<Trash2 size={18} />} onClick={() => setDeleteTarget(item)}>
                           Xóa
                         </Button>
                       </Box>
@@ -202,7 +195,7 @@ export default function QuizListPage() {
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Button
               variant="outlined"
-              startIcon={<AutoAwesomeIcon />}
+              startIcon={<Sparkles size={18} />}
               onClick={() => { setCreateDialogOpen(false); navigate('/lecturer/quiz/new'); }}
               sx={{ justifyContent: 'flex-start', py: 1.5 }}
             >
@@ -210,7 +203,7 @@ export default function QuizListPage() {
             </Button>
             <Button
               variant="outlined"
-              startIcon={<CreateIcon />}
+              startIcon={<PenLine size={18} />}
               onClick={() => { setCreateDialogOpen(false); setManualDialogOpen(true); }}
               sx={{ justifyContent: 'flex-start', py: 1.5 }}
             >

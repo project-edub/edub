@@ -9,8 +9,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContentText from '@mui/material/DialogContentText';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
+import { Sparkles, BookOpenText } from 'lucide-react';
 import CrudIcon from '../../components/common/CrudIcon';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import * as lessonPlanService from '../../services/lessonPlanService';
@@ -207,7 +206,7 @@ export default function LessonListPage() {
             <button className="btn btn-add" onClick={() => setAdding(true)}>+ Thêm bài học</button>
             <Button
               variant="outlined"
-              startIcon={<MenuBookIcon />}
+              startIcon={<BookOpenText size={18} />}
               onClick={handleAutoGenerateClick}
               disabled={actionLoading}
               size="small"
@@ -216,7 +215,7 @@ export default function LessonListPage() {
             </Button>
             <Button
               variant="outlined"
-              startIcon={<AutoAwesomeIcon />}
+              startIcon={<Sparkles size={18} />}
               onClick={openBatchAI}
               disabled={actionLoading || plan.lessons.length === 0}
               size="small"
@@ -295,7 +294,7 @@ export default function LessonListPage() {
                       aria-label={`Gợi ý AI cho bài ${lesson.name}`}
                       sx={{ ml: 0.5, color: 'primary.main' }}
                     >
-                      <AutoAwesomeIcon fontSize="small" />
+                      <Sparkles size={18} />
                     </IconButton>
                   </Tooltip>
                 </div>

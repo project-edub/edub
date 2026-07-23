@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import AccountCircleRoundedIcon from '@mui/icons-material/AccountCircleRounded';
-import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
-import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
+import { CircleUser, LogOut, GraduationCap } from 'lucide-react';
 import {
   AppBar,
   Avatar,
@@ -40,9 +38,11 @@ const lecturerMenuItems = [
 ];
 
 const adminMenuItems = [
+  { to: '/admin/dashboard', label: 'Bảng quản lí' },
   { to: '/admin/accounts', label: 'Quản lý tài khoản' },
   { to: '/admin/subscriptions', label: 'Gói đăng ký' },
   { to: '/admin/coin-packages', label: 'Gói ECoin' },
+  { to: '/admin/transactions', label: 'Giao dịch' },
   { to: '/admin/game-ecoin-config', label: 'Cấu hình chung' },
   { to: '/admin/score-templates', label: 'Template điểm' },
   { to: '/admin/curriculum-templates', label: 'Mẫu giáo án' },
@@ -108,7 +108,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <Toolbar sx={{ justifyContent: 'space-between', gap: 2, minHeight: 72, px: { xs: 0, sm: 1 } }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
             <Avatar sx={{ bgcolor: 'primary.main', width: 36, height: 36 }}>
-              <SchoolOutlinedIcon fontSize="small" />
+              <GraduationCap size={18} />
             </Avatar>
             <Typography
               variant="h6"
@@ -140,7 +140,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </IconButton>
 
             <Avatar sx={{ width: 40, height: 40, bgcolor: 'primary.main', color: 'primary.contrastText' }}>
-              <AccountCircleRoundedIcon />
+              <CircleUser size={24} />
             </Avatar>
 
             <Typography
@@ -154,7 +154,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               onClick={handleLogout}
               variant="outlined"
               color="error"
-              startIcon={<LogoutRoundedIcon />}
+              startIcon={<LogOut size={18} />}
               sx={{ whiteSpace: 'nowrap' }}
             >
               Đăng xuất

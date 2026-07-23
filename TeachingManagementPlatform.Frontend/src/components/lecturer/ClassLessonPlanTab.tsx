@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { AxiosError } from 'axios';
 import Button from '@mui/material/Button';
-import DateRangeIcon from '@mui/icons-material/DateRange';
+import { CalendarRange } from 'lucide-react';
 import type { LessonPlanSummary } from '../../types/lessonPlan';
 import type { ClassLessonPlanResponse, ClassLessonResponse } from '../../types/classLessonPlan';
 import type { SchoolYearHoliday } from '../../types/teachingSchedule';
@@ -281,7 +281,7 @@ export default function ClassLessonPlanTab({ classId }: ClassLessonPlanTabProps)
             <Button
               variant="outlined"
               size="small"
-              startIcon={<DateRangeIcon />}
+              startIcon={<CalendarRange size={20} />}
               onClick={handleAutoFillDates}
               disabled={autoFillLoading || assignedPlan.lessons.length === 0}
             >

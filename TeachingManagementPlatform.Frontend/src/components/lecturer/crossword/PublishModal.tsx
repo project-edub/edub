@@ -14,8 +14,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { Copy, CheckCircle2 } from 'lucide-react';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -126,7 +125,7 @@ export default function PublishModal({
               gap: 2,
             }}
           >
-            <CheckCircleIcon sx={{ fontSize: 56, color: '#16a34a' }} />
+            <CheckCircle2 size={56} style={{ color: '#16a34a' }} />
             <Typography variant="h6" sx={{ fontWeight: 700, color: '#166534' }}>
               Xuất bản thành công!
             </Typography>
@@ -159,7 +158,7 @@ export default function PublishModal({
               />
               <Tooltip title={copied ? 'Đã sao chép!' : 'Sao chép link'}>
                 <IconButton onClick={handleCopyLink} size="small" aria-label="Sao chép link">
-                  <ContentCopyIcon fontSize="small" />
+                  <Copy size={18} />
                 </IconButton>
               </Tooltip>
             </Box>

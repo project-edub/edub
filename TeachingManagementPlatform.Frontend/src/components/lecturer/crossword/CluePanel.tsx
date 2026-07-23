@@ -1,8 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Box, Button, Divider, IconButton, Tooltip, Typography } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
+import { Pencil, Trash2, Plus } from 'lucide-react';
 import type { CrosswordWordDetailDto } from '../../../types/crossword';
 import type { PlacedWord } from '../../../utils/gridBuilder';
 
@@ -100,7 +98,7 @@ export default function CluePanel({
                 '&:hover': { color: 'primary.main' },
               }}
             >
-              <EditIcon fontSize="small" />
+              <Pencil size={18} />
             </IconButton>
           </Tooltip>
           <Tooltip title="Xoá">
@@ -116,7 +114,7 @@ export default function CluePanel({
                 '&:hover': { color: 'error.main' },
               }}
             >
-              <DeleteIcon fontSize="small" />
+              <Trash2 size={18} />
             </IconButton>
           </Tooltip>
         </Box>
@@ -155,7 +153,7 @@ export default function CluePanel({
       {/* Add word button */}
       <Button
         variant="outlined"
-        startIcon={<AddIcon />}
+        startIcon={<Plus size={18} />}
         onClick={onAddWord}
         fullWidth
         sx={{ textTransform: 'none' }}

@@ -10,7 +10,7 @@ import {
   SwipeableDrawer,
   IconButton,
 } from '@mui/material';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import { ChevronUp } from 'lucide-react';
 import * as crosswordService from '../../services/crosswordService';
 import * as coinService from '../../services/coinService';
 import { buildGrid, rebuildGridFromPositions, hasSavedPositions } from '../../utils/gridBuilder';
@@ -756,7 +756,7 @@ export default function CrosswordEditorPage() {
         }}
       >
         <IconButton onClick={() => setBottomSheetOpen(true)} aria-label="Mở danh sách gợi ý">
-          <ExpandLessIcon />
+          <ChevronUp size={24} />
         </IconButton>
         <Typography variant="body2" sx={{ ml: 1, color: '#475569' }}>
           Xem gợi ý ({gridResult.placedWords.length} từ)

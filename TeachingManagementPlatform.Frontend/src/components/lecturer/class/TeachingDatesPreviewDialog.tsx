@@ -16,8 +16,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import { Calendar, AlertTriangle } from 'lucide-react';
 import type { LessonDate, SchoolYearHoliday } from '../../../types/teachingSchedule';
 import * as teachingScheduleService from '../../../services/teachingScheduleService';
 
@@ -128,7 +127,7 @@ export default function TeachingDatesPreviewDialog({
     >
       <DialogTitle id="teaching-dates-preview-title">
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <CalendarMonthIcon color="primary" />
+          <Calendar size={20} />
           <span>Xem trước ngày dạy dự kiến</span>
         </Box>
       </DialogTitle>
@@ -207,11 +206,13 @@ export default function TeachingDatesPreviewDialog({
                             />
                             {conflictHoliday && (
                               <Tooltip title={`Trùng nghỉ lễ: ${conflictHoliday.name}`} arrow>
-                                <WarningAmberIcon
-                                  color="warning"
-                                  fontSize="small"
-                                  aria-label={`Cảnh báo: trùng nghỉ lễ ${conflictHoliday.name}`}
-                                />
+                                <span>
+                                  <AlertTriangle
+                                    size={18}
+                                    style={{ color: '#ed6c02' }}
+                                    aria-label={`Cảnh báo: trùng nghỉ lễ ${conflictHoliday.name}`}
+                                  />
+                                </span>
                               </Tooltip>
                             )}
                           </Box>

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { AxiosError } from 'axios';
+import { Pencil, Trash2 } from 'lucide-react';
 import type {
   SubscriptionPackage,
   CreateSubscriptionPackageRequest,
@@ -332,10 +333,8 @@ export default function SubscriptionPackagePage() {
                   </td>
                   <td style={tdStyle}>
                     <div style={actionButtonsStyle}>
-                      <button type="button" onClick={() => openEditModal(pkg)} disabled={actionLoading} className="btn btn-update">Sửa</button>
-                      <button type="button" onClick={() => setDeleteTarget(pkg)} disabled={actionLoading || pkg.isDefault} className="btn btn-delete">
-                        {pkg.isDefault ? 'Không xóa' : 'Xóa'}
-                      </button>
+                      <button type="button" onClick={() => openEditModal(pkg)} title="Sửa" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'inline-flex', alignItems: 'center', opacity: 0.7 }} onMouseEnter={e => (e.currentTarget.style.opacity = '1')} onMouseLeave={e => (e.currentTarget.style.opacity = '0.7')}><Pencil size={18} /></button>
+                      {!pkg.isDefault && <button type="button" onClick={() => setDeleteTarget(pkg)} title="Xóa" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'inline-flex', alignItems: 'center', opacity: 0.7 }} onMouseEnter={e => (e.currentTarget.style.opacity = '1')} onMouseLeave={e => (e.currentTarget.style.opacity = '0.7')}><Trash2 size={18} /></button>}
                     </div>
                   </td>
                 </tr>

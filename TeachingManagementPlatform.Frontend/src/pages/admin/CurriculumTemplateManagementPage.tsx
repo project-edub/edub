@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AxiosError } from 'axios';
+import { Eye, Pencil, Trash2 } from 'lucide-react';
 import type { ApiError } from '../../types/common';
 import * as adminService from '../../services/adminCurriculumTemplateService';
 import type {
@@ -194,32 +195,9 @@ export default function CurriculumTemplateManagementPage() {
                       <td style={tdStyle}>{formatDate(tpl.createdAt)}</td>
                       <td style={tdStyle}>
                         <div style={actionButtonsStyle}>
-                          <button
-                            type="button"
-                            onClick={() => openViewDialog(tpl)}
-                            className="btn btn-neutral"
-                            style={actionBtnStyle}
-                          >
-                            Xem
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => openEditDialog(tpl)}
-                            disabled={actionLoading}
-                            className="btn btn-update"
-                            style={actionBtnStyle}
-                          >
-                            Sửa
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setDeleteTarget(tpl)}
-                            disabled={actionLoading}
-                            className="btn btn-delete"
-                            style={actionBtnStyle}
-                          >
-                            Xóa
-                          </button>
+                          <button type="button" onClick={() => openViewDialog(tpl)} title="Xem" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'inline-flex', alignItems: 'center', opacity: 0.7 }} onMouseEnter={e => (e.currentTarget.style.opacity = '1')} onMouseLeave={e => (e.currentTarget.style.opacity = '0.7')}><Eye size={18} /></button>
+                          <button type="button" onClick={() => openEditDialog(tpl)} title="Sửa" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'inline-flex', alignItems: 'center', opacity: 0.7 }} onMouseEnter={e => (e.currentTarget.style.opacity = '1')} onMouseLeave={e => (e.currentTarget.style.opacity = '0.7')}><Pencil size={18} /></button>
+                          <button type="button" onClick={() => setDeleteTarget(tpl)} title="Xóa" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'inline-flex', alignItems: 'center', opacity: 0.7 }} onMouseEnter={e => (e.currentTarget.style.opacity = '1')} onMouseLeave={e => (e.currentTarget.style.opacity = '0.7')}><Trash2 size={18} /></button>
                         </div>
                       </td>
                     </tr>

@@ -14,8 +14,7 @@ import Alert from '@mui/material/Alert';
 import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { ArrowLeft, Sparkles } from 'lucide-react';
 import type { CurriculumTemplate, CurriculumTemplateLesson } from '../../../types/curriculumTemplate';
 import * as curriculumTemplateService from '../../../services/adminCurriculumTemplateService';
 
@@ -144,10 +143,10 @@ export default function TemplateSelectionDialog({
               aria-label="Quay lại danh sách"
               disabled={generating}
             >
-              <ArrowBackIcon />
+              <ArrowLeft size={20} />
             </IconButton>
           )}
-          <AutoAwesomeIcon color="primary" />
+          <Sparkles size={20} />
           <span>
             {step === 'list' ? 'Chọn mẫu giáo án' : `Xem trước: ${selectedTemplate?.sourceNote || 'Mẫu giáo án'}`}
           </span>
